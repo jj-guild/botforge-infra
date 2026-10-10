@@ -1,0 +1,77 @@
+# Recurring self-hosted-runner disk maintenance.
+#
+# Post-mortem of the 2026-10-10 drasah incident: successive PR-deploy
+# images (~300 MB each) accumulated on the VPS until the disk filled,
+# which crashed MongoDB mid-write (FileStreamFailed) and wedged the
+# deploy health gate. This workflow reclaims that drift on every
+# environment runner, weekly (schedule) or on demand (dispatch).
+#
+# Non-destructive by construction:
+#   - docker image prune -af removes only images used by NO container
+#     (running or stopped stacks keep their images; volumes are never
+#     touched);
+#   - docker builder prune -af removes the build cache only;
+#   - runner _diag logs older than 7 days (diagnostic logs, safe).
+# A disk still above 85% after the reclaim opens a tracking issue.
+#
+# NOTE: this workflow must never run concurrently with a deploy on the
+# same environment (image prune vs. pull): the job-level concurrency
+# group below serializes maintenance runs, and the weekly slot (Sunday
+# 05:10 UTC) avoids the deploy-heavy hours.
+name: Environment maintenance
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: "Environment whose runner to maintain"
+        required: true
+        type: choice
+        options: [drasah, merlin, prod, test]
+  schedule:
+    - cron: "10 5 * * 0"
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  maintain:
+    name: Reclaim runner disk (${{ matrix.env }})
+    runs-on: ["self-hosted", "kingdoms", "env-${{ matrix.env }}"]
+    timeout-minutes: 15
+    concurrency:
+      group: env-maintenance-${{ matrix.env }}
+      cancel-in-progress: false
+    strategy:
+      fail-fast: false
+      matrix:
+        env: ${{ fromJSON(github.event_name == 'schedule' && '["drasah","merlin","prod","test"]' || format('["{0}"]', inputs.environment)) }}
+    steps:
+      - name: Disk usage before
+        run: df -h /
+
+      - name: Reclaim (unused images, build cache, old runner diag logs)
+        run: |
+          docker image prune -af || true
+          docker builder prune -af || true
+          find /opt/kingdoms/runners -type f -path '*/_diag/*' -mtime +7 -delete 2>/dev/null || true
+
+      - name: Disk usage after
+        run: df -h /
+
+      - name: Alert when the disk stays above 85%
+        env:
+          GH_TOKEN: ${{ github.token }}
+          ENV_NAME: ${{ matrix.env }}
+        run: |
+          use="$(df --output=pcent / | tail -1 | tr -dc '0-9')"
+          echo "disk usage after reclaim: ${use}%"
+          if (( use > 85 )); then
+            title="Runner disk above 85% on ${ENV_NAME}"
+            existing="$(gh issue list --state open --search "in:title \"${title}\"" --json number --jq 'length')"
+            if [[ "${existing}" == "0" ]]; then
+              gh issue create --title "${title}" \
+                --body "The scheduled environment maintenance reclaimed what it could but `df /` still reports ${use}% on the `${ENV_NAME}` runner. Inspect the VPS (`docker system df`, `du -x /opt/kingdoms`) and clean or enlarge manually. Maintenance run: https://github.com/merlin-pinpin-org/kingdoms-infra/actions/runs/${{ github.run_id }}"
+            fi
+          fi
