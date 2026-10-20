@@ -122,6 +122,10 @@ jobs:
           # scopes its ladders to this guild; without it the mod's register
           # hook fails and the mod stays inactive.
           TEST_GUILD_ID: ${{ vars.TEST_GUILD_ID }}
+          # Console allowlist (dev-console session): the comma-separated test
+          # guild ids that may run the console's destructive actions. Declared
+          # only on the GitHub environments that want them; empty elsewhere.
+          TEST_GUILD_IDS: ${{ vars.TEST_GUILD_IDS }}
           # The deploy run links itself in /status (Infra field) so the
           # running bot can point at the exact job that deployed it.
           KINGDOMS_DEPLOY_RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}

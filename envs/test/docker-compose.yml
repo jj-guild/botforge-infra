@@ -59,11 +59,11 @@ services:
       # admins — clean managed/nuke + reset data + install modal.
       KINGDOMS_DEV_CONSOLE: "1"
       # The console's guild allowlist (developer-mandated isolation):
-      # only these guild ids may be cleaned/nuked/reset, and the allowlist
-      # is env-defined — nothing at runtime can add a guild to it. The
-      # default is empty (fail closed: no console anywhere); prod never
-      # declares the variable at all.
-      KINGDOMS_TEST_GUILD_IDS: ${TEST_GUILD_ID:-}
+      # only these comma-separated guild ids may run the console's
+      # destructive actions — env-defined, runtime-immutable. Empty
+      # default: the console stays visible but its action buttons are
+      # disabled (fail closed). Prod never declares the variable.
+      KINGDOMS_TEST_GUILD_IDS: ${TEST_GUILD_IDS:-}
       MONGO_URI: mongodb://kingdoms-mongo:27017
       REDIS_URI: redis://kingdoms-redis:6379
       MONGO_DB: ${MONGO_DB:-kingdoms}
