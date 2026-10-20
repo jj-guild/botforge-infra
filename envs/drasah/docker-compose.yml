@@ -52,7 +52,12 @@ services:
       KINGDOMS_DEPLOY_IMAGE: ${KINGDOMS_DEPLOY_IMAGE:-}
       KINGDOMS_DEPLOY_BRANCH: ${KINGDOMS_DEPLOY_BRANCH:-}
       KINGDOMS_DEPLOY_PR_TITLE: ${KINGDOMS_DEPLOY_PR_TITLE:-}
-      KINGDOMS_DEPLOY_ENV: ${KINGDOMS_DEPLOY_ENV:-}
+      # Pinned to the literal environment name: the dev console's runtime
+      # gate reads it (non-prod, opt-in below).
+      KINGDOMS_DEPLOY_ENV: drasah
+      # Dev console (test environments only): registers /dev for bot
+      # admins — clean managed/nuke + mods/games install modal.
+      KINGDOMS_DEV_CONSOLE: "1"
       MONGO_URI: mongodb://kingdoms-mongo:27017
       REDIS_URI: redis://kingdoms-redis:6379
       MONGO_DB: ${MONGO_DB:-kingdoms}

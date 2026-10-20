@@ -38,7 +38,10 @@ services:
       KINGDOMS_DEPLOY_IMAGE: ${KINGDOMS_DEPLOY_IMAGE:-}
       KINGDOMS_DEPLOY_BRANCH: ${KINGDOMS_DEPLOY_BRANCH:-}
       KINGDOMS_DEPLOY_PR_TITLE: ${KINGDOMS_DEPLOY_PR_TITLE:-}
-      KINGDOMS_DEPLOY_ENV: ${KINGDOMS_DEPLOY_ENV:-}
+      # Pinned to the literal environment name (never overridable): the
+      # dev console and every prod-gated surface read this variable at
+      # runtime and refuse to act on a production environment.
+      KINGDOMS_DEPLOY_ENV: prod
       MONGO_URI: mongodb://kingdoms-mongo:27017
       REDIS_URI: redis://kingdoms-redis:6379
       MONGO_DB: ${MONGO_DB:-kingdoms}
