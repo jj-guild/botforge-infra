@@ -1,0 +1,106 @@
+# Console ops — run the /console actions on an environment's test guilds
+# from GitHub Actions (workflow_dispatch, called by the kingdoms-services
+# ops-commands router with the kingdoms-deployer App token).
+#
+# Same actions, same gates as the Discord /console: the workflow runs the
+# headless CLI (kingdoms.cli.console_ops) inside the env's kingdoms-core
+# container — the only place where the code and the Mongo network are both
+# available (#138 execution model, same as env-seed.yml).
+#
+# Targets: one allowlisted guild id, or "all" — every guild in the env's
+# TEST_GUILD_IDS allowlist (never a default: the caller must choose, and
+# the CLI re-validates every target against the env-defined allowlist).
+#
+# Gates (fail-closed, layered — see the console SPOF review):
+#   1. workflow_dispatch only, on the env's runner, behind the GitHub
+#      environment's reviewers/secrets (prod declares neither variable)
+#   2. prod refused: the job exits before any container command
+#   3. the CLI re-checks KINGDOMS_DEPLOY_ENV, the allowlist, and every
+#      target guild id (defense in depth — the inputs are untrusted)
+#   4. nuke requires CONFIRM=NUKE (the Actions-side triple-click)
+name: Console environment
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: "Environment to run the console action on (a directory under envs/)"
+        required: true
+        type: string
+      action:
+        description: "Console action"
+        required: true
+        type: choice
+        options: [clean-managed, nuke, reset-data, install]
+      guild:
+        description: "Target guild id, or 'all' for every allowlisted guild (never the default)"
+        required: true
+        type: string
+        default: ""
+      mods:
+        description: "install only: comma-separated mod ids"
+        required: false
+        type: string
+        default: ""
+      games:
+        description: "install only: comma-separated game keys"
+        required: false
+        type: string
+        default: ""
+      confirm:
+        description: "nuke only: must equal NUKE"
+        required: false
+        type: string
+        default: ""
+
+permissions:
+  contents: read
+
+concurrency:
+  group: console-${{ inputs.environment }}
+  cancel-in-progress: false
+
+jobs:
+  console:
+    name: Console ${{ inputs.action }} (${{ inputs.environment }})
+    runs-on: ${{ fromJSON(format('["self-hosted", "kingdoms", "env-{0}"]', inputs.environment)) }}
+    environment: ${{ inputs.environment }}
+    steps:
+      - name: Check out the environment configuration
+        uses: actions/checkout@v4
+        with:
+          ref: deploy/${{ inputs.environment }}
+      - name: Fail closed on prod
+        if: inputs.environment == 'prod'
+        run: |
+          echo "::error::console ops are never allowed on prod (no role, no approval path)"
+          exit 1
+      - name: Fail closed on nuke without the explicit confirmation
+        if: inputs.action == 'nuke' && inputs.confirm != 'NUKE'
+        run: |
+          echo "::error::nuke requires the explicit confirmation (confirm=NUKE) — the Actions-side triple-click"
+          exit 1
+      - name: Fail closed on a missing guild target
+        if: inputs.guild == ''
+        run: |
+          echo "::error::the guild target is mandatory: one allowlisted guild id, or 'all' (never a default)"
+          exit 1
+      - name: Resolve the pinned image from the state file
+        run: |
+          state="envs/${{ inputs.environment }}/state/kingdoms-bot.yml"
+          pinned="$(grep -E '^image:' "$state" | head -1 | cut -d' ' -f2-)"
+          [[ -n "$pinned" ]] || { echo "ERROR: $state has no pinned image" >&2; exit 1; }
+          echo "KINGDOMS_BOT_IMAGE=$pinned" >> "$GITHUB_ENV"
+      - name: Run the console CLI in the env container
+        working-directory: envs/${{ inputs.environment }}
+        env:
+          ACTION: ${{ inputs.action }}
+          GUILD: ${{ inputs.guild }}
+          MODS: ${{ inputs.mods }}
+          GAMES: ${{ inputs.games }}
+          DISCORD_TOKEN: ${{ secrets.DISCORD_TOKEN }}
+        run: |
+          args=(--guild "$GUILD")
+          if [[ "$ACTION" == "install" ]]; then
+            args+=(--mods "$MODS" --games "$GAMES")
+          fi
+          docker compose exec -T kingdoms-core python -m kingdoms.cli.console_ops "$ACTION" "${args[@]}"
