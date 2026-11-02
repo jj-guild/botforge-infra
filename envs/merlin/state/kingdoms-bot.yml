@@ -1,20 +1,20 @@
 # Desired state of kingdoms-bot on the merlin environment (ADR-0018).
 # Written by the deploy pipelines only (kingdoms-deployer GitHub App);
 # a push to this branch deploys this exact image.
-image: ghcr.io/merlin-pinpin-org/kingdoms-services:pr-295-20261102165140-fddd220
-version_label: pr-295-20261102165140-fddd220
-deploy_url: https://github.com/merlin-pinpin-org/kingdoms-services/pull/295#issuecomment-6582911321
+image: ghcr.io/merlin-pinpin-org/kingdoms-services:pr-295-20261102171805-d1b9928
+version_label: pr-295-20261102171805-d1b9928
+deploy_url: https://github.com/merlin-pinpin-org/kingdoms-services/pull/295#issuecomment-6583524383
 deploy_kind: pr
 deploy_ref: 295
-deploy_tree_url: https://github.com/merlin-pinpin-org/kingdoms-services/tree/fddd220ce9b4009a00285eac0ce5de1954f5e96d
-deploy_ts: 1793638383
-deploy_commit_ts: 1793637972
-deploy_commit: fddd220ce9b4009a00285eac0ce5de1954f5e96d
-deploy_ci_run_id: 41485487460
-deploy_ci_run_number: 1160
-deploy_ci_run_ts: 1793638267
+deploy_tree_url: https://github.com/merlin-pinpin-org/kingdoms-services/tree/d1b99283a04a45c8507d9de8b349a638349b3ec7
+deploy_ts: 1793639930
+deploy_commit_ts: 1793639694
+deploy_commit: d1b99283a04a45c8507d9de8b349a638349b3ec7
+deploy_ci_run_id: 41489506733
+deploy_ci_run_number: 1162
+deploy_ci_run_ts: 1793639756
 deployed_by: merlin-pinpin (/deploy)
-deployed_at: "2026-11-02T16:53:03Z"
+deployed_at: "2026-11-02T17:18:50Z"
 source: 
 deploy_branch: vibe/bulk-import-no-rollback-c1e78a
 deploy_pr_title: feat(admin): bulk map import never rolls back — every line runs, successes and failures are reported
