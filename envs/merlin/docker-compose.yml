@@ -207,10 +207,7 @@ services:
       # (the ws_last_frame collection) — the debugging trail.
       MONGO_URI: mongodb://kingdoms-mongo:27017
       MONGO_DB: ${MONGO_DB:-kingdoms}
-      # DEBUG for the provider (the owner's debugging window): the
-      # world conclusion logs on every 5s poll — the matches received
-      # per context, the enrolled ids found (or the explicit absence).
-      LOG_LEVEL: ${AOE2LOBBY_LOG_LEVEL:-DEBUG}
+      LOG_LEVEL: ${LOG_LEVEL:-INFO}
     expose:
       - "50062"
     healthcheck:
