@@ -22,6 +22,7 @@ services:
       # GitHub environment secrets (nothing secret is stored on the VPS);
       # non-secret values have overridable defaults.
       DISCORD_TOKEN: ${DISCORD_TOKEN:?DISCORD_TOKEN is required}
+      KINGDOMS_VERSION: ${KINGDOMS_VERSION:-}
       BOT_ADMINS: ${BOT_ADMINS:-}
       # Liquipedia API contact (User-Agent) — the bot process runs the
       # panel's map import (fetch_map_seed), not only the core sync.
@@ -91,6 +92,7 @@ services:
     pull_policy: always
     environment:
       KINGDOMS_PROCESS: core
+      KINGDOMS_VERSION: ${KINGDOMS_VERSION:-}
       MONGO_URI: mongodb://kingdoms-mongo:27017
       REDIS_URI: redis://kingdoms-redis:6379
       CORE_GRPC_PORT: "50051"
@@ -135,6 +137,7 @@ services:
     pull_policy: always
     environment:
       KINGDOMS_PROCESS: ext-librematch
+      KINGDOMS_VERSION: ${KINGDOMS_VERSION:-}
       EXT_GRPC_PORT: "50061"
       LIBREMATCH_API_URL: ${LIBREMATCH_API_URL:-}
       LIBREMATCH_API_KEY: ${LIBREMATCH_API_KEY:-}
@@ -154,6 +157,7 @@ services:
     pull_policy: always
     environment:
       KINGDOMS_PROCESS: ext-aoe2lobby
+      KINGDOMS_VERSION: ${KINGDOMS_VERSION:-}
       EXT_GRPC_PORT: "50062"
       AOE2LOBBY_WS_URL: ${AOE2LOBBY_WS_URL:-}
       AOE2LOBBY_API_KEY: ${AOE2LOBBY_API_KEY:-}
@@ -178,6 +182,7 @@ services:
     pull_policy: always
     environment:
       KINGDOMS_PROCESS: ext-aoe2techtree
+      KINGDOMS_VERSION: ${KINGDOMS_VERSION:-}
       EXT_GRPC_PORT: "50063"
       AOE2TECHTREE_SOURCE: ${AOE2TECHTREE_SOURCE:-dataset}
       AOE2TECHTREE_API_URL: ${AOE2TECHTREE_API_URL:-}
