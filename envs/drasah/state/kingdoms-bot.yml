@@ -7,14 +7,14 @@ deploy_url: https://github.com/merlin-pinpin-org/kingdoms-services/tree/6ebd47e1
 deploy_kind: integration
 deploy_ref: 6ebd47e
 deploy_tree_url: https://github.com/merlin-pinpin-org/kingdoms-services/tree/6ebd47e1a17b6178c8c7312d5f20253506752dcc
-deploy_ts: 1793639296
+deploy_ts: 1793641549
 deploy_commit_ts: 1793639169
 deploy_commit: 6ebd47e1a17b6178c8c7312d5f20253506752dcc
-deploy_ci_run_id: 41487900618
-deploy_ci_run_number: 2268
-deploy_ci_run_ts: 1793639172
-deployed_by: Drasahaoe (autopin vibe/drasah/main)
-deployed_at: "2026-11-02T17:08:16Z"
-source: 
+deploy_ci_run_id: 
+deploy_ci_run_number: 
+deploy_ci_run_ts: 
+deployed_by: config-change-deploy (run 41494139727)
+deployed_at: "2026-11-02T17:45:49Z"
+source: drasah-config change on main (commit 4c6d2b8) — image unchanged
 deploy_branch: vibe/drasah/main
 deploy_pr_title: 
