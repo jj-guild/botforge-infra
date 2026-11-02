@@ -1,20 +1,20 @@
 # Desired state of kingdoms-bot on the merlin environment (ADR-0018).
 # Written by the deploy pipelines only (kingdoms-deployer GitHub App);
 # a push to this branch deploys this exact image.
-image: ghcr.io/merlin-pinpin-org/kingdoms-services:pr-275-20261102151633-abc94ac
-version_label: pr-275-20261102151633-abc94ac
-deploy_url: https://github.com/merlin-pinpin-org/kingdoms-services/pull/275#issuecomment-6580756575
+image: ghcr.io/merlin-pinpin-org/kingdoms-services:pr-294-20261102155059-4838660
+version_label: pr-294-20261102155059-4838660
+deploy_url: https://github.com/merlin-pinpin-org/kingdoms-services/pull/294#issuecomment-6581543895
 deploy_kind: pr
-deploy_ref: 275
-deploy_tree_url: https://github.com/merlin-pinpin-org/kingdoms-services/tree/abc94ac7f1743e4cb3a0f90bc66b22dfd055f4c8
-deploy_ts: 1793632656
-deploy_commit_ts: 1793632058
-deploy_commit: abc94ac7f1743e4cb3a0f90bc66b22dfd055f4c8
-deploy_ci_run_id: 41469864372
-deploy_ci_run_number: 1152
-deploy_ci_run_ts: 1793632552
+deploy_ref: 294
+deploy_tree_url: https://github.com/merlin-pinpin-org/kingdoms-services/tree/48386606d211a7ffd8da173e1d0b5281ea1f6ade
+deploy_ts: 1793634703
+deploy_commit_ts: 1793634050
+deploy_commit: 48386606d211a7ffd8da173e1d0b5281ea1f6ade
+deploy_ci_run_id: 41475530287
+deploy_ci_run_number: 1153
+deploy_ci_run_ts: 1793634624
 deployed_by: merlin-pinpin (/deploy)
-deployed_at: "2026-11-02T15:17:36Z"
+deployed_at: "2026-11-02T15:51:43Z"
 source: 
-deploy_branch: vibe/provider-aoe2lobby
-deploy_pr_title: feat(aoe2): the live layer — the aoe2lobby provider, the game-aoe2 aggregator, the live panels
+deploy_branch: vibe/fix-discord-voice-warnings
+deploy_pr_title: fix(discord): install the voice optionals (PyNaCl, davey) to clear the startup warnings
