@@ -1,20 +1,20 @@
 # Desired state of kingdoms-bot on the merlin environment (ADR-0018).
 # Written by the deploy pipelines only (kingdoms-deployer GitHub App);
 # a push to this branch deploys this exact image.
-image: ghcr.io/merlin-pinpin-org/kingdoms-services:pr-298-20261102190147-005082b
-version_label: pr-298-20261102190147-005082b
-deploy_url: https://github.com/merlin-pinpin-org/kingdoms-services/pull/298#issuecomment-6585784380
+image: ghcr.io/merlin-pinpin-org/kingdoms-services:pr-298-20261102191629-4c5481b
+version_label: pr-298-20261102191629-4c5481b
+deploy_url: https://github.com/merlin-pinpin-org/kingdoms-services/pull/298#issuecomment-6586151642
 deploy_kind: pr
 deploy_ref: 298
-deploy_tree_url: https://github.com/merlin-pinpin-org/kingdoms-services/tree/005082b5899f83b6ae3f90e91774227b7cf56532
-deploy_ts: 1793646155
-deploy_commit_ts: 1793645708
-deploy_commit: 005082b5899f83b6ae3f90e91774227b7cf56532
-deploy_ci_run_id: 41505976081
-deploy_ci_run_number: 1172
-deploy_ci_run_ts: 1793646063
+deploy_tree_url: https://github.com/merlin-pinpin-org/kingdoms-services/tree/4c5481bbc1858231e333797b47e95e03a7af734e
+deploy_ts: 1793647033
+deploy_commit_ts: 1793646434
+deploy_commit: 4c5481bbc1858231e333797b47e95e03a7af734e
+deploy_ci_run_id: 41508308567
+deploy_ci_run_number: 1173
+deploy_ci_run_ts: 1793646954
 deployed_by: merlin-pinpin (/deploy)
-deployed_at: "2026-11-02T19:02:35Z"
+deployed_at: "2026-11-02T19:17:13Z"
 source: 
 deploy_branch: vibe/on-demand-maps-sync-c1e78a
 deploy_pr_title: feat(admin): AoE2 maps enrichment is on demand — a "Sync aoe2 maps" button, never at boot
