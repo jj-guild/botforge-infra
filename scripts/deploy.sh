@@ -58,6 +58,13 @@ if [[ -f "${STATE_FILE}" ]]; then
     log "state: image=${KINGDOMS_BOT_IMAGE} label=${KINGDOMS_DEPLOY_LABEL:-<none>} deploy_url=${KINGDOMS_DEPLOY_URL:-<none>} kind=${KINGDOMS_DEPLOY_KIND:-<none>} ref=${KINGDOMS_DEPLOY_REF:-<none>}"
 fi
 
+# Every process (bot, core, ext, game) logs its version at startup; the
+# running version is the deployed image tag (ADR-0018 pinned reference).
+if [[ -n "${KINGDOMS_BOT_IMAGE:-}" ]]; then
+    export KINGDOMS_VERSION="${KINGDOMS_BOT_IMAGE##*:}"
+    log "version: ${KINGDOMS_VERSION}"
+fi
+
 cd "${ENV_DIR}"
 
 # Idempotence note: this script manages the full stack lifecycle. Running
