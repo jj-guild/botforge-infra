@@ -107,6 +107,9 @@ jobs:
           # Liquipedia API compliance (kingdoms-services#247): the sync's
           # User-Agent must identify the project and carry a contact;
           # non-secret, GitHub environment variable on every env.
+          # PROVIDER_CONTACT is the generic variable (every provider);
+          # LIQUIPEDIA_CONTACT stays the legacy fallback.
+          PROVIDER_CONTACT: ${{ vars.PROVIDER_CONTACT || vars.LIQUIPEDIA_CONTACT }}
           LIQUIPEDIA_CONTACT: ${{ vars.LIQUIPEDIA_CONTACT }}
           # The env's test guild (compose: CICD_GUILD_ID) — the ladder mod
           # scopes its ladders to this guild; without it the mod's register
