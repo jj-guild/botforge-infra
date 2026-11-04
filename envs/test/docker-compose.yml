@@ -62,6 +62,11 @@ services:
       # The map import (the panel's Liquipedia fetch) routes through the
       # ext-liquipedia provider process — never in-process in the bot.
       EXT_LIQUIPEDIA_URI: ${EXT_LIQUIPEDIA_URI:-kingdoms-ext-liquipedia:50064}
+      # The live dashboard + the activity feed read the game service, and
+      # the profile stats ride ext-librematch (GAME_<KEY>_URI convention)
+      # — the providers panel needs GAME_AOE2_URI (merlin carries them).
+      GAME_AOE2_URI: ${GAME_AOE2_URI:-kingdoms-game-aoe2:50071}
+      EXT_LIBREMATCH_URI: ${EXT_LIBREMATCH_URI:-kingdoms-ext-librematch:50061}
     healthcheck:
       # The image HEALTHCHECK also probes /healthz; the explicit compose
       # healthcheck makes the deployment health gate (scripts/deploy.sh)
@@ -216,7 +221,9 @@ services:
       PROVIDER_CONTACT: ${PROVIDER_CONTACT:-}
       MONGO_URI: mongodb://kingdoms-mongo:27017
       MONGO_DB: ${MONGO_DB:-kingdoms}
-      LOG_LEVEL: ${LOG_LEVEL:-INFO}
+      # DEBUG until the Liquipedia 429s are diagnosed: the 429 handler
+      # logs the request URL + headers and the response rate-limit headers.
+      LOG_LEVEL: ${LOG_LEVEL:-DEBUG}
     expose:
       - "50064"
     healthcheck:
