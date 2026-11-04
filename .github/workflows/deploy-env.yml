@@ -74,6 +74,12 @@ jobs:
           } >> "$GITHUB_OUTPUT"
       - name: Log in to GHCR (the bot image package is not public)
         uses: docker/login-action@v3
+        env:
+          # Isolated credential store per run: concurrent deployments on the
+          # same VPS share ~/.docker/config.json — one job's post-deploy
+          # logout raced another job's pull into 'error from registry:
+          # unauthorized' (merlin+test 2026-11-04). Each run gets its own.
+          DOCKER_CONFIG: ${{ runner.temp }}/docker-${{ github.run_id }}-${{ github.run_attempt }}
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
@@ -90,6 +96,9 @@ jobs:
       - name: Deploy the stack (image pinned by the state file)
         run: ./scripts/deploy.sh ${{ inputs.environment }}
         env:
+          # Same isolated credential store as the login step: the pull
+          # reads the credentials from here, never the shared ~/.docker.
+          DOCKER_CONFIG: ${{ runner.temp }}/docker-${{ github.run_id }}-${{ github.run_attempt }}
           BACKUP_DIR: /opt/kingdoms/backups/${{ inputs.environment }}
           # The failed-health-gate recovery path (rollback.sh --auto) pushes
           # the state revert to deploy/<env> with this token — the same
