@@ -90,7 +90,6 @@ jobs:
           ROW="$(grep -E "^\| @${REQUESTOR} \|" "${ROSTER}")"
           TEAMS="$(echo "${ROW}" | awk -F'|' '{print $6}')"
           ROLES="$(echo "${ROW}" | awk -F'|' '{print $7}')"
-          OWNS="$(echo "${ROW}" | awk -F'|' '{print $8}')"
           ALLOWED=no
           # ops/maintainers team: clean anywhere (prod is blocked above)
           if echo "${TEAMS}" | grep -q "maintainers\|ops"; then
