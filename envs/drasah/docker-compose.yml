@@ -26,8 +26,7 @@ services:
       BOT_ADMINS: ${BOT_ADMINS:-}
       # Liquipedia API contact (User-Agent) — the bot process runs the
       # panel's map import (fetch_map_seed), not only the core sync.
-      PROVIDER_CONTACT: ${PROVIDER_CONTACT:-${LIQUIPEDIA_CONTACT:-}}
-      LIQUIPEDIA_CONTACT: ${LIQUIPEDIA_CONTACT:-}
+      PROVIDER_CONTACT: ${PROVIDER_CONTACT:-}
       # Test guild of this environment (GitHub environment variable
       # TEST_GUILD_ID — non-secret). The bot syncs its commands and scopes
       # its ladders to this guild (ladder:aoe2:<guild_id>); the matches seed
@@ -101,8 +100,7 @@ services:
       # Liquipedia MediaWiki API compliance (kingdoms-services#247): the
       # map sync's User-Agent must identify the project and carry a
       # contact; non-secret GitHub environment variable (deploy-env.yml).
-      PROVIDER_CONTACT: ${PROVIDER_CONTACT:-${LIQUIPEDIA_CONTACT:-}}
-      LIQUIPEDIA_CONTACT: ${LIQUIPEDIA_CONTACT:-}
+      PROVIDER_CONTACT: ${PROVIDER_CONTACT:-}
       # ADR-0020 providers: core aggregates ext-librematch and ext-aoe2lobby
       # over the docker network; without URIs it degrades cleanly (marked
       # offline in the live dashboard) — the ext processes still serve.
