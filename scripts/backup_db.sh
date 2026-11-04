@@ -57,10 +57,18 @@ if ! docker compose exec -T "${REDIS_SERVICE}" sh -c '
     done
 '; then
     rm -f "${REDIS_DUMP}"
-    die "redis BGSAVE failed; removed partial dump"
+    # The Redis dataset is a CACHE (hot workflow state, TTLs) — its loss
+    # degrades nothing durable; a BGSAVE failure (typically the host's
+    # missing vm.overcommit_memory=1 starving the fork on a busy VPS)
+    # must not block a deployment behind a mandatory backup. The Mongo
+    # archive (the durable data) stays mandatory.
+    log "WARNING: redis BGSAVE failed; continuing without the Redis snapshot (cache-only data)"
+elif ! docker compose cp "${REDIS_SERVICE}:/data/dump.rdb" "${REDIS_DUMP}" 2>/dev/null \
+        || [[ ! -s "${REDIS_DUMP}" ]]; then
+    rm -f "${REDIS_DUMP}"
+    log "WARNING: redis dump copy failed; continuing without it (cache-only data)"
+else
+    log "Redis backup verified: ${REDIS_DUMP} ($(du -h "${REDIS_DUMP}" | cut -f1))"
 fi
-docker compose cp "${REDIS_SERVICE}:/data/dump.rdb" "${REDIS_DUMP}"
-[[ -s "${REDIS_DUMP}" ]] || { rm -f "${REDIS_DUMP}"; die "Redis dump is empty; removed"; }
-log "Redis backup verified: ${REDIS_DUMP} ($(du -h "${REDIS_DUMP}" | cut -f1))"
 
 log "backup complete: prefix ${ENVIRONMENT}-${TIMESTAMP}"
