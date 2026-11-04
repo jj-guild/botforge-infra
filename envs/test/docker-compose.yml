@@ -181,7 +181,7 @@ services:
       # the providers panel shows every provider; the techtree is
       # deployed, liquipedia probes empty until it joins the stack.
       EXT_AOE2TECHTREE_URI: ${EXT_AOE2TECHTREE_URI:-kingdoms-ext-aoe2techtree:50063}
-      EXT_LQUIPEDIA_URI: ${EXT_LQUIPEDIA_URI:-}
+      EXT_LIQUIPEDIA_URI: ${EXT_LIQUIPEDIA_URI:-kingdoms-ext-liquipedia:50064}
       LOG_LEVEL: ${LOG_LEVEL:-INFO}
     expose:
       - "50071"
@@ -193,6 +193,12 @@ services:
       start_period: 15s
     depends_on:
       kingdoms-ext-aoe2lobby:
+        condition: service_healthy
+      kingdoms-ext-librematch:
+        condition: service_healthy
+    restart: unless-stopped
+
+  kingdoms-ext-aoe2lobby:
     # ext-aoe2lobby: AoE2 live lobby events (aoe2lobby.com WebSocket).
     image: ${KINGDOMS_BOT_IMAGE:?KINGDOMS_BOT_IMAGE must be pinned by deploy/test/state/kingdoms-bot.yml}
     pull_policy: always
