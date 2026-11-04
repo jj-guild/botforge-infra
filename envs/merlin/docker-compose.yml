@@ -267,7 +267,9 @@ services:
       PROVIDER_CONTACT: ${PROVIDER_CONTACT:-}
       MONGO_URI: mongodb://kingdoms-mongo:27017
       MONGO_DB: ${MONGO_DB:-kingdoms}
-      LOG_LEVEL: ${LOG_LEVEL:-INFO}
+      # DEBUG until the Liquipedia 429s are diagnosed: the 429 handler
+      # logs the request URL + headers and the response rate-limit headers.
+      LOG_LEVEL: ${LOG_LEVEL:-DEBUG}
     expose:
       - "50064"
     healthcheck:
