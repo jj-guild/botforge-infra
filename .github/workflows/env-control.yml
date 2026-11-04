@@ -4,7 +4,8 @@
 # pinned state (scripts/envctl.sh). This is the operator's day-to-day
 # handle for an environment; deployments stay on the state-branch path.
 #
-# reset is destructive (data volumes wiped). Double gate:
+# reset recreates the stack; the externalized data (bind mounts on
+# the VPS filesystem) survives. Double gate:
 #   1. the env-reset roster capability (self env only; ops anywhere) —
 #      and never prod, for any role, no approval path;
 #   2. the env's compose manifest opts in via x-kingdoms-env-resettable
