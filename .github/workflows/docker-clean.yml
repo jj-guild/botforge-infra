@@ -62,19 +62,26 @@ jobs:
           esac
           echo "name=${INPUT_ENV}" >> "$GITHUB_OUTPUT"
 
+      - name: Check out the roster (kingdoms/CONTRIBUTORS.md)
+        uses: actions/checkout@v4
+        with:
+          repository: merlin-pinpin-org/kingdoms
+          ref: main
+          path: roster
+          sparse-checkout: CONTRIBUTORS.md
+
       - name: Roster gate (CONTRIBUTORS.md drives GitHub)
         env:
           REQUESTOR: ${{ inputs.requestor }}
           ENVIRONMENT: ${{ inputs.environment }}
-          GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
           # The roster lives in kingdoms/CONTRIBUTORS.md — the source of
           # truth for who may operate an environment. The gate resolves
-          # the requestor's login against it.
-          ROSTER="$(mktemp)"
-          gh api "repos/merlin-pinpin-org/kingdoms/contents/CONTRIBUTORS.md" \
-            --jq '.content' | base64 -d > "${ROSTER}"
+          # the requestor's login against it. Checked out above: the VPS
+          # runners carry no gh CLI, and this keeps the gate offline-safe.
+          ROSTER="${GITHUB_WORKSPACE}/roster/CONTRIBUTORS.md"
+          [[ -s "${ROSTER}" ]] || { echo "::error::roster not found at ${ROSTER}"; exit 1; }
           if ! grep -qE "^\| @${REQUESTOR} \|" "${ROSTER}"; then
             echo "::error::@${REQUESTOR} has no roster entry (kingdoms/CONTRIBUTORS.md) — docker clean denied"
             exit 1
