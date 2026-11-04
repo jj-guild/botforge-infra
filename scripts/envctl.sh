@@ -4,8 +4,11 @@
 # runner (called by .github/workflows/env-control.yml) and dumps the
 # result; it never deploys, never pulls, never touches the pinned state.
 #
-# reset is DESTRUCTIVE: it stops the stack and deletes the data volumes
-# (mongo_data, redis_data). Double gate before it can run:
+# reset stops the stack and recreates it fresh — the DATA SURVIVES:
+# mongo and redis ride bind mounts on the VPS filesystem
+# (/opt/kingdoms/envs/<env>/{mongo,redis}), never docker volumes, so a
+# reset (docker compose down --volumes) nor any volume prune can wipe
+# them. Double gate before it can run:
 #   1. the env-reset roster capability (self env only; ops anywhere),
 #   2. the env itself opts in: x-kingdoms-env-resettable: true in its
 #      compose manifest (an allowlist — prod never carries the flag, and
@@ -78,7 +81,7 @@ print(data.get("x-kingdoms-env-resettable") is True)
 ' "${COMPOSE_FILE}")"
         [[ "$resettable" == "True" ]] \
             || die "reset is not allowed on this environment (no x-kingdoms-env-resettable flag in its compose manifest)"
-        log "RESETTING: stopping the stack and deleting the data volumes"
+        log "RESETTING: stopping the stack (the externalized data under /opt/kingdoms/envs/${ENVIRONMENT} survives)"
         docker compose down --volumes
         ;;
     status)
