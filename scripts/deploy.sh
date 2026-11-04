@@ -122,6 +122,31 @@ else
     log "stack not running yet (first deployment?): skipping the backup"
 fi
 
+# One-shot data migration (externalized volumes): the stores ride bind
+# mounts on the VPS filesystem (/opt/kingdoms/envs/<env>/{mongo,redis})
+# — the data survives reset-env, volume prunes and compose down -v.
+# The FIRST deploy after the switch must carry the legacy named volumes'
+# content over: with the stack stopped (a stopped mongod flushes its
+# files — a live file copy would corrupt WiredTiger), the copy is safe.
+# Runs only when the legacy volume exists AND the target dir is empty.
+DATA_ROOT="/opt/kingdoms/envs/${ENVIRONMENT}"
+_migrate_store() {
+    local name="$1" dir="$2"
+    mkdir -p "${dir}"
+    if docker volume inspect "${ENVIRONMENT}_${name}" >/dev/null 2>&1         && [[ -z "$(ls -A "${dir}" 2>/dev/null)" ]]; then
+        log "migrating ${ENVIRONMENT}_${name} -> ${dir} (one-shot, stack stopped)"
+        docker run --rm \
+            -v "${ENVIRONMENT}_${name}:/source:ro" \
+            -v "${dir}:/target" \
+            alpine:3 cp -a /source/. /target/ \
+            || die "store migration failed for ${name}: aborting (the legacy volume is untouched)"
+        log "migration done: ${dir} now holds ${name}'s data (legacy volume kept until cleaned)"
+    fi
+}
+docker compose stop kingdoms-mongo kingdoms-redis >/dev/null 2>&1 || true
+_migrate_store mongo_data "${DATA_ROOT}/mongo"
+_migrate_store redis_data "${DATA_ROOT}/redis"
+
 log "applying the stack"
 # ADR-0020 process split (kingdoms-infra#89): the stack is now four
 # Kingdoms processes (bot, core, ext-librematch, ext-aoe2lobby) plus the
