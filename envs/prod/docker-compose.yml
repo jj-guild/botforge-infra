@@ -17,8 +17,7 @@ services:
       BOT_ADMINS: ${BOT_ADMINS:-}
       # Liquipedia API contact (User-Agent) — the bot process runs the
       # panel's map import (fetch_map_seed), not only the core sync.
-      PROVIDER_CONTACT: ${PROVIDER_CONTACT:-${LIQUIPEDIA_CONTACT:-}}
-      LIQUIPEDIA_CONTACT: ${LIQUIPEDIA_CONTACT:-}
+      PROVIDER_CONTACT: ${PROVIDER_CONTACT:-}
       KINGDOMS_DEPLOY_URL: ${KINGDOMS_DEPLOY_URL:-}
       KINGDOMS_DEPLOY_LABEL: ${KINGDOMS_DEPLOY_LABEL:-}
       KINGDOMS_DEPLOY_RUN_URL: ${KINGDOMS_DEPLOY_RUN_URL:-}
@@ -90,8 +89,7 @@ services:
       # Liquipedia MediaWiki API compliance (kingdoms-services#247): the
       # map sync's User-Agent must identify the project and carry a
       # contact; non-secret GitHub environment variable (deploy-env.yml).
-      PROVIDER_CONTACT: ${PROVIDER_CONTACT:-${LIQUIPEDIA_CONTACT:-}}
-      LIQUIPEDIA_CONTACT: ${LIQUIPEDIA_CONTACT:-}
+      PROVIDER_CONTACT: ${PROVIDER_CONTACT:-}
     expose:
       - "50051"
     healthcheck:
