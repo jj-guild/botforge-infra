@@ -1,0 +1,118 @@
+# Clean the Docker resources of a test environment's runner VPS
+# (workflow_dispatch): prune (safe — dangling/unused only) or deep
+# (everything unused, volumes included). Runs ON the environment's own
+# runner, next to its containers; never deploys, never pulls, never
+# touches the pinned state (scripts/docker_clean.sh).
+#
+# Roster-gated (CONTRIBUTORS.md is the source of truth — the doc drives
+# GitHub, never the other way around): the requestor's GitHub login must
+# carry a roster entry with the env-ops capability profile — `ops`
+# anywhere, `dev` on the shared test envs, a contributor on their own
+# personal env (their roster alias names their environments). Prod is
+# NEVER cleanable from here, whatever the role.
+name: Docker clean
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: "Environment whose runner to clean (a directory under envs/)"
+        required: true
+        type: string
+      mode:
+        description: "prune (safe) or deep (everything unused, volumes included)"
+        required: false
+        type: choice
+        default: prune
+        options:
+          - prune
+          - deep
+      requestor:
+        description: "The GitHub login of the human asking (roster-gated)"
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: docker-clean-${{ inputs.environment }}
+  cancel-in-progress: false
+
+jobs:
+  clean:
+    name: ${{ inputs.mode }} (${{ inputs.environment }})
+    runs-on: ${{ fromJSON(format('["self-hosted", "kingdoms", "env-{0}"]', inputs.environment)) }}
+    environment: ${{ inputs.environment }}
+    steps:
+      - name: Resolve the environment (untrusted input, validated as data)
+        id: env
+        env:
+          INPUT_ENV: ${{ inputs.environment }}
+          INPUT_MODE: ${{ inputs.mode }}
+        run: |
+          [[ "${INPUT_ENV}" =~ ^[a-z0-9-]+$ ]] || { echo "::error::invalid environment name"; exit 1; }
+          if [[ "${INPUT_ENV}" == prod ]]; then
+            echo "::error::docker clean is never allowed on prod"
+            exit 1
+          fi
+          case "${INPUT_MODE}" in
+            prune|deep) ;;
+            *) echo "::error::invalid mode (prune|deep)"; exit 1 ;;
+          esac
+          echo "name=${INPUT_ENV}" >> "$GITHUB_OUTPUT"
+
+      - name: Roster gate (CONTRIBUTORS.md drives GitHub)
+        env:
+          REQUESTOR: ${{ inputs.requestor }}
+          ENVIRONMENT: ${{ inputs.environment }}
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          # The roster lives in kingdoms/CONTRIBUTORS.md — the source of
+          # truth for who may operate an environment. The gate resolves
+          # the requestor's login against it.
+          ROSTER="$(mktemp)"
+          gh api "repos/merlin-pinpin-org/kingdoms/contents/CONTRIBUTORS.md" \
+            --jq '.content' | base64 -d > "${ROSTER}"
+          if ! grep -qE "^\| @${REQUESTOR} \|" "${ROSTER}"; then
+            echo "::error::@${REQUESTOR} has no roster entry (kingdoms/CONTRIBUTORS.md) — docker clean denied"
+            exit 1
+          fi
+          # Extract the row: login | alias | since | cla | teams | roles | owns | scope
+          ROW="$(grep -E "^\| @${REQUESTOR} \|" "${ROSTER}")"
+          TEAMS="$(echo "${ROW}" | awk -F'|' '{print $6}')"
+          ROLES="$(echo "${ROW}" | awk -F'|' '{print $7}')"
+          OWNS="$(echo "${ROW}" | awk -F'|' '{print $8}')"
+          ALLOWED=no
+          # ops/maintainers team: clean anywhere (prod is blocked above)
+          if echo "${TEAMS}" | grep -q "maintainers\|ops"; then
+            ALLOWED=yes
+          fi
+          # dev on the shared envs (test)
+          if echo "${ROLES}" | grep -qw "dev" && [[ "${ENVIRONMENT}" == "test" ]]; then
+            ALLOWED=yes
+          fi
+          # a contributor on their own environment: the roster's Owns
+          # column names their environments; the alias is the env name
+          # convention (env-<alias> runner label, envs/<alias> dir)
+          ALIAS="$(echo "${ROW}" | awk -F'|' '{print $2}' | tr -d ' ')"
+          if [[ "${ENVIRONMENT}" == "${ALIAS}" ]]; then
+            ALLOWED=yes
+          fi
+          if [[ "${ALLOWED}" != "yes" ]]; then
+            echo "::error::@${REQUESTOR} may not clean ${ENVIRONMENT} (roster: dev on test only, self env only, or ops) — denied"
+            exit 1
+          fi
+          echo "roster gate: @${REQUESTOR} (alias ${ALIAS}) may clean ${ENVIRONMENT}"
+
+      - name: Check out the environment configuration
+        uses: actions/checkout@v4
+        with:
+          ref: deploy/${{ steps.env.outputs.name }}
+
+      - name: Clean the runner's Docker residue
+        env:
+          ENVIRONMENT: ${{ steps.env.outputs.name }}
+          MODE: ${{ inputs.mode }}
+        run: ./scripts/docker_clean.sh "${ENVIRONMENT}" "${MODE}"
