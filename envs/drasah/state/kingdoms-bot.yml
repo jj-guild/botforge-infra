@@ -7,14 +7,14 @@ deploy_url: https://github.com/merlin-pinpin-org/kingdoms-services/pull/244#issu
 deploy_kind: pr
 deploy_ref: 244
 deploy_tree_url: https://github.com/merlin-pinpin-org/kingdoms-services/tree/955b366184b188471775815018068537e18ba8cb
-deploy_ts: 1793724239
+deploy_ts: 1793795772
 deploy_commit_ts: 1793723795
 deploy_commit: 955b366184b188471775815018068537e18ba8cb
-deploy_ci_run_id: 41676946322
-deploy_ci_run_number: 1212
-deploy_ci_run_ts: 1793724154
-deployed_by: Drasahaoe (/deploy)
-deployed_at: "2026-11-03T16:43:59Z"
-source: rollback 04/11 — quarantine of the jeu-d'armes evening series (Entrée button + seigneur enrollment reports)
+deploy_ci_run_id: 
+deploy_ci_run_number: 
+deploy_ci_run_ts: 
+deployed_by: config-change-deploy (run 41830628569)
+deployed_at: "2026-11-04T12:36:12Z"
+source: drasah-config change on main (commit 759ad7c) — image unchanged
 deploy_branch: vibe/drasah/main
 deploy_pr_title: mod kingdoms
