@@ -185,7 +185,7 @@ services:
       # the providers panel shows every provider; the techtree is
       # deployed, liquipedia probes empty until it joins the stack.
       EXT_AOE2TECHTREE_URI: ${EXT_AOE2TECHTREE_URI:-kingdoms-ext-aoe2techtree:50063}
-      EXT_LQUIPEDIA_URI: ${EXT_LQUIPEDIA_URI:-}
+      EXT_LIQUIPEDIA_URI: ${EXT_LIQUIPEDIA_URI:-kingdoms-ext-liquipedia:50064}
       LOG_LEVEL: ${LOG_LEVEL:-INFO}
     expose:
       - "50071"
