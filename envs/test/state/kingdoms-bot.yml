@@ -7,14 +7,14 @@ deploy_url: https://github.com/merlin-pinpin-org/kingdoms-services/pull/304#issu
 deploy_kind: pr
 deploy_ref: 304
 deploy_tree_url: https://github.com/merlin-pinpin-org/kingdoms-services/tree/a9df659ec67536f4c9787983cac14be0336fbbf1
-deploy_ts: 1793806316
+deploy_ts: 1793872509
 deploy_commit_ts: 1793802862
 deploy_commit: a9df659ec67536f4c9787983cac14be0336fbbf1
 deploy_ci_run_id: 
 deploy_ci_run_number: 
 deploy_ci_run_ts: 
-deployed_by: config-change-deploy (run 41858618433)
-deployed_at: "2026-11-04T15:31:56Z"
-source: test-config change on main (commit 681f388) — image unchanged
+deployed_by: config-change-deploy (run 42006276980)
+deployed_at: "2026-11-05T09:55:09Z"
+source: test-config change on main (commit 38a6147) — image unchanged
 deploy_branch: vibe/merlin-refresh-c1e78a
 deploy_pr_title: chore(deploy): the merlin + test refresh point — main's head, verbatim
