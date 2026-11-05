@@ -45,9 +45,6 @@ services:
       LOG_LEVEL: ${LOG_LEVEL:-INFO}
       # ADR-0020 process split: the bot talks to svc-core over gRPC.
       CORE_URI: ${CORE_URI:-kingdoms-core:50051}
-      # The map import (the panel's Liquipedia fetch) routes through the
-      # ext-liquipedia provider process — never in-process in the bot.
-      EXT_LIQUIPEDIA_URI: ${EXT_LIQUIPEDIA_URI:-kingdoms-ext-liquipedia:50064}
     healthcheck:
       # The image HEALTHCHECK also probes /healthz; the explicit compose
       # healthcheck makes the deployment health gate (scripts/deploy.sh)
