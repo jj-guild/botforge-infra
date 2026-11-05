@@ -1,20 +1,20 @@
 # Desired state of kingdoms-bot on the merlin environment (ADR-0018).
 # Written by the deploy pipelines only (kingdoms-deployer GitHub App);
 # a push to this branch deploys this exact image.
-image: ghcr.io/merlin-pinpin-org/kingdoms-services:pr-306-20261105221835-1f3e764
-version_label: pr-306-20261105221835-1f3e764
-deploy_url: https://github.com/merlin-pinpin-org/kingdoms-services/pull/306#issuecomment-6671007725
+image: ghcr.io/merlin-pinpin-org/kingdoms-services:pr-306-20261105223522-2334ae5
+version_label: pr-306-20261105223522-2334ae5
+deploy_url: https://github.com/merlin-pinpin-org/kingdoms-services/pull/306#issuecomment-6671325123
 deploy_kind: pr
 deploy_ref: 306
-deploy_tree_url: https://github.com/merlin-pinpin-org/kingdoms-services/tree/1f3e764db631bf69b7ff95437b8cb767247cc7e3
-deploy_ts: 1793917160
-deploy_commit_ts: 1793917070
-deploy_commit: 1f3e764db631bf69b7ff95437b8cb767247cc7e3
-deploy_ci_run_id: 42120309130
-deploy_ci_run_number: 1355
-deploy_ci_run_ts: 1793917087
+deploy_tree_url: https://github.com/merlin-pinpin-org/kingdoms-services/tree/2334ae53bd7568fd1faeb4a3d34a4cd25691a866
+deploy_ts: 1793918168
+deploy_commit_ts: 1793918076
+deploy_commit: 2334ae53bd7568fd1faeb4a3d34a4cd25691a866
+deploy_ci_run_id: 42122692827
+deploy_ci_run_number: 1357
+deploy_ci_run_ts: 1793918093
 deployed_by: merlin-pinpin (/deploy)
-deployed_at: "2026-11-05T22:19:20Z"
+deployed_at: "2026-11-05T22:36:08Z"
 source: 
 deploy_branch: vibe/arch-conformity-86e552
 deploy_pr_title: Architecture conformity: the five rules hold — provider isolation, one game home, the bot touches no provider
