@@ -62,9 +62,6 @@ services:
       # The map import (the panel's Liquipedia fetch) routes through the
       # ext-liquipedia provider process — never in-process in the bot.
       EXT_LIQUIPEDIA_URI: ${EXT_LIQUIPEDIA_URI:-kingdoms-ext-liquipedia:50064}
-      # The providers panel asks EVERY provider for its own call stats:
-      EXT_AOE2LOBBY_URI: ${EXT_AOE2LOBBY_URI:-kingdoms-ext-aoe2lobby:50062}
-      EXT_AOE2TECHTREE_URI: ${EXT_AOE2TECHTREE_URI:-kingdoms-ext-aoe2techtree:50063}
       # The live dashboard + the activity feed read the game service, and
       # the profile stats ride ext-librematch (GAME_<KEY>_URI convention)
       # — the providers panel needs GAME_AOE2_URI (merlin carries them).
