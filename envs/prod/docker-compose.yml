@@ -48,9 +48,6 @@ services:
       # The map import (the panel's Liquipedia fetch) routes through the
       # ext-liquipedia provider process — never in-process in the bot.
       EXT_LIQUIPEDIA_URI: ${EXT_LIQUIPEDIA_URI:-kingdoms-ext-liquipedia:50064}
-      # The providers panel asks EVERY provider for its own call stats:
-      EXT_AOE2LOBBY_URI: ${EXT_AOE2LOBBY_URI:-kingdoms-ext-aoe2lobby:50062}
-      EXT_AOE2TECHTREE_URI: ${EXT_AOE2TECHTREE_URI:-kingdoms-ext-aoe2techtree:50063}
     healthcheck:
       # The image HEALTHCHECK also probes /healthz; the explicit compose
       # healthcheck makes the deployment health gate (scripts/deploy.sh)
