@@ -59,9 +59,6 @@ services:
       LOG_LEVEL: ${LOG_LEVEL:-INFO}
       # ADR-0020 process split: the bot talks to svc-core over gRPC.
       CORE_URI: ${CORE_URI:-kingdoms-core:50051}
-      # The map import (the panel's Liquipedia fetch) routes through the
-      # ext-liquipedia provider process — never in-process in the bot.
-      EXT_LIQUIPEDIA_URI: ${EXT_LIQUIPEDIA_URI:-kingdoms-ext-liquipedia:50064}
       # The live dashboard + the activity feed read the game service, and
       # the profile stats ride ext-librematch (GAME_<KEY>_URI convention)
       # — the providers panel needs GAME_AOE2_URI (merlin carries them).
