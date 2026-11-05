@@ -66,9 +66,6 @@ services:
       # The game service (svc-aoe2): the live dashboard + the activity
       # feed read it (GAME_<KEY>_URI convention).
       GAME_AOE2_URI: ${GAME_AOE2_URI:-kingdoms-game-aoe2:50071}
-      # The map import (the panel's Liquipedia fetch) routes through the
-      # ext-liquipedia provider process — never in-process in the bot.
-      EXT_LIQUIPEDIA_URI: ${EXT_LIQUIPEDIA_URI:-kingdoms-ext-liquipedia:50064}
     healthcheck:
       # The image HEALTHCHECK also probes /healthz; the explicit compose
       # healthcheck makes the deployment health gate (scripts/deploy.sh)
