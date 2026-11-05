@@ -48,6 +48,9 @@ services:
       # The map import (the panel's Liquipedia fetch) routes through the
       # ext-liquipedia provider process — never in-process in the bot.
       EXT_LIQUIPEDIA_URI: ${EXT_LIQUIPEDIA_URI:-kingdoms-ext-liquipedia:50064}
+      # The providers panel asks EVERY provider for its own call stats:
+      EXT_AOE2LOBBY_URI: ${EXT_AOE2LOBBY_URI:-kingdoms-ext-aoe2lobby:50062}
+      EXT_AOE2TECHTREE_URI: ${EXT_AOE2TECHTREE_URI:-kingdoms-ext-aoe2techtree:50063}
     healthcheck:
       # The image HEALTHCHECK also probes /healthz; the explicit compose
       # healthcheck makes the deployment health gate (scripts/deploy.sh)
@@ -212,7 +215,9 @@ services:
       MONGO_DB: ${MONGO_DB:-kingdoms}
       # DEBUG until the Liquipedia 429s are diagnosed: the 429 handler
       # logs the request URL + headers and the response rate-limit headers.
-      LOG_LEVEL: ${LOG_LEVEL:-DEBUG}
+      # HARDCODED: the deploy workflow exports LOG_LEVEL=INFO, which
+      # overrode the ${LOG_LEVEL:-DEBUG} default.
+      LOG_LEVEL: DEBUG
     expose:
       - "50064"
     healthcheck:
