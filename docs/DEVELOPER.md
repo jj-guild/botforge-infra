@@ -81,12 +81,7 @@ Deployment is **GitOps-driven**: changes to the state branches are applied
 by CI/CD, never by hand on the VPS. Deploy scripts must stay idempotent and
 support rollback (`deploy.sh`, database restore via `restore_db.sh`).
 
-## Workflow pitfalls (learned the hard way) — this repo's troubleshooting section
-
-The binding policy lives in kingdoms CONVENTIONS.md, *Troubleshooting
-is part of the fix*: every fixed incident ships its regression check
-and a dated entry here (symptom → root cause → fix → the check that
-guards it), newest first.
+## Workflow pitfalls (learned the hard way)
 
 - **Never rename a workflow or a workflow job that backs a required status
   check.** GitHub rulesets match check contexts by **exact name**: the
