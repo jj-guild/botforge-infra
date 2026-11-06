@@ -6,6 +6,11 @@
 #
 # reset recreates the stack; the externalized data (bind mounts on
 # the VPS filesystem) survives. Double gate:
+#
+# wipe-liquipedia-cache drops ONLY the provider's cache tables
+# (liquipedia_maps, liquipedia_pages) — a surgical fix for stale
+# descriptors; the next maps sync re-fetches fresh. No other data
+# is touched (bindings, pools, matches live on).
 #   1. the env-reset roster capability (self env only; ops anywhere) —
 #      and never prod, for any role, no approval path;
 #   2. the env's compose manifest opts in via x-kingdoms-env-resettable
@@ -29,6 +34,7 @@ on:
           - stop
           - restart
           - reset
+          - wipe-liquipedia-cache
       environment:
         description: "Environment to control (a directory under envs/)"
         required: true
