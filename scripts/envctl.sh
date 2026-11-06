@@ -18,7 +18,7 @@ set -Eeuo pipefail
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 mapfile -t ENVIRONMENTS < <(cd "${REPO_ROOT}/envs" && ls -d */ 2>/dev/null | tr -d '/')
 [[ ${#ENVIRONMENTS[@]} -gt 0 ]] || { echo "ERROR: no environment found under envs/" >&2; exit 1; }
-COMMANDS=(start stop restart status reset wipe-liquipedia-cache)
+COMMANDS=(start stop restart status reset clear-db)
 
 ENVIRONMENT="${1:-}"
 COMMAND="${2:-}"
@@ -64,19 +64,24 @@ case "${COMMAND}" in
         log "restarting the stack (no pull, no recreate)"
         docker compose restart
         ;;
-    wipe-liquipedia-cache)
-        # SURGICAL cache wipe (owner direction 2026-11-06): the liquipedia
-        # provider's own tables carry descriptors fetched by the buggy-era
-        # pipeline (missing images/traits). The wipe drops ONLY those two
-        # collections — the next maps sync re-fetches everything fresh
-        # through the current pipeline. No other data is touched.
-        log "WIPING the liquipedia cache tables (liquipedia_maps, liquipedia_pages)"
-        docker compose exec -T kingdoms-mongo mongosh --quiet --eval '
-            const db = db.getSiblingDB("kingdoms");
-            const maps = db.getCollection("liquipedia_maps").drop();
-            const pages = db.getCollection("liquipedia_pages").drop();
-            print("liquipedia_maps dropped: " + maps + ", liquipedia_pages dropped: " + pages);
-        '
+    clear-db)
+        # Generic collection wipe (owner direction 2026-11-06): drops ONLY
+        # the named collections. The names ride the CLEAR_COLLECTIONS env
+        # var (validated ^[a-zA-Z0-9_]+$ each — no shell/Mongo injection);
+        # the roster's env-control capability gates who may call, and the
+        # collections are data, never code.
+        [[ -n "${CLEAR_COLLECTIONS:-}" ]] || die "clear-db needs at least one collection name"
+        mapfile -t COLLECTIONS <<< "$(echo "${CLEAR_COLLECTIONS}" | tr ' ' '\n')"
+        for col in "${COLLECTIONS[@]}"; do
+            [[ "$col" =~ ^[a-zA-Z0-9_]+$ ]] || die "invalid collection name: $col"
+        done
+        log "CLEARING collections: ${COLLECTIONS[*]}"
+        for col in "${COLLECTIONS[@]}"; do
+            docker compose exec -T kingdoms-mongo mongosh --quiet --eval "
+                const dropped = db.getSiblingDB('kingdoms').getCollection('${col}').drop();
+                print('${col} dropped: ' + dropped);
+            "
+        done
         ;;
     reset)
         # Allowlist: only manifests carrying x-kingdoms-env-resettable: true.
