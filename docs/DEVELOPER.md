@@ -38,6 +38,15 @@ protected (`PROTECTED_ENVS`): PR deploys never target it; only released
 `vX.Y.Z` images are pinned there. See
 [ENVIRONMENTS.md](ENVIRONMENTS.md).
 
+**Pre-1.0 directions (developer, 2026-11-06 session):** the durable data
+stores (MongoDB, Redis) move to the managed external clusters — the
+compose stops carrying them in test and prod, the daily dump targets the
+clusters and a restore drill is rehearsed (issue #127); and the bot
+scales to **N bot containers from the same image** (at least 3 in test
+and prod), each loading its mod set from a `KINGDOMS_MODS` environment
+variable — the environment model above stays unchanged, only the number
+of bot services per env grows.
+
 ## Checks
 
 Anyone can run the local checks with a public clone, no credentials:

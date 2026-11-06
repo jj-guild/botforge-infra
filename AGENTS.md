@@ -48,7 +48,7 @@ for the Kingdoms Discord bot platform.
   workflow, and a useful improvised command is committed ("learned").
   Humans on GitHub only merge PRs and approve prod deploys
   (+ one-time bootstrapping) — see the kingdoms
-  [Automate or learn](https://github.com/merlin-pinpin-org/kingdoms/blob/main/docs/SKILLS/automate-or-learn.md)
+  [Automate or learn](https://github.com/merlin-pinpin-org/kingdoms/blob/main/.agents/skills/automate-or-learn/SKILL.md)
   skill and CONVENTIONS.md (*Human GitHub scope*, *Everything is
   automation*).
 - **PR merges, cowboy mode, branch cleanup and user-branch rules are
