@@ -7,10 +7,10 @@
 # reset recreates the stack; the externalized data (bind mounts on
 # the VPS filesystem) survives. Double gate:
 #
-# wipe-liquipedia-cache drops ONLY the provider's cache tables
-# (liquipedia_maps, liquipedia_pages) — a surgical fix for stale
-# descriptors; the next maps sync re-fetches fresh. No other data
-# is touched (bindings, pools, matches live on).
+# clear-db drops ONLY the NAMED collections (validated names, the
+# roster's env-control capability gates the caller) — a surgical
+# wipe: /clear-db liquipedia_maps liquipedia_pages. Everything
+# else lives on.
 #   1. the env-reset roster capability (self env only; ops anywhere) —
 #      and never prod, for any role, no approval path;
 #   2. the env's compose manifest opts in via x-kingdoms-env-resettable
@@ -34,10 +34,14 @@ on:
           - stop
           - restart
           - reset
-          - wipe-liquipedia-cache
+          - clear-db
       environment:
         description: "Environment to control (a directory under envs/)"
         required: true
+        type: string
+      collections:
+        description: "clear-db only: the collections to drop (space-separated)"
+        required: false
         type: string
 
 permissions:
@@ -75,5 +79,6 @@ jobs:
         env:
           ENVIRONMENT: ${{ steps.env.outputs.name }}
           COMMAND: ${{ inputs.command }}
+          CLEAR_COLLECTIONS: ${{ inputs.collections }}
           DISCORD_TOKEN: ${{ secrets.DISCORD_TOKEN }}
         run: ./scripts/envctl.sh "${ENVIRONMENT}" "${COMMAND}"
