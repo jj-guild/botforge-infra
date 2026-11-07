@@ -38,7 +38,7 @@ permissions:
 jobs:
   maintain:
     name: Reclaim runner disk (${{ matrix.env }})
-    runs-on: ["self-hosted", "kingdoms", "env-${{ matrix.env }}"]
+    runs-on: ${{ fromJSON(format('["self-hosted", "kingdoms", "env-{0}"]', matrix.env)) }}
     timeout-minutes: 15
     concurrency:
       group: env-maintenance-${{ matrix.env }}
