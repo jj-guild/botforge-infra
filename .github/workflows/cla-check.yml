@@ -1,11 +1,18 @@
 name: CLA Check
-
-# Lightweight CLA check: maintainers (repo collaborators/owner) are exempt.
-# External contributors must acknowledge the CLA by commenting `/cla` on the
-# PR (or by checking the CLA box in the PR template, which requires a
-# subsequent `/cla` comment for the automated check).
-# The `/cla` comment is the recorded acknowledgment.
-
+# Roster-driven CLA check (email process — see CLA.md and the roster):
+# a contributor signs the CLA and emails it to a maintainer; the
+# maintainer's roster PR (cla: accepted) is the recorded acceptance.
+# This check reads CONTRIBUTORS.md on kingdoms main and verifies the PR
+# author has an accepted, DATED CLA. The /cla comment flow is gone —
+# the roster is the only record. Job name must stay `cla` exactly: the
+# main ruleset matches the required check context by name.
+#
+# Rules:
+# - Agent sessions (the vibe agent) are whitelisted: they author or
+#   co-author commits on behalf of a rostered human, whose CLA is
+#   checked by the roster entry of the PR author / co-authors.
+# - A human passes only with `accepted <date>` in the roster (the
+#   signature date is mandatory); anything else blocks the PR.
 on:
   pull_request_target:
     types: [opened, synchronize, reopened]
@@ -18,39 +25,59 @@ jobs:
   cla:
     runs-on: ubuntu-latest
     steps:
-      - name: Check CLA acknowledgment
-        uses: actions/github-script@v7
+      - name: Check out the roster (kingdoms main — the CLA record)
+        uses: actions/checkout@v4
         with:
-          script: |
-            const exempt = context.payload.pull_request.author_association === "OWNER"
-              || context.payload.pull_request.author_association === "COLLABORATOR"
-              || context.payload.pull_request.author_association === "MEMBER";
+          repository: merlin-pinpin-org/kingdoms
+          ref: main
+          sparse-checkout: |
+            CONTRIBUTORS.md
+            .github/workflows/scripts/roster.py
 
-            if (exempt) {
-              core.info("Maintainer PR — CLA not required.");
-              return;
-            }
+      - name: Verify the PR CLA against the roster (agent whitelisted, humans need a dated accepted CLA)
+        run: |
+          set -euo pipefail
+          author="${{ github.event.pull_request.user.login }}"
+          python3 - "$author" <<'PY'
+          import io, json, os, re, subprocess, sys
+          sys.path.insert(0, ".github/workflows/scripts")
+          from roster import parse_roster
 
-            const author = context.payload.pull_request.user.login;
-            const comments = await github.rest.issues.listComments({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              issue_number: context.issue.number,
-              per_page: 100,
-            });
+          def load_agent_whitelist(path="CONTRIBUTORS.md"):
+              """Parse the '## Agent whitelist' table — the single source of truth."""
+              section, entries = False, set()
+              for line in io.open(path, encoding="utf-8"):
+                  if line.startswith("## "):
+                      section = line[3:].strip().startswith("Agent whitelist")
+                      continue
+                  if section and line.startswith("|") and not line.startswith("| ---") and "Identity" not in line:
+                      ident = line.strip().strip("|").split("|")[0].strip().strip("`")
+                      if ident:
+                          entries.add(ident)
+              return entries
 
-            const accepted = comments.data.some(
-              (c) => c.user.login === author && /^\/cla\b/i.test(c.body.trim())
-            );
+          author = sys.argv[1]
+          roster = parse_roster("CONTRIBUTORS.md")
+          AGENT_WHITELIST = load_agent_whitelist()
 
-            if (!accepted) {
-              await github.rest.issues.createComment({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                issue_number: context.issue.number,
-                body: `Hi @${author}, thank you for the PR! Before it can be merged, please accept the [CLA](../${context.repo.repo}/blob/main/CLA.md) by commenting \`/cla\` on this pull request.`,
-              });
-              core.setFailed("CLA not accepted: the PR author must comment /cla.");
-            } else {
-              core.info(`CLA accepted by @${author}.`);
-            }
+          def cla_ok(login):
+              person = roster.get(login)
+              if not person:
+                  return False, f"no roster entry (CONTRIBUTORS.md)"
+              m = re.match(r"accepted\s+(\S+)", person.cla, re.IGNORECASE)
+              if not m:
+                  return False, f"CLA on record but not dated: '{person.cla}' — the signature date is mandatory"
+              return True, f"CLA accepted {m.group(1)}: {person.alias}"
+
+          # The PR author is checked first; agent logins are whitelisted.
+          if author in AGENT_WHITELIST or author == "github-actions[bot]":
+              print(f"PR author is an agent session ({author}) — whitelisted; the human behind it carries the CLA.")
+              sys.exit(0)
+          ok, why = cla_ok(author)
+          if ok:
+              print(f"PR author: {why}")
+              sys.exit(0)
+          print(f"::error::PR author {author}: {why}.")
+          print("::error::Email the signed CLA (CLA.md in the kingdoms repo) to a maintainer — the maintainer's roster PR records 'accepted <date>'; there is no comment flow.")
+          sys.exit(1)
+          PY
