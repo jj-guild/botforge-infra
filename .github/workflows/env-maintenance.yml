@@ -72,6 +72,6 @@ jobs:
             existing="$(gh issue list --state open --search "in:title \"${title}\"" --json number --jq 'length')"
             if [[ "${existing}" == "0" ]]; then
               gh issue create --title "${title}" \
-                --body "The scheduled environment maintenance reclaimed what it could but `df /` still reports ${use}% on the `${ENV_NAME}` runner. Inspect the VPS (`docker system df`, `du -x /opt/kingdoms`) and clean or enlarge manually. Maintenance run: https://github.com/merlin-pinpin-org/kingdoms-infra/actions/runs/${{ github.run_id }}"
+                --body "The scheduled environment maintenance reclaimed what it could but `df /` still reports ${use}% on the ${ENV_NAME} runner. Inspect the VPS ('docker system df', 'du -x /opt/kingdoms') and clean or enlarge manually. Maintenance run: https://github.com/merlin-pinpin-org/kingdoms-infra/actions/runs/${{ github.run_id }}"
             fi
           fi
