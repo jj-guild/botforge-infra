@@ -172,6 +172,9 @@ services:
       # player_state collection) — the panels read a snapshot, the
       # requests never query the providers.
       MONGO_URI: mongodb://kingdoms-mongo:27017
+      # the content docs' cache-aside (the sync's write-through lands
+      # here — the reads and the stores share ONE Redis):
+      REDIS_URI: redis://kingdoms-redis:6379
       MONGO_DB: ${MONGO_DB:-kingdoms}
       EXT_AOE2LOBBY_URI: ${EXT_AOE2LOBBY_URI:-kingdoms-ext-aoe2lobby:50062}
       EXT_LIBREMATCH_URI: ${EXT_LIBREMATCH_URI:-kingdoms-ext-librematch:50061}
