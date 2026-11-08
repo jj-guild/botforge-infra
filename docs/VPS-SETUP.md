@@ -1,5 +1,7 @@
 # VPS setup guide — cloud-init bootstrap
 
+> **Short on time?** [VPS-INSTALL-QUICKSTART.md](VPS-INSTALL-QUICKSTART.md) is the copy-paste version (OVH Public Cloud included).
+
 This guide turns a fresh VPS into a fully automated GitOps deployment
 target **at first boot**, via one cloud-init user-data block. It is
 written as commands to copy-paste: it assumes you already know ssh,
