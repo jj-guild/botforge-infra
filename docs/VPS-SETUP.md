@@ -43,8 +43,8 @@ Create the instance and paste the following block in the provider's
 **user data / cloud-init** field, then boot. Replace `2.337.0` with the
 runner version currently shown on the Runners page.
 
-> **No user-data field in the provider UI? (e.g. the OVH reinstall
-> window has none)** — boot the VPS, SSH as root, and run the flat
+> **No user-data field in the provider UI? (OVH Public Cloud instance
+> creation has none)** — boot the VPS, SSH as root, and run the flat
 > equivalent instead (generated from this block, kept in sync):
 > ```bash
 > curl -fsSL https://raw.githubusercontent.com/jj-guild/botforge-infra/main/scripts/vps/bootstrap-flat.sh | sudo bash
