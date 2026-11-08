@@ -43,12 +43,26 @@ Create the instance and paste the following block in the provider's
 **user data / cloud-init** field, then boot. Replace `2.337.0` with the
 runner version currently shown on the Runners page.
 
-> **No user-data field in the provider UI? (OVH Public Cloud instance
-> creation has none)** — boot the VPS, SSH as root, and run the flat
-> equivalent instead (generated from this block, kept in sync):
-> ```bash
-> curl -fsSL https://raw.githubusercontent.com/jj-guild/botforge-infra/main/scripts/vps/bootstrap-flat.sh | sudo bash
-> ```
+> **No user-data field in the provider UI? (OVH Public Cloud Control
+> Panel has none — it is OpenStack underneath)** — two options:
+> 1. **Create the instance via the OpenStack CLI/API with `--user-data`**
+>    (OVH guide KB0050912). RC credentials: Manager → Public Cloud →
+>    project → *OpenStack* → download the RC file, `source openrc.sh`,
+>    then:
+>    ```bash
+>    # cloud-init.yaml = the block above (first line #cloud-config)
+>    openstack server create --flavor <flavor> --image "Debian 13" \
+>      --key-name <your-key> --network Ext-Net \
+>      --user-data cloud-init.yaml botforge-vps
+>    ```
+>    (OVH API equivalent: `POST /cloud/project/{id}/instance` with a
+>    `userData` field.) Note: user-data is **creation-time only** — a
+>    reset/rebuild does not re-inject it.
+> 2. **Boot plain, then run the flat fallback over SSH** (generated from
+>    this block, kept in sync):
+>    ```bash
+>    curl -fsSL https://raw.githubusercontent.com/jj-guild/botforge-infra/main/scripts/vps/bootstrap-flat.sh | sudo bash
+>    ```
 > Then continue at step 2 (runner registration).
 
 ```yaml
