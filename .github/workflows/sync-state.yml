@@ -110,14 +110,16 @@ jobs:
             echo "deploy/${{ matrix.env }} already contains main — nothing to sync."
             exit 0
           fi
-          git merge origin/main --no-edit -m "deploy(${{ matrix.env }}): sync state branch with main" || {
-            # The rename of the state file (kingdoms-bot.yml → botforge-bot.yml)
-            # can conflict with the branch's own pin: retry resolving content
-            # conflicts in favor of main's tree, the preserved pin is restored
-            # by the next step either way.
+          msg="deploy(${{ matrix.env }}): sync state branch with main"
+          if ! git merge origin/main --no-edit -m "$msg"; then
+            # The state-file rename (kingdoms-bot.yml → botforge-bot.yml) can
+            # raise a modify/delete conflict that -X cannot resolve. Fall back
+            # to the ADR-0018 invariant: a state branch is exactly main + its
+            # own pinned state file (restored by the next step).
             git merge --abort
-            git merge origin/main --no-edit -X theirs -m "deploy(${{ matrix.env }}): sync state branch with main"
-          }
+            git read-tree -u --reset origin/main
+            git commit -m "$msg"
+          fi
       - name: Restore the pinned state at its new path (rename rides the sync)
         if: env.skip != 'true'
         run: |
