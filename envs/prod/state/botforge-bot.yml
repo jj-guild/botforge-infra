@@ -1,5 +1,5 @@
 # Desired state of botforge-bot on the prod environment (ADR-0018).
-# Written by the deploy pipelines only (kingdoms-deployer GitHub App);
+# Written by the deploy pipelines only (jj-guild-deployer GitHub App);
 # a push to this branch deploys this exact image.
 image: ghcr.io/jj-guild/botforge-services:v0.1.2
 version_label: v0.1.2

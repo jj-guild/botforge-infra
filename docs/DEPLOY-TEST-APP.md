@@ -24,7 +24,7 @@ As the developer (Settings → Developer settings → [New GitHub App](https://g
 
 | Field | Value |
 | --- | --- |
-| GitHub App name | `kingdoms-deployer` |
+| GitHub App name | `jj-guild-deployer` |
 | Homepage URL | `https://github.com/jj-guild/botforge` |
 | **Repository permissions** | **Actions: Read and write** + **Contents: Read and write** (state-branch commits, ADR-0018) |
 | Where can this app be installed | **Only on this account** |
@@ -40,7 +40,7 @@ is not used here.
 
 ## 2. Install it on botforge-infra only
 
-Install the app (`kingdoms-deployer`) on `jj-guild/botforge-infra`
+Install the app (`jj-guild-deployer`) on `jj-guild/botforge-infra`
 only — leave every other repository unchecked, especially
 `botforge-services` and `botforge`.
 
@@ -85,7 +85,7 @@ manually from the Actions tab.
 > organization**. The repositories moved from the personal account
 > `merlin-pinpin` to the `jj-guild` organization, and the app has
 > since recorded activity here (it dispatched the Pin state run), so the
-> actor picker now lists `kingdoms-deployer[bot]`. On the personal-account
+> actor picker now lists `jj-guild-deployer[bot]`. On the personal-account
 > repository the picker did not list the app and this policy was deferred
 > — this note records why.
 
@@ -94,7 +94,7 @@ Actions → Policies → New policy):
 
 - **Name**: `deploy-test-dispatch`;
 - **Target**: the workflow `.github/workflows/deploy.yml`;
-- **Actor rule** (allow list): **`kingdoms-deployer[bot]`** only — add the
+- **Actor rule** (allow list): **`jj-guild-deployer[bot]`** only — add the
   human administrators too if they want a manual fallback (otherwise
   nobody can dispatch the workflow by hand);
 - **Event rule** (allow list): `workflow_dispatch` and `push` — `push`
@@ -114,12 +114,12 @@ app would break `/deploy` entirely.
 > (checked 2026-09, on an organization repository, with the app having
 > recorded dispatch activity) does not offer third-party GitHub Apps in
 > the allowed-actors list — only users, repository roles, and
-> GitHub-owned bots. If it does not list `kingdoms-deployer[bot]`, create
+> GitHub-owned bots. If it does not list `jj-guild-deployer[bot]`, create
 > or edit the policy through the **REST API** instead of the UI, which
 > accepts bot identities by ID:
 >
 > ```bash
-> # Bot id: kingdoms-deployer[bot] = 332499271
+> # Bot id: jj-guild-deployer[bot] = 332499271
 > gh api --method POST /repos/jj-guild/botforge-infra/actions/policies \
 >   -f name=deploy-test-dispatch \
 >   -f enforcement=active \
@@ -129,7 +129,7 @@ app would break `/deploy` entirely.
 > ```
 >
 > Then verify with a `/deploy`: the run must still be created by
-> `kingdoms-deployer[bot]` — an actor list without the app breaks the
+> `jj-guild-deployer[bot]` — an actor list without the app breaks the
 > `/deploy` flow. To adjust the policy later, use
 > `gh api /repos/jj-guild/botforge-infra/actions/policies` to list
 > the policy ids and the update endpoint on the same API.
@@ -169,6 +169,6 @@ anonymous and fails closed.
 1. Comment `/deploy` on any PR of `botforge-services`.
 2. The PR gets a 🚀 comment, then a ✅ one.
 3. A **Pin state** run followed by a **Deploy environment** run appear in
-   this repository's Actions (triggered by `kingdoms-deployer[bot]`),
+   this repository's Actions (triggered by `jj-guild-deployer[bot]`),
    run on the self-hosted runner, and the bot on the test VPS restarts
    with the PR image.

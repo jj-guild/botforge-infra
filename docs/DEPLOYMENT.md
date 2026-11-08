@@ -9,7 +9,7 @@ a pinned state on its `deploy/<env>` state branch (ADR-0018):
 
 | Environment | Manifest | Purpose |
 | ----------- | -------- | ------- |
-| `test` | `envs/test/docker-compose.yml` | VPS; deployed on demand (`/deploy` PR comment via the kingdoms-deployer GitHub App, or test-config change on main). Commit-SHA-tagged images | validation environment |
+| `test` | `envs/test/docker-compose.yml` | VPS; deployed on demand (`/deploy` PR comment via the jj-guild-deployer GitHub App, or test-config change on main). Commit-SHA-tagged images | validation environment |
 | `prod` | `envs/prod/docker-compose.yml` | VPS; released `vX.Y.Z` images only, promoted after validation on `test` and approved by the `prod` environment reviewers |
 
 Each environment runs the same services (ADR-0020 process split,

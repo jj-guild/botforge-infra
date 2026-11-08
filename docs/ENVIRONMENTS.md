@@ -152,7 +152,7 @@ git push origin deploy/<env>
 ```
 
 The sync push deploys with the unchanged pinned state — safe by design.
-The `sync-state` workflow pushes with the `kingdoms-deployer` App token —
+The `sync-state` workflow pushes with the `jj-guild-deployer` App token —
 the same actor the deploy pipelines use to write the pinned state, and the
 only non-admin actor in the `deploy/*` ruleset bypass lists.
 
@@ -227,7 +227,7 @@ policy gates **who may trigger the workflows** (see
 | Deployment branch policy | `deploy/test` (state branch, ADR-0018), `main`, `vibe/**` | `deploy/prod` (state branch, ADR-0018) |
 | Required reviewers | — | `merlin-pinpin` (approval before any prod job consumes prod secrets) |
 | Wait timer | — | — |
-| Actions policy (who may trigger the workflow) | `deploy-test-dispatch`: `kingdoms-deployer[bot]` + admins (via REST API — the UI picker does not list third-party apps); events `workflow_dispatch`, `push` | — (prod deploys are state-branch pushes written by the release pipeline only; the `prod` environment reviewers gate the Deploy environment run) |
+| Actions policy (who may trigger the workflow) | `deploy-test-dispatch`: `jj-guild-deployer[bot]` + admins (via REST API — the UI picker does not list third-party apps); events `workflow_dispatch`, `push` | — (prod deploys are state-branch pushes written by the release pipeline only; the `prod` environment reviewers gate the Deploy environment run) |
 
 Reading the matrix:
 
@@ -254,7 +254,7 @@ branch on this repository):
    (`pr-<id>-<timestamp>-<sha>`) from the PR head.
 3. A `/deploy` comment on the PR builds/publishes that exact image and
    dispatches this repository's **Pin state** workflow with it via the
-   `kingdoms-deployer` GitHub App (ephemeral token, Actions: write only).
+   `jj-guild-deployer` GitHub App (ephemeral token, Actions: write only).
 4. The pinned state push triggers the deploy chain on the self-hosted
    runner (test VPS); it pulls the
    authenticated image (package access: botforge-infra has role Read on the
