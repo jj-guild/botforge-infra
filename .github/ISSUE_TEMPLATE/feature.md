@@ -15,7 +15,7 @@ labels: enhancement
 
 ## Context
 
-<!-- Decisions made with the game designer, links to kingdoms docs (ADRs,
+<!-- Decisions made with the game designer, links to botforge docs (ADRs,
      architecture pages), relevant existing issues. Issues are self-contained:
      a future session has no conversation memory. -->
 
@@ -37,7 +37,7 @@ labels: enhancement
 
 **Depends on:**
 
-- [ ] #N (same repo) or merlin-pinpin-org/kingdoms-services#N (cross repo)
+- [ ] #N (same repo) or jj-guild/botforge-services#N (cross repo)
 
 ## Related
 

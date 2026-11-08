@@ -5,7 +5,7 @@
 # GitHub itself serializes them — a pin can never race a sync (the
 # historical "cannot lock ref" failure). The pin is triggered by a
 # repository_dispatch from a deploy pipeline (e.g. the /deploy-test
-# workflow of kingdoms-services, authenticated as the kingdoms-deployer
+# workflow of botforge-services, authenticated as the kingdoms-deployer
 # App, whose token is the only non-admin actor allowed to write the state
 # branches); the client passes the whole state as client_payload, so the
 # pinned values cannot drift from what the pipeline built.
@@ -59,7 +59,7 @@ jobs:
           # emitters sit at exactly 10, so an over-cap dispatch fails with
           # a 422 before reaching this workflow. Say it here too: if this
           # check ever fires, an emitter gained a property (see
-          # kingdoms-services scripts/check_pin_payloads.sh, the CI guard).
+          # botforge-services scripts/check_pin_payloads.sh, the CI guard).
           count="$(jq 'keys | length' <<<"$PAYLOAD")"
           if (( count > 10 )); then
             echo "::error::the pin-state dispatch payload carries ${count} properties — the GitHub API cap is 10; compose the extra fields here instead of passing them"
@@ -76,20 +76,20 @@ jobs:
         id: app-token
         uses: actions/create-github-app-token@v3
         with:
-          app-id: ${{ secrets.KINGDOMS_DEPLOYER_APP_ID }}
-          private-key: ${{ secrets.KINGDOMS_DEPLOYER_APP_PRIVATE_KEY }}
-          owner: merlin-pinpin-org
-          repositories: kingdoms-infra
+          app-id: ${{ secrets.BOTFORGE_DEPLOYER_APP_ID }}
+          private-key: ${{ secrets.BOTFORGE_DEPLOYER_APP_PRIVATE_KEY }}
+          owner: jj-guild
+          repositories: botforge-infra
       - name: Configure git
         run: |
           git config --global user.name "kingdoms-deployer[bot]"
-          git config --global user.email "noreply@merlin-pinpin.org"
+          git config --global user.email "noreply@jj-guild.org"
       - name: Check whether the state branch exists
         id: state-branch
         env:
           APP_TOKEN: ${{ steps.app-token.outputs.token }}
         run: |
-          if git ls-remote "https://x-access-token:${APP_TOKEN}@github.com/merlin-pinpin-org/kingdoms-infra.git" "refs/heads/deploy/${{ env.env_name }}" | grep -q .; then
+          if git ls-remote "https://x-access-token:${APP_TOKEN}@github.com/jj-guild/botforge-infra.git" "refs/heads/deploy/${{ env.env_name }}" | grep -q .; then
             echo "exists=true" >> "$GITHUB_OUTPUT"
           else
             echo "exists=false" >> "$GITHUB_OUTPUT"
@@ -119,15 +119,21 @@ jobs:
           else
             git merge origin/main --no-edit -m "deploy(${env_name}): sync state branch with main"
           fi
-          state_file="envs/${env_name}/state/kingdoms-bot.yml"
-          # One-time migration (envs/ layout): state branches created before
-          # the move still carry the file at deploy/state/<env>/. Move it
-          # in the same commit as the pin, so the merge from main (which no
-          # longer creates deploy/state/) cannot lose it.
-          if [[ ! -f "$state_file" && -f "deploy/state/${env_name}/kingdoms-bot.yml" ]]; then
-            mkdir -p "envs/${env_name}/state"
-            git mv "deploy/state/${env_name}/kingdoms-bot.yml" "$state_file"
-            rmdir "deploy/state/${env_name}" "deploy/state" 2>/dev/null || true
+          state_file="envs/${env_name}/state/botforge-bot.yml"
+          # One-time migrations: state branches created before the envs/
+          # layout still carry the file at deploy/state/<env>/, and branches
+          # synced before the botforge rename still carry it under the old
+          # kingdoms-bot.yml name. Move it in the same commit as the pin, so
+          # the merge from main cannot lose it.
+          if [[ ! -f "$state_file" ]]; then
+            for legacy in "envs/${env_name}/state/kingdoms-bot.yml" "deploy/state/${env_name}/kingdoms-bot.yml"; do
+              if [[ -f "$legacy" ]]; then
+                mkdir -p "envs/${env_name}/state"
+                git mv "$legacy" "$state_file"
+                rmdir "deploy/state/${env_name}" "deploy/state" 2>/dev/null || true
+                break
+              fi
+            done
           fi
           if [[ ! -f "$state_file" ]]; then
             if [[ "${STATE_BRANCH_EXISTS}" == "true" ]]; then
@@ -151,9 +157,9 @@ jobs:
           # tag, resolved here via the GitHub API — the payload cap (10
           # properties) leaves no room for another field, and /status must
           # never render the tag as the commit.
-          commit_sha="$(gh api "repos/merlin-pinpin-org/kingdoms-services/commits/${commit_ref}" --jq '.sha' 2>/dev/null || true)"
+          commit_sha="$(gh api "repos/jj-guild/botforge-services/commits/${commit_ref}" --jq '.sha' 2>/dev/null || true)"
           [[ -n "$commit_sha" ]] || commit_sha="$commit_ref"
-          committed="$(gh api "repos/merlin-pinpin-org/kingdoms-services/commits/${commit_ref}" --jq '.commit.committer.date' 2>/dev/null || true)"
+          committed="$(gh api "repos/jj-guild/botforge-services/commits/${commit_ref}" --jq '.commit.committer.date' 2>/dev/null || true)"
           commit_ts=""
           [[ -n "$committed" ]] && commit_ts="$(date -u -d "$committed" +%s 2>/dev/null || true)"
           [[ -n "$commit_ts" ]] || echo "::warning::deploy_commit_ts not resolved for ${commit_ref}; the announcement renders no Committed date"
@@ -165,26 +171,26 @@ jobs:
           ci_run_number=""
           ci_run_ts=""
           if [[ -n "$ci_run_id" ]]; then
-            ci_run_number="$(gh api "repos/merlin-pinpin-org/kingdoms-services/actions/runs/${ci_run_id}" --jq '.run_number' 2>/dev/null || true)"
+            ci_run_number="$(gh api "repos/jj-guild/botforge-services/actions/runs/${ci_run_id}" --jq '.run_number' 2>/dev/null || true)"
             [[ -n "$ci_run_number" ]] || echo "::warning::CI run number not resolved for run ${ci_run_id}; /status shows the run id"
-            run_started="$(gh api "repos/merlin-pinpin-org/kingdoms-services/actions/runs/${ci_run_id}" --jq '.run_started_at' 2>/dev/null || true)"
+            run_started="$(gh api "repos/jj-guild/botforge-services/actions/runs/${ci_run_id}" --jq '.run_started_at' 2>/dev/null || true)"
             [[ -n "$run_started" ]] && ci_run_ts="$(date -u -d "$run_started" +%s 2>/dev/null || true)"
             [[ -n "$ci_run_ts" ]] || echo "::warning::CI run date not resolved for run ${ci_run_id}; the Job CI line renders no date"
           fi
-          # The PR title is composed here too (kingdoms-services deploy.yml
+          # The PR title is composed here too (botforge-services deploy.yml
           # passes ci_run instead — the /deploy run has the PR in context
           # anyway and the payload had no room for both).
           deploy_kind="$(field deploy_kind)"
           deploy_ref="$(field deploy_ref)"
           pr_title=""
           if [[ "$deploy_kind" == "pr" ]]; then
-            pr_title="$(gh api "repos/merlin-pinpin-org/kingdoms-services/pulls/${deploy_ref}" --jq '.title' 2>/dev/null || true)"
+            pr_title="$(gh api "repos/jj-guild/botforge-services/pulls/${deploy_ref}" --jq '.title' 2>/dev/null || true)"
           fi
           branch="$(field deploy_branch)"
           message="$(field message)"
           [[ -n "$message" ]] || message="deploy(${env_name}): pin $(field version_label)"
           {
-            echo "# Desired state of kingdoms-bot on the ${env_name} environment (ADR-0018)."
+            echo "# Desired state of botforge-bot on the ${env_name} environment (ADR-0018)."
             echo "# Written by the deploy pipelines only (kingdoms-deployer GitHub App);"
             echo "# a push to this branch deploys this exact image."
             echo "image: $(field image)"
@@ -207,6 +213,6 @@ jobs:
           } > "$state_file"
           git add "$state_file"
           git commit -m "$message"
-          git remote set-url origin "https://x-access-token:${APP_TOKEN}@github.com/merlin-pinpin-org/kingdoms-infra.git"
+          git remote set-url origin "https://x-access-token:${APP_TOKEN}@github.com/jj-guild/botforge-infra.git"
           git push origin HEAD:deploy/${env_name}
           echo "state pinned on deploy/${env_name}: $(field image)"

@@ -7,7 +7,7 @@
 ## Checklist
 - [ ] Code and comments in English
 - [ ] `make lint` and `make test` pass
-- [ ] Documentation updated in `kingdoms` if behavior changed
+- [ ] Documentation updated in `botforge` if behavior changed
 - [ ] No secrets committed
 - [ ] CLA accepted (external contributors)
 

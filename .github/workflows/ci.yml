@@ -41,7 +41,7 @@ jobs:
           for manifest in envs/*/docker-compose.yml; do
             echo "Validating ${manifest}"
             DISCORD_TOKEN=ci-placeholder \
-            KINGDOMS_BOT_IMAGE=ghcr.io/merlin-pinpin-org/kingdoms-services:sha-ci \
+            BOTFORGE_IMAGE=ghcr.io/jj-guild/botforge-services:sha-ci \
               docker compose -f "${manifest}" config --quiet
           done
 
@@ -52,26 +52,26 @@ jobs:
       DISCORD_TOKEN: ci-placeholder
       # The test manifest fails closed without a pinned image (ADR-0018):
       # CI boots only mongo/redis, but compose interpolation needs it.
-      KINGDOMS_BOT_IMAGE: ghcr.io/merlin-pinpin-org/kingdoms-services:sha-ci
+      BOTFORGE_IMAGE: ghcr.io/jj-guild/botforge-services:sha-ci
     steps:
       - uses: actions/checkout@v4
 
       - name: Start the test stack (bot service excluded)
         working-directory: envs/test
         run: |
-          docker compose up -d kingdoms-mongo kingdoms-redis
+          docker compose up -d botforge-mongo botforge-redis
 
       - name: Wait for MongoDB and Redis healthchecks
         working-directory: envs/test
         run: |
-          timeout 90 bash -c "until [ \"\$(docker inspect --format '{{.State.Health.Status}}' \"\$(docker compose ps -q kingdoms-mongo)\")\" = healthy ]; do sleep 3; done"
-          timeout 90 bash -c "until [ \"\$(docker inspect --format '{{.State.Health.Status}}' \"\$(docker compose ps -q kingdoms-redis)\")\" = healthy ]; do sleep 3; done"
+          timeout 90 bash -c "until [ \"\$(docker inspect --format '{{.State.Health.Status}}' \"\$(docker compose ps -q botforge-mongo)\")\" = healthy ]; do sleep 3; done"
+          timeout 90 bash -c "until [ \"\$(docker inspect --format '{{.State.Health.Status}}' \"\$(docker compose ps -q botforge-redis)\")\" = healthy ]; do sleep 3; done"
 
       - name: Smoke check from a bot-like container
         working-directory: envs/test
         run: |
-          mkdir -p /tmp/kingdoms-smoke
-          cat > /tmp/kingdoms-smoke/smoke.py <<'PY'
+          mkdir -p /tmp/botforge-smoke
+          cat > /tmp/botforge-smoke/smoke.py <<'PY'
           import os
 
           import pymongo
@@ -92,12 +92,12 @@ jobs:
           print("SMOKE TEST PASSED")
           PY
 
-          NETWORK="$(docker inspect --format '{{range $k, $v := .NetworkSettings.Networks}}{{$k}}{{end}}' "$(docker compose ps -q kingdoms-mongo)")"
+          NETWORK="$(docker inspect --format '{{range $k, $v := .NetworkSettings.Networks}}{{$k}}{{end}}' "$(docker compose ps -q botforge-mongo)")"
           echo "Stack network: ${NETWORK}"
           docker run --rm --network "${NETWORK}" \
-            -e MONGO_URI=mongodb://kingdoms-mongo:27017 \
-            -e REDIS_URI=redis://kingdoms-redis:6379 \
-            -v /tmp/kingdoms-smoke/smoke.py:/smoke.py:ro \
+            -e MONGO_URI=mongodb://botforge-mongo:27017 \
+            -e REDIS_URI=redis://botforge-redis:6379 \
+            -v /tmp/botforge-smoke/smoke.py:/smoke.py:ro \
             --entrypoint /bin/bash \
             python:3.12-slim -c 'pip install --quiet --no-input pymongo redis >/dev/null && python /smoke.py'
 
@@ -118,24 +118,24 @@ jobs:
       DISCORD_TOKEN: ci-placeholder
       # Same as the smoke job: the manifest fails closed without a pinned
       # image (ADR-0018); the round-trip boots mongo/redis only.
-      KINGDOMS_BOT_IMAGE: ghcr.io/merlin-pinpin-org/kingdoms-services:sha-ci
+      BOTFORGE_IMAGE: ghcr.io/jj-guild/botforge-services:sha-ci
     steps:
       - uses: actions/checkout@v4
 
       - name: Start the test stack (bot service excluded)
         working-directory: envs/test
         run: |
-          docker compose up -d kingdoms-mongo kingdoms-redis
+          docker compose up -d botforge-mongo botforge-redis
 
       - name: Wait for MongoDB healthcheck
         working-directory: envs/test
         run: |
-          timeout 90 bash -c "until [ \"\$(docker inspect --format '{{.State.Health.Status}}' \"\$(docker compose ps -q kingdoms-mongo)\")\" = healthy ]; do sleep 3; done"
+          timeout 90 bash -c "until [ \"\$(docker inspect --format '{{.State.Health.Status}}' \"\$(docker compose ps -q botforge-mongo)\")\" = healthy ]; do sleep 3; done"
 
       - name: Seed reference data
         working-directory: envs/test
         run: |
-          docker compose exec -T kingdoms-mongo mongosh --quiet kingdoms <<'JS'
+          docker compose exec -T botforge-mongo mongosh --quiet botforge <<'JS'
           db.users.insertMany([
             { _id: "user-1", platform: "discord", display_name: "PlayerOne", rating: 1200 },
             { _id: "user-2", platform: "discord", display_name: "PlayerTwo", rating: 980 },
@@ -143,52 +143,52 @@ jobs:
           ])
           db.guilds.insertOne({ _id: "guild-1", locale: "fr", channel_categories: { admin: "123" } })
           JS
-          docker compose exec -T kingdoms-redis redis-cli MSET workflow:wf-1:step "ask_name" workflow:wf-2:step "confirm" session:user-1 "abc123"
+          docker compose exec -T botforge-redis redis-cli MSET workflow:wf-1:step "ask_name" workflow:wf-2:step "confirm" session:user-1 "abc123"
 
       - name: Capture reference state (MongoDB and Redis)
         working-directory: envs/test
         run: |
-          echo "COUNT=$(docker compose exec -T kingdoms-mongo mongosh --quiet kingdoms --eval 'db.users.countDocuments({})')" >> "$GITHUB_ENV"
-          docker compose exec -T kingdoms-mongo mongosh --quiet kingdoms --eval 'db.users.find().sort({_id:1}).toArray()' > /tmp/reference.json
-          docker compose exec -T kingdoms-redis redis-cli --raw MGET workflow:wf-1:step workflow:wf-2:step session:user-1 > /tmp/reference-redis.txt
+          echo "COUNT=$(docker compose exec -T botforge-mongo mongosh --quiet botforge --eval 'db.users.countDocuments({})')" >> "$GITHUB_ENV"
+          docker compose exec -T botforge-mongo mongosh --quiet botforge --eval 'db.users.find().sort({_id:1}).toArray()' > /tmp/reference.json
+          docker compose exec -T botforge-redis redis-cli --raw MGET workflow:wf-1:step workflow:wf-2:step session:user-1 > /tmp/reference-redis.txt
 
       - name: Run backup
         env:
-          BACKUP_DIR: /tmp/kingdoms-backups
-        run: ./scripts/backup_db.sh test /tmp/kingdoms-backups
+          BACKUP_DIR: /tmp/botforge-backups
+        run: ./scripts/backup_db.sh test /tmp/botforge-backups
 
       - name: Wipe both stores (simulate data loss)
         working-directory: envs/test
         run: |
-          docker compose exec -T kingdoms-mongo mongosh --quiet kingdoms --eval 'db.dropDatabase()'
-          docker compose exec -T kingdoms-redis redis-cli FLUSHALL
+          docker compose exec -T botforge-mongo mongosh --quiet botforge --eval 'db.dropDatabase()'
+          docker compose exec -T botforge-redis redis-cli FLUSHALL
 
       - name: Restore the backup (MongoDB + Redis)
         run: |
-          BACKUP_ARCHIVE="$(find /tmp/kingdoms-backups -maxdepth 1 -name 'test-*.archive.gz' -printf '%T@ %p\n' | sort -rn | head -n 1 | cut -d' ' -f2-)"
+          BACKUP_ARCHIVE="$(find /tmp/botforge-backups -maxdepth 1 -name 'test-*.archive.gz' -printf '%T@ %p\n' | sort -rn | head -n 1 | cut -d' ' -f2-)"
           ./scripts/restore_db.sh test "${BACKUP_ARCHIVE}" --yes
 
       - name: Verify the restored data matches the reference
         working-directory: envs/test
         run: |
-          RESTORED_COUNT="$(docker compose exec -T kingdoms-mongo mongosh --quiet kingdoms --eval 'db.users.countDocuments({})')"
+          RESTORED_COUNT="$(docker compose exec -T botforge-mongo mongosh --quiet botforge --eval 'db.users.countDocuments({})')"
           echo "Reference count: ${COUNT}, restored count: ${RESTORED_COUNT}"
           test "${RESTORED_COUNT}" = "${COUNT}"
-          docker compose exec -T kingdoms-mongo mongosh --quiet kingdoms --eval 'db.users.find().sort({_id:1}).toArray()' > /tmp/restored.json
+          docker compose exec -T botforge-mongo mongosh --quiet botforge --eval 'db.users.find().sort({_id:1}).toArray()' > /tmp/restored.json
           diff /tmp/reference.json /tmp/restored.json
-          docker compose exec -T kingdoms-redis redis-cli --raw MGET workflow:wf-1:step workflow:wf-2:step session:user-1 > /tmp/restored-redis.txt
+          docker compose exec -T botforge-redis redis-cli --raw MGET workflow:wf-1:step workflow:wf-2:step session:user-1 > /tmp/restored-redis.txt
           diff /tmp/reference-redis.txt /tmp/restored-redis.txt
           echo "BACKUP/RESTORE ROUND-TRIP OK (MongoDB + Redis)"
 
       - name: Verify rollback script restores the latest backup
         working-directory: envs/test
         run: |
-          docker compose exec -T kingdoms-mongo mongosh --quiet kingdoms --eval 'db.users.deleteOne({_id: "user-3"})'
-          docker compose exec -T kingdoms-redis redis-cli DEL session:user-1
-          BACKUP_DIR=/tmp/kingdoms-backups "${GITHUB_WORKSPACE}/scripts/rollback.sh" test "" --yes
-          docker compose exec -T kingdoms-mongo mongosh --quiet kingdoms --eval 'db.users.find().sort({_id:1}).toArray()' > /tmp/after-rollback.json
+          docker compose exec -T botforge-mongo mongosh --quiet botforge --eval 'db.users.deleteOne({_id: "user-3"})'
+          docker compose exec -T botforge-redis redis-cli DEL session:user-1
+          BACKUP_DIR=/tmp/botforge-backups "${GITHUB_WORKSPACE}/scripts/rollback.sh" test "" --yes
+          docker compose exec -T botforge-mongo mongosh --quiet botforge --eval 'db.users.find().sort({_id:1}).toArray()' > /tmp/after-rollback.json
           diff /tmp/reference.json /tmp/after-rollback.json
-          docker compose exec -T kingdoms-redis redis-cli --raw MGET workflow:wf-1:step workflow:wf-2:step session:user-1 > /tmp/after-rollback-redis.txt
+          docker compose exec -T botforge-redis redis-cli --raw MGET workflow:wf-1:step workflow:wf-2:step session:user-1 > /tmp/after-rollback-redis.txt
           diff /tmp/reference-redis.txt /tmp/after-rollback-redis.txt
           echo "ROLLBACK RESTORE OK (MongoDB + Redis)"
 

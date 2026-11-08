@@ -1,6 +1,6 @@
 ---
 name: Documentation
-about: Document infrastructure in the kingdoms repo (source of truth)
+about: Document infrastructure in the botforge repo (source of truth)
 title: "[Docs] "
 labels: documentation
 ---
@@ -20,13 +20,13 @@ labels: documentation
 
 ## Specifications
 
-<!-- Precise scope: which kingdoms docs pages (VPS-SETUP, deployment,
+<!-- Precise scope: which botforge docs pages (VPS-SETUP, deployment,
      architecture), which sections, what diagrams -->
 
 ## Acceptance criteria
 
 <!-- Objectively verifiable: the docs pages exist, describe the real
-     behavior, and python3 scripts/validate_docs.py passes in kingdoms -->
+     behavior, and python3 scripts/validate_docs.py passes in botforge -->
 
 ## Dependencies
 
@@ -36,7 +36,7 @@ labels: documentation
 
 **Depends on:**
 
-- [ ] #N (same repo) or merlin-pinpin-org/kingdoms-services#N (cross repo)
+- [ ] #N (same repo) or jj-guild/botforge-services#N (cross repo)
 
 ## Related
 

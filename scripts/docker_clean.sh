@@ -21,7 +21,7 @@ set -euo pipefail
 
 ENVIRONMENT="${1:?usage: docker_clean.sh <environment> [prune|deep]}"
 MODE="${2:-prune}"
-RUNNER_ROOT="${RUNNER_ROOT:-/opt/kingdoms/runners}"
+RUNNER_ROOT="${RUNNER_ROOT:-/opt/botforge/runners}"
 
 if [[ "${ENVIRONMENT}" == "prod" ]]; then
   echo "::error::docker clean is never allowed on prod (ops decision, never a side effect)"
