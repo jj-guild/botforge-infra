@@ -25,7 +25,9 @@ Tracked by jj-guild/botforge-services#331 (lot 2).
 
 ## 0. Prerequisites
 
-- A VPS with **Ubuntu Server 26.04 LTS**, at least **2 GB RAM / 20 GB
+- A VPS with **Debian 13 (trixie)** (Ubuntu 26.04 LTS also works — the
+  cloud-init block auto-detects the distro for the Docker apt repo via
+  `/etc/os-release`), at least **2 GB RAM / 20 GB
   disk**, and your SSH key (any provider: OVH, Scaleway, Hetzner,
   DigitalOcean…).
 - On GitHub (`jj-guild/botforge-infra`), per environment you
@@ -62,11 +64,12 @@ write_files:
       set -Eeuo pipefail
       export DEBIAN_FRONTEND=noninteractive
 
-      # --- Docker Engine + Compose plugin (official repo) ---
+      # --- Docker Engine + Compose plugin (official repo, distro-adaptive) ---
       install -m 0755 -d /etc/apt/keyrings
-      curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc
+      DISTRO_ID="$(. /etc/os-release && echo "${ID:-debian}")"   # debian | ubuntu
+      curl -fsSL "https://download.docker.com/linux/${DISTRO_ID}/gpg" -o /etc/apt/keyrings/docker.asc
       chmod a+r /etc/apt/keyrings/docker.asc
-      echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu $(. /etc/os-release && echo "$VERSION_CODENAME") stable" \
+      echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/${DISTRO_ID} $(. /etc/os-release && echo "$VERSION_CODENAME") stable" \
         > /etc/apt/sources.list.d/docker.list
       apt-get update
       apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
