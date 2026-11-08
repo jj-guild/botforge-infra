@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Post-deploy battery (kingdoms-infra#78): verify the environment runs
+# Post-deploy battery (botforge-infra#78): verify the environment runs
 # what the pinned state says. Read-only, Docker/API only, no test
 # tooling on the env runner (hard constraint of #78).
 #
@@ -13,7 +13,7 @@ set -Eeuo pipefail
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 ENVIRONMENT="${1:-test}"
 ENV_DIR="${REPO_ROOT}/envs/${ENVIRONMENT}"
-STATE_FILE="${ENV_DIR}/state/kingdoms-bot.yml"
+STATE_FILE="${ENV_DIR}/state/botforge-bot.yml"
 REPORT_FILE="${BATTERY_REPORT:-/tmp/battery-report.md}"
 
 # Container names are compose-owned (`<project>-<service>-1`, the project is
@@ -30,10 +30,10 @@ log() { echo "[battery:${ENVIRONMENT}] $*"; }
 pinned_image="$(grep -E '^image:' "${STATE_FILE}" | head -1 | cut -d' ' -f2-)"
 [[ -n "${pinned_image}" ]] || { echo "P0: state file has no pinned image" >&2; exit 10; }
 
-# The compose file interpolates ${KINGDOMS_BOT_IMAGE:?}: without it exported
+# The compose file interpolates ${BOTFORGE_IMAGE:?}: without it exported
 # every `compose ps` dies before listing containers and every check turns
 # into a false P0. Export the pin — the same read deploy.sh does.
-export KINGDOMS_BOT_IMAGE="${pinned_image}"
+export BOTFORGE_IMAGE="${pinned_image}"
 
 : > "${REPORT_FILE}"
 echo "## Post-deploy battery — ${ENVIRONMENT}" >> "${REPORT_FILE}"
@@ -48,13 +48,13 @@ p2_found() { note "- **P2** $*"; p2=$((p2+1)); log "P2: $*"; }
 ok() { note "- OK: $*"; log "OK: $*"; }
 
 # ── Check 1: stack identity — the running bot image matches the pin ──
-bot_cid="$(container_of kingdoms-bot)"
+bot_cid="$(container_of botforge-bot)"
 running_image=""
 if [[ -n "${bot_cid}" ]]; then
     running_image="$(docker inspect --format '{{.Config.Image}}' "${bot_cid}" 2>/dev/null || true)"
 fi
 if [[ -z "${running_image}" ]]; then
-    p0_found "bot container not found (kingdoms-bot) — the stack did not come up"
+    p0_found "bot container not found (botforge-bot) — the stack did not come up"
 elif [[ "${running_image}" != "${pinned_image}" ]]; then
     p0_found "running image ${running_image} != pinned ${pinned_image}"
 else

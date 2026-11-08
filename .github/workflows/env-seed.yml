@@ -1,8 +1,8 @@
 # Seed an environment's data from a source file (/seed ops command).
-# workflow_dispatch only (called by the kingdoms-services ops-commands
+# workflow_dispatch only (called by the botforge-services ops-commands
 # router with the kingdoms-deployer App token), running ON the target
 # environment's runner (label env-<name>): the seeding CLIs execute
-# inside the env's kingdoms-core container — the only place where the
+# inside the env's botforge-core container — the only place where the
 # code and the Mongo network are both available (#138 execution model).
 #
 # Types (each maps to one existing, idempotent CLI):
@@ -30,7 +30,7 @@ on:
         type: choice
         options: [users, ladder-season, season, test-season, game-content]
       file:
-        description: "Source file path relative to kingdoms-services/ (empty = latest dump for the type)"
+        description: "Source file path relative to botforge-services/ (empty = latest dump for the type)"
         required: false
         type: string
       ladder_id:
@@ -52,19 +52,19 @@ concurrency:
 jobs:
   seed:
     name: Seed ${{ inputs.type }} (${{ inputs.environment }})
-    runs-on: ${{ fromJSON(format('["self-hosted", "kingdoms", "env-{0}"]', inputs.environment)) }}
+    runs-on: ${{ fromJSON(format('["self-hosted", "botforge", "env-{0}"]', inputs.environment)) }}
     environment: ${{ inputs.environment }}
     steps:
       - name: Check out the environment configuration
         uses: actions/checkout@v4
         with:
           ref: deploy/${{ inputs.environment }}
-      - name: Check out kingdoms-services (CLIs and data dumps)
+      - name: Check out botforge-services (CLIs and data dumps)
         uses: actions/checkout@v4
         with:
-          repository: merlin-pinpin-org/kingdoms-services
+          repository: jj-guild/botforge-services
           ref: main
-          path: kingdoms-services
+          path: botforge-services
       - name: Fail closed on synthetic data in prod
         if: inputs.environment == 'prod' && inputs.type == 'test-season'
         run: |
@@ -77,9 +77,9 @@ jobs:
           SEED_FILE: ${{ inputs.file }}
         run: |
           case "$SEED_TYPE" in
-            users)   data_dir="kingdoms-services/data/core";        prefix="users" ;;
-            ladder-season) data_dir="kingdoms-services/data/core";  prefix="season" ;;
-            season)  data_dir="kingdoms-services/data/core";        prefix="season" ;;
+            users)   data_dir="botforge-services/data/core";        prefix="users" ;;
+            ladder-season) data_dir="botforge-services/data/core";  prefix="season" ;;
+            season)  data_dir="botforge-services/data/core";        prefix="season" ;;
             test-season) data_dir=""; prefix="" ;;
             game-content) data_dir=""; prefix="" ;;
           esac
@@ -109,14 +109,14 @@ jobs:
           echo "data_dir=$data_dir" >> "$GITHUB_ENV"
       - name: Resolve the pinned image from the state file
         # Compose interpolation fails closed on a missing
-        # KINGDOMS_BOT_IMAGE (same as deploy.sh): export the pinned image
+        # BOTFORGE_IMAGE (same as deploy.sh): export the pinned image
         # so any docker compose command in this workflow targets the
         # deployed stack.
         run: |
-          state="envs/${{ inputs.environment }}/state/kingdoms-bot.yml"
+          state="envs/${{ inputs.environment }}/state/botforge-bot.yml"
           pinned="$(grep -E '^image:' "$state" | head -1 | cut -d' ' -f2-)"
           [[ -n "$pinned" ]] || { echo "ERROR: $state has no pinned image" >&2; exit 1; }
-          echo "KINGDOMS_BOT_IMAGE=$pinned" >> "$GITHUB_ENV"
+          echo "BOTFORGE_IMAGE=$pinned" >> "$GITHUB_ENV"
       - name: Run the seed CLI in the env container
         env:
           ENVIRONMENT: ${{ inputs.environment }}
@@ -129,9 +129,9 @@ jobs:
           cd "envs/${ENVIRONMENT}"
           case "$SEED_TYPE" in
             users)
-              docker compose cp "${GITHUB_WORKSPACE}/${{ env.data_dir }}/${{ env.data_file }}" kingdoms-core:/tmp/seed.csv
-              docker compose exec -T kingdoms-core python -m \
-                kingdoms.core.services.identity_import_cli \
+              docker compose cp "${GITHUB_WORKSPACE}/${{ env.data_dir }}/${{ env.data_file }}" botforge-core:/tmp/seed.csv
+              docker compose exec -T botforge-core python -m \
+                botforge.core.services.identity_import_cli \
                 /tmp/seed.csv
               ;;
             ladder-season)
@@ -146,21 +146,21 @@ jobs:
               [[ -n "$env_guild" ]] || { echo "ERROR: env ${ENVIRONMENT} declares no TEST_GUILD_ID (GitHub environment variable) — add it before seeding a ladder season; refusing to seed without the env's guild, this guards against seeding the wrong env (e.g. prod)" >&2; exit 1; }
               [[ "$GUILD_ID" == "$env_guild" ]] || { echo "ERROR: guild ${GUILD_ID} is not ${ENVIRONMENT}'s test guild (${env_guild}) — each env only seeds its own guild's ladder; refusing to seed another env's or prod's data" >&2; exit 1; }
               season_file="${GITHUB_WORKSPACE}/${{ env.data_dir }}/${{ env.data_file }}"
-              users_file="$(find "${GITHUB_WORKSPACE}/kingdoms-services/data/core" -maxdepth 1 -name '*users.csv' 2>/dev/null | sort | tail -1)"
-              matches_file="$(find "${GITHUB_WORKSPACE}/kingdoms-services/data/mods/ladder" -maxdepth 1 -name '*matches.csv' 2>/dev/null | sort | tail -1)"
+              users_file="$(find "${GITHUB_WORKSPACE}/botforge-services/data/core" -maxdepth 1 -name '*users.csv' 2>/dev/null | sort | tail -1)"
+              matches_file="$(find "${GITHUB_WORKSPACE}/botforge-services/data/mods/ladder" -maxdepth 1 -name '*matches.csv' 2>/dev/null | sort | tail -1)"
               [[ -n "$users_file" && -n "$matches_file" ]] || { echo "ERROR: no users or matches dump found for the ladder-season seed" >&2; exit 1; }
-              docker compose cp "$season_file" kingdoms-core:/tmp/seed-season.yaml
-              docker compose cp "$users_file" kingdoms-core:/tmp/seed-users.csv
-              docker compose cp "$matches_file" kingdoms-core:/tmp/seed-matches.csv
-              docker compose exec -T kingdoms-core python -m \
-                kingdoms.mods.ladder.season_import_cli \
+              docker compose cp "$season_file" botforge-core:/tmp/seed-season.yaml
+              docker compose cp "$users_file" botforge-core:/tmp/seed-users.csv
+              docker compose cp "$matches_file" botforge-core:/tmp/seed-matches.csv
+              docker compose exec -T botforge-core python -m \
+                botforge.mods.ladder.season_import_cli \
                 /tmp/seed-season.yaml /tmp/seed-users.csv /tmp/seed-matches.csv \
                 "$GUILD_ID"
               ;;
             season)
-              docker compose cp "${GITHUB_WORKSPACE}/${{ env.data_dir }}/${{ env.data_file }}" kingdoms-core:/tmp/seed.yaml
-              docker compose exec -T kingdoms-core python -m \
-                kingdoms.core.games.aoe2.seed_cli_yaml \
+              docker compose cp "${GITHUB_WORKSPACE}/${{ env.data_dir }}/${{ env.data_file }}" botforge-core:/tmp/seed.yaml
+              docker compose exec -T botforge-core python -m \
+                botforge.core.games.aoe2.seed_cli_yaml \
                 /tmp/seed.yaml "$LADDER_ID"
               ;;
             game-content)
@@ -168,17 +168,17 @@ jobs:
               # (aoe2techtree, MIT + Microsoft Game Content Usage Rules):
               # creates the missing civs, upserts the FR/EN content docs.
               # Idempotent; safe on any env including prod.
-              docker compose exec -T kingdoms-core python -m \
-                kingdoms.core.games.aoe2.content_refresh_cli
+              docker compose exec -T botforge-core python -m \
+                botforge.core.games.aoe2.content_refresh_cli
               ;;
             test-season)
               [[ -n "$LADDER_ID" ]] || { echo "ERROR: ladder_id (owner_ref) is required for test-season" >&2; exit 1; }
-              python3 kingdoms-services/scripts/generate_test_data.py /tmp/kingdoms-test-data
+              python3 botforge-services/scripts/generate_test_data.py /tmp/botforge-test-data
               for f in test-season.yaml test-users.csv test-matches.csv; do
-                docker compose cp "/tmp/kingdoms-test-data/$f" "kingdoms-core:/tmp/$f"
+                docker compose cp "/tmp/botforge-test-data/$f" "botforge-core:/tmp/$f"
               done
-              docker compose exec -T kingdoms-core python -m \
-                kingdoms.mods.ladder.season_import_cli \
+              docker compose exec -T botforge-core python -m \
+                botforge.mods.ladder.season_import_cli \
                 /tmp/test-season.yaml /tmp/test-users.csv /tmp/test-matches.csv \
                 "$LADDER_ID"
               ;;

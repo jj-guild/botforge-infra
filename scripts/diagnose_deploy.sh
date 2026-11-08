@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Diagnose a stuck or slow kingdoms-infra deployment (ADR-0018 chain).
+# Diagnose a stuck or slow botforge-infra deployment (ADR-0018 chain).
 #
 # Learned from the 2026-09-24 prod incident: a run left `waiting` on a
 # deleted/older workflow version holds the `deploy-<env>` concurrency
@@ -20,7 +20,7 @@
 #   scripts/diagnose_deploy.sh <env> --json    # machine-readable single object
 #
 # Exit codes: 0 healthy or only advisories, 1 a blocking cause is found,
-# 2 usage error. Requires: gh (read access to kingdoms-infra).
+# 2 usage error. Requires: gh (read access to botforge-infra).
 set -euo pipefail
 
 usage="usage: diagnose_deploy.sh <env> [--json]"
@@ -34,7 +34,7 @@ elif [[ $# -gt 0 ]]; then
   exit 2
 fi
 
-repo="merlin-pinpin-org/kingdoms-infra"
+repo="jj-guild/botforge-infra"
 
 # Only the Deploy environment chain holds the deploy-<env> concurrency
 # group: a run matters here when it routes a deployment for this env —
@@ -76,7 +76,7 @@ while IFS= read -r id; do
   labels="$(gh api "repos/${repo}/actions/runs/${id}/jobs" \
     --jq '[.jobs[] | select(.labels != null) | .labels[]] | join(",")' 2>/dev/null || true)"
   if [[ -n "$labels" ]] && [[ "$labels" != *"|"* ]] \
-     && [[ "$labels" == *"self-hosted,kingdoms,env-"* ]] \
+     && [[ "$labels" == *"self-hosted,botforge,env-"* ]] \
      && [[ $(gh api "repos/${repo}/actions/runs/${id}/jobs" --jq '[.jobs[].labels | length] | max' 2>/dev/null || echo 0) -lt 3 ]]; then
     broken_label_runs="${broken_label_runs}${id}\n"
   fi

@@ -34,7 +34,7 @@ title: "[Task] "
 
 **Depends on:**
 
-- [ ] #N (same repo) or merlin-pinpin-org/kingdoms-services#N (cross repo)
+- [ ] #N (same repo) or jj-guild/botforge-services#N (cross repo)
 
 ## Related
 

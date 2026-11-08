@@ -1,12 +1,12 @@
-# Desired state of kingdoms-bot on the merlin environment (ADR-0018).
-# Written by the deploy pipelines only (kingdoms-deployer GitHub App);
+# Desired state of botforge-bot on the merlin environment (ADR-0018).
+# Written by the deploy pipelines only (jj-guild-deployer GitHub App);
 # a push to this branch deploys this exact image.
-image: ghcr.io/merlin-pinpin-org/kingdoms-services:pr-212-20261007101324-b9e4474
+image: ghcr.io/jj-guild/botforge-services:pr-212-20261007101324-b9e4474
 version_label: merlin@b9e4474
-deploy_url: https://github.com/merlin-pinpin-org/kingdoms-services/tree/b9e44749d4ecb863bcaa41c8bddc82639a970f0c
+deploy_url: https://github.com/jj-guild/botforge-services/tree/b9e44749d4ecb863bcaa41c8bddc82639a970f0c
 deploy_kind: integration
 deploy_ref: b9e4474
-deploy_tree_url: https://github.com/merlin-pinpin-org/kingdoms-services/tree/b9e44749d4ecb863bcaa41c8bddc82639a970f0c
+deploy_tree_url: https://github.com/jj-guild/botforge-services/tree/b9e44749d4ecb863bcaa41c8bddc82639a970f0c
 deploy_ts: 1791368042
 deploy_commit_ts: 1791367943
 deploy_commit: b9e44749d4ecb863bcaa41c8bddc82639a970f0c

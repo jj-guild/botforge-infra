@@ -26,8 +26,8 @@ elif [[ $# -gt 0 ]]; then
   exit 2
 fi
 
-repo_infra="merlin-pinpin-org/kingdoms-infra"
-repo_svc="merlin-pinpin-org/kingdoms-services"
+repo_infra="jj-guild/botforge-infra"
+repo_svc="jj-guild/botforge-services"
 env_branch="deploy/${alias_name}"
 integration_branch="vibe/${alias_name}/main"
 
@@ -99,7 +99,7 @@ fi
 # 4. The state branch exists and carries a pinned image (matching the head).
 state_pin="$(git ls-remote "https://github.com/${repo_infra}.git" "refs/heads/${env_branch}" 2>/dev/null | cut -f1 || true)"
 if [[ -n "$state_pin" ]]; then
-  pinned="$(gh api "repos/${repo_infra}/contents/envs/${alias_name}/state/kingdoms-bot.yml?ref=${env_branch}" \
+  pinned="$(gh api "repos/${repo_infra}/contents/envs/${alias_name}/state/botforge-bot.yml?ref=${env_branch}" \
     --jq '.content' 2>/dev/null | base64 -d 2>/dev/null | grep -E '^image:' | head -1 | cut -d' ' -f2- || true)"
   if [[ -n "$pinned" ]]; then
     flag OK "state branch ${env_branch} pins: ${pinned}"

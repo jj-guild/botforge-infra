@@ -32,7 +32,7 @@ concurrency:
 jobs:
   dump:
     name: Dump ${{ matrix.environment }}
-    runs-on: ${{ fromJSON(format('["self-hosted", "kingdoms", "env-{0}"]', matrix.environment)) }}
+    runs-on: ${{ fromJSON(format('["self-hosted", "botforge", "env-{0}"]', matrix.environment)) }}
     strategy:
       fail-fast: false
       matrix:
@@ -47,13 +47,13 @@ jobs:
         env:
           # VPS-SETUP.md: the persistent backup directory survives
           # checkouts; the same path the deploy backup uses.
-          BACKUP_DIR: /opt/kingdoms/backups/${{ matrix.environment }}
+          BACKUP_DIR: /opt/botforge/backups/${{ matrix.environment }}
         run: ./scripts/backup_db.sh "${{ matrix.environment }}"
 
       - name: Upload the archives (private artifacts)
         uses: actions/upload-artifact@v4
         with:
           name: db-dump-${{ matrix.environment }}-${{ github.run_id }}
-          path: /opt/kingdoms/backups/${{ matrix.environment }}-*.archive.gz
+          path: /opt/botforge/backups/${{ matrix.environment }}-*.archive.gz
           retention-days: 90
           if-no-files-found: error

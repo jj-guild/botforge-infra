@@ -29,7 +29,7 @@ jobs:
         uses: actions/github-script@v7
         with:
           script: |
-            const org = "merlin-pinpin-org";
+            const org = "jj-guild";
             const infraChecks = [
               "Lint scripts and workflows",
               "Validate compose manifests",
@@ -52,16 +52,16 @@ jobs:
             const kingdomsChecks = ["cla", "check"];
 
             const expected = {
-              "kingdoms-infra": {
+              "botforge-infra": {
                 "main": { rules: ["deletion", "non_fast_forward", "required_linear_history", "pull_request", "required_status_checks"], checks: infraChecks },
                 "deploy/test": { rules: ["deletion", "non_fast_forward", "required_linear_history", "required_status_checks"], checks: infraChecks },
                 "deploy/prod": { rules: ["deletion", "non_fast_forward", "required_linear_history", "pull_request", "required_status_checks"], checks: infraChecks },
               },
-              "kingdoms-services": {
+              "botforge-services": {
                 "main": { rules: ["deletion", "non_fast_forward", "required_linear_history", "pull_request", "required_status_checks"], checks: servicesChecks },
                 
               },
-              "kingdoms": {
+              "botforge": {
                 "main": { rules: ["deletion", "non_fast_forward", "required_linear_history", "pull_request", "required_status_checks"], checks: kingdomsChecks },
               },
             };
@@ -105,7 +105,7 @@ jobs:
             // Tag rulesets (release tags) are not returned by getBranchRules —
             // audit them through the repo rulesets API instead.
             const expectedTags = {
-              "kingdoms-services": ["deletion", "non_fast_forward"],
+              "botforge-services": ["deletion", "non_fast_forward"],
             };
             for (const [repo, wantRules] of Object.entries(expectedTags)) {
               const rulesets = await github.paginate(
@@ -140,10 +140,10 @@ jobs:
 
             // State branches must not drift from main (ADR-0018 propagation).
             // Environments are data: the branches are the deploy/ refs that
-            // exist on kingdoms-infra.
+            // exist on botforge-infra.
             const infraBranches = await github.paginate(
               github.rest.repos.listBranches,
-              { owner: org, repo: "kingdoms-infra", per_page: 100 },
+              { owner: org, repo: "botforge-infra", per_page: 100 },
             );
             const envNames = infraBranches
               .map((b) => b.name)
@@ -154,18 +154,18 @@ jobs:
               try {
                 const compare = await github.rest.repos.compareCommits({
                   owner: org,
-                  repo: "kingdoms-infra",
+                  repo: "botforge-infra",
                   base: "main",
                   head: branch,
                 });
                 const behind = compare.data.behind_by;
                 if (behind > 0) {
-                  problems.push(`kingdoms-infra: ${branch} is ${behind} commit(s) behind main — propagate the pipeline changes (docs/ENVIRONMENTS.md § "Keeping the state branches current")`);
+                  problems.push(`botforge-infra: ${branch} is ${behind} commit(s) behind main — propagate the pipeline changes (docs/ENVIRONMENTS.md § "Keeping the state branches current")`);
                 } else {
-                  core.info(`kingdoms-infra: ${branch} is in sync with main`);
+                  core.info(`botforge-infra: ${branch} is in sync with main`);
                 }
               } catch (e) {
-                problems.push(`kingdoms-infra: cannot compare main..${branch} — ${e.message}`);
+                problems.push(`botforge-infra: cannot compare main..${branch} — ${e.message}`);
               }
             }
 
