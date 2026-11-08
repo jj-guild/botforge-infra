@@ -1,8 +1,8 @@
-# VPS setup guide — cloud-init bootstrap
+# Hosting setup guide — cloud-init bootstrap
 
-> **Short on time?** [VPS-INSTALL-QUICKSTART.md](VPS-INSTALL-QUICKSTART.md) is the copy-paste version (OVH Public Cloud included).
+> **Short on time?** [HOSTING-INSTALL-QUICKSTART.md](HOSTING-INSTALL-QUICKSTART.md) is the copy-paste version (OVH Public Cloud included).
 
-This guide turns a fresh VPS into a fully automated GitOps deployment
+This guide turns a fresh hosting into a fully automated GitOps deployment
 target **at first boot**, via one cloud-init user-data block. It is
 written as commands to copy-paste: it assumes you already know ssh,
 GitHub Actions runners and Docker — no tutorials, one verification
@@ -12,7 +12,7 @@ Tracked by jj-guild/botforge-services#331 (lot 2).
 
 ## What you are building
 
-- One VPS hosting **one or more environments** (a full stack per
+- One hosting hosting **one or more environments** (a full stack per
   environment: bot + MongoDB + Redis). Each environment gets exactly
   **one self-hosted runner labeled `env-<name>`** under
   `/opt/botforge/runners/<env>/` — the deploy workflows route jobs by
@@ -21,13 +21,13 @@ Tracked by jj-guild/botforge-services#331 (lot 2).
   `/opt/botforge/backups/<env>/` (deployment backups) and
   `/opt/botforge/envs/<env>/{mongo,redis}` (bind-mount targets — they
   survive a `docker compose down --volumes` reset).
-- Secrets (the Discord bot token) are **never stored on the VPS**: they
+- Secrets (the Discord bot token) are **never stored on the hosting**: they
   live in GitHub *environment secrets* and the runner injects them at
   deploy time.
 
 ## 0. Prerequisites
 
-- A VPS with **Debian 13 (trixie)** (Ubuntu 26.04 LTS also works — the
+- A hosting with **Debian 13 (trixie)** (Ubuntu 26.04 LTS also works — the
   cloud-init block auto-detects the distro for the Docker apt repo via
   `/etc/os-release`), at least **2 GB RAM / 20 GB
   disk**, and your SSH key (any provider: OVH, Scaleway, Hetzner,
@@ -39,37 +39,15 @@ Tracked by jj-guild/botforge-services#331 (lot 2).
   - a **runner registration token**: Settings → Actions → Runners → New
     self-hosted runner → Linux/x64 (the token is valid **1 hour**).
 
-## 1. Provision the VPS with cloud-init
+## 1. Provision the hosting with cloud-init
 
 Create the instance and paste the following block in the provider's
 **user data / cloud-init** field, then boot. Replace `2.337.0` with the
 runner version currently shown on the Runners page.
 
-> **No user-data field in the provider UI? (OVH Public Cloud Control
-> Panel has none — it is OpenStack underneath)** — two options:
-> 1. **Create the instance via the OpenStack CLI/API with `--user-data`**
->    (OVH guide KB0050912). RC credentials: Manager → Public Cloud →
->    project → *OpenStack* → download the RC file, `source openrc.sh`,
->    then:
->    ```bash
->    # cloud-init.yaml = the block above (first line #cloud-config)
->    openstack server create --flavor <flavor> --image "Debian 13" \
->      --key-name <your-key> --network Ext-Net \
->      --user-data cloud-init.yaml botforge-vps
->    ```
->    (OVH API equivalent: `POST /cloud/project/{id}/instance` with a
->    `userData` field.) Note: user-data is **creation-time only** — a
->    reset/rebuild does not re-inject it.
-> 2. **Boot plain, then run the flat fallback over SSH** (generated from
->    this block, kept in sync):
->    ```bash
->    curl -fsSL https://raw.githubusercontent.com/jj-guild/botforge-infra/main/scripts/vps/bootstrap-flat.sh | sudo bash
->    ```
-> Then continue at step 2 (runner registration).
-
 ```yaml
 #cloud-config
-# BotForge VPS bootstrap — libs, users, multi-env filesystem, pinned
+# BotForge hosting bootstrap — libs, users, multi-env filesystem, pinned
 # runner binary, helper scripts and shell aliases. Runner registration
 # is deliberately NOT done here (registration tokens live 1h): it is
 # step 2, with the same add-env.sh command used later for more envs.
@@ -156,7 +134,7 @@ write_files:
     permissions: "0755"
     content: |
       #!/usr/bin/env bash
-      # Add one environment to a provisioned VPS: per-env dirs + runner
+      # Add one environment to a provisioned hosting: per-env dirs + runner
       # (labels botforge,env-<env>) + systemd service. Same command at
       # first boot and later — one command per environment.
       # Run as root:  add-env.sh <env> --token <REGISTRATION_TOKEN>
@@ -179,7 +157,7 @@ write_files:
   - path: /etc/profile.d/botforge.sh
     permissions: "0644"
     content: |
-      # BotForge compose helpers (installed by cloud-init — docs/VPS-SETUP.md).
+      # BotForge compose helpers (installed by cloud-init — docs/HOSTING-SETUP.md).
       _kwork() {  # print the env's compose dir: the runner's _work checkout
         local env="$1" d
         for d in /opt/botforge/runners/"$env"/_work/*/*/envs/"$env"; do
@@ -225,21 +203,50 @@ sudo -u botforge docker ps           # docker group membership OK
 The aliases load on the **next** login (profile.d): `exit`, reconnect,
 then `type kc kcl`.
 
-## 2. Register the runner(s) — one command per environment
+## 2. Register the runner(s) — line by line, one per environment
+
+Before the commands: fetch a registration token. Either on the Runners
+page (*Settings → Actions → Runners → New self-hosted runner*, Linux/x64
+— <https://github.com/jj-guild/botforge-infra/settings/actions/runners/new>),
+or via API (the token is shown once and is valid **1 hour**):
 
 ```bash
-# token from Settings → Actions → Runners → New self-hosted runner (Linux/x64)
-sudo /opt/botforge/bin/add-env.sh test --token <TOKEN>
-
-# more environments on the SAME VPS — same command, nothing else to redo:
-sudo /opt/botforge/bin/add-env.sh dev-merlin  --token <TOKEN>
-sudo /opt/botforge/bin/add-env.sh dev-drasah --token <TOKEN>
+REG='repos/jj-guild/botforge-infra/actions/runners/registration-token'
+gh api -X POST "$REG" --jq '.token'
 ```
 
-Each call creates `/opt/botforge/{backups,envs}/<env>/`, registers the
-runner with labels `botforge,env-<env>` in
-`/opt/botforge/runners/<env>/`, and installs + starts its systemd
-service.
+Then, on the hosting, exactly the commands GitHub prints on that page:
+
+```bash
+# Download
+# Create a folder
+$ mkdir actions-runner && cd actions-runner
+# Download the latest runner package
+$ curl -o actions-runner-linux-x64-2.338.2.tar.gz -L https://github.com/actions/runner/releases/download/v2.338.2/actions-runner-linux-x64-2.338.2.tar.gz
+# Optional: Validate the hash
+$ echo "baebf204307bac6193480852732f0aba2ae97b6c5597c244f4d5558390147c40  actions-runner-linux-x64-2.338.2.tar.gz" | shasum -a 256 -c
+# Extract the installer
+$ tar xzf ./actions-runner-linux-x64-2.338.2.tar.gz
+Configure
+# Create the runner and start the configuration experience
+$ ./config.sh --url https://github.com/jj-guild/botforge-infra --token <TOKEN>
+# Last step, run it!
+$ ./run.sh
+```
+
+(Use the runner version currently shown on the Runners page, and the
+fresh token from above.)
+
+After GitHub's block, our per-environment specifics — labels
+`botforge,env-<env>`, install as a systemd service, per-env directory
+under `/opt/botforge/runners/<env>/` (all of this is also wrapped by
+`/opt/botforge/bin/add-env.sh <env> --token <TOKEN>`):
+
+```bash
+$ ./config.sh --url https://github.com/jj-guild/botforge-infra --token <TOKEN> --labels botforge,env-test
+$ sudo ./svc.sh install && sudo ./svc.sh start
+# or equivalently: sudo /opt/botforge/bin/add-env.sh test --token <TOKEN>
+```
 
 **Verify** — every env runner must be online/Idle with the right labels:
 
@@ -251,6 +258,7 @@ gh api /repos/jj-guild/botforge-infra/actions/runners \
 cd /opt/botforge/runners/<env> && sudo ./svc.sh status
 ```
 
+
 ## 3. GitHub environments and secrets (per environment)
 
 On `jj-guild/botforge-infra`: **Settings → Environments →
@@ -258,7 +266,7 @@ On `jj-guild/botforge-infra`: **Settings → Environments →
 environment's bot token, from the Discord developer portal) and the
 environment **variable** `BOT_ADMINS` (comma-separated Discord user IDs
 of that bot's operators). Repeat per environment (`test`, `dev-merlin`,
-…). Nothing secret is ever written to the VPS — the runner picks the
+…). Nothing secret is ever written to the hosting — the runner picks the
 secrets up at deploy time.
 
 ## 4. First deployment
@@ -281,8 +289,8 @@ docker ps --filter name=botforge
 
 Environments are data (see [ENVIRONMENTS.md](ENVIRONMENTS.md)): one
 `envs/<name>/` manifest + state, one `deploy/<name>` state branch, one
-GitHub environment, one runner label. On a VPS provisioned with this
-guide, the VPS part is a single command:
+GitHub environment, one runner label. On a hosting provisioned with this
+guide, the hosting part is a single command:
 
 ```bash
 sudo /opt/botforge/bin/add-env.sh <env> --token <TOKEN>
@@ -291,7 +299,7 @@ sudo /opt/botforge/bin/add-env.sh <env> --token <TOKEN>
 …then create the GitHub environment with its secrets (step 3) and the
 repo data (manifest + `deploy/<env>` branch) per the
 [ENVIRONMENTS.md](ENVIRONMENTS.md) checklist. Existing environments on
-the same VPS are untouched — same scripts, same paths, shared tarball.
+the same hosting are untouched — same scripts, same paths, shared tarball.
 
 ## 6. Daily operation — the aliases
 
@@ -312,27 +320,22 @@ On any fresh ssh login, `/etc/profile.d/botforge.sh` provides:
 `DISCORD_TOKEN` from your shell if set, otherwise `placeholder`.
 Compose fails closed on **unset** substitution variables; for
 `ps` / `logs` / `stop` / `start` the values are irrelevant, so the
-placeholder is enough and **no secret is ever needed on the VPS**. Real
+placeholder is enough and **no secret is ever needed on the hosting**. Real
 secrets are injected only by the runner at deploy time (GitHub
 environment secrets). Never type a real `DISCORD_TOKEN` in an
-interactive shell on the VPS.
+interactive shell on the hosting.
 
-## 7. The rename — jj-guild/botforge-services#241
+## 7. Naming reference (current state)
 
-The org/repo rename changes: the runner registration `--url`, the
-`gh api /repos/<org>/…` paths, the `ghcr.io/<org>/…` image prefix and
-the git remotes. Runner labels (`botforge`, `env-<env>`) and the
-`deploy/<env>` state branch names are unchanged.
+- Org: `jj-guild`. Repos: `botforge` (docs), `botforge-services` (code),
+  `botforge-infra` (this repo), `visual-generator`.
+- Images: `ghcr.io/jj-guild/botforge-services:<tag>`.
+- Git remotes and `gh api /repos/jj-guild/…` paths use the names above.
+- Runner registration `--url`: `https://github.com/jj-guild/botforge-infra`.
+- Runner labels: `botforge`, `env-<env>`. State branches: `deploy/<env>`.
+- Hosting user/paths: `botforge`, `/opt/botforge/…`. Image env var:
+  `BOTFORGE_IMAGE` (read from `envs/<env>/state/botforge-bot.yml`).
 
-Post-rename checklist:
-
-1. Reinstall the VPS with this guide (the baked-in default `--url` is
-   updated in the same change).
-2. Re-register the runners (step 2) against the new repo URL.
-3. Trigger a first deployment per env (step 4) and verify the image
-   pulls from the new `ghcr.io/<org>/…` prefix.
-4. Re-run the step-4 health verification (`docker ps --filter
-   name=botforge`).
 
 ## 8. Troubleshooting
 
@@ -359,13 +362,13 @@ Post-rename checklist:
   but your shell predates it — switch again with `sudo -iu botforge`.
 - **Known pitfalls from past sessions**: Discord throttling ~2 h after
   intensive provisioning; `systemd-resolved` DNS quirks; the
-  `/opt/botforge/envs/<env>` bind mounts survive a VPS reset **by
+  `/opt/botforge/envs/<env>` bind mounts survive a hosting reset **by
   design** (that is the data).
 
 ## Out of scope — lot 4
 
 The laptop CLI (`vpsctl`: bootstrap / diagnose / start / stop / restart
-/ status / logs against the VPS from your own machine, configured only
+/ status / logs against the hosting from your own machine, configured only
 through a `~/.ssh/config` alias) is **not** part of this guide — it is
 tracked in jj-guild/botforge-services#349.
 

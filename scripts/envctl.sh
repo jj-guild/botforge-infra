@@ -5,7 +5,7 @@
 # result; it never deploys, never pulls, never touches the pinned state.
 #
 # reset stops the stack and recreates it fresh — the DATA SURVIVES:
-# mongo and redis ride bind mounts on the VPS filesystem
+# mongo and redis ride bind mounts on the hosting filesystem
 # (/opt/botforge/envs/<env>/{mongo,redis}), never docker volumes, so a
 # reset (docker compose down --volumes) nor any volume prune can wipe
 # them. Double gate before it can run:

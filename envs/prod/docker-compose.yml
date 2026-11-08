@@ -1,6 +1,6 @@
 # Production environment. Secrets are injected at deploy time by the CD
 # pipeline from the GitHub environment secrets (botforge-infra#2); nothing
-# secret is stored on the VPS.
+# secret is stored on the hosting.
 # The bot image tag is pinned: deployments and rollbacks move the tag on
 # purpose, never implicitly.
 
@@ -10,7 +10,7 @@ services:
     pull_policy: always
     environment:
       # Secrets are injected at deploy time by the CD pipeline from the
-      # GitHub environment secrets (nothing secret is stored on the VPS);
+      # GitHub environment secrets (nothing secret is stored on the hosting);
       # non-secret values have overridable defaults.
       DISCORD_TOKEN: ${DISCORD_TOKEN:?DISCORD_TOKEN is required}
       BOTFORGE_VERSION: ${BOTFORGE_VERSION:-}
@@ -227,7 +227,7 @@ services:
     volumes:
       - /opt/botforge/envs/prod/mongo:/data/db
     healthcheck:
-      # mongosh cold-start on a busy shared VPS can exceed 5s; without
+      # mongosh cold-start on a busy shared hosting can exceed 5s; without
       # margin the probe is killed mid-handshake and mongo flaps
       # unhealthy (deploy-time false negative, drasah 2026-10-07).
       test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping')"]

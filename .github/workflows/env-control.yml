@@ -5,7 +5,7 @@
 # handle for an environment; deployments stay on the state-branch path.
 #
 # reset recreates the stack; the externalized data (bind mounts on
-# the VPS filesystem) survives. Double gate:
+# the hosting filesystem) survives. Double gate:
 #
 # clear-db drops ONLY the NAMED collections (validated names, the
 # roster's env-control capability gates the caller) — a surgical

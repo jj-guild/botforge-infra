@@ -20,7 +20,7 @@
 # job-level `if` cannot reference `matrix` (it is evaluated before the
 # matrix expansion), which is what broke the first deployment. The env is
 # validated against the envs/ data below; adding an environment is adding its
-# envs/<name>/ directory (ruleset and VPS install aside).
+# envs/<name>/ directory (ruleset and hosting install aside).
 
 name: Pin state
 

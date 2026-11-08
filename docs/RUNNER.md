@@ -1,6 +1,6 @@
 # Runner cheat-sheet — install & uninstall
 
-On a VPS provisioned by cloud-init ([VPS-SETUP.md](VPS-SETUP.md)), prefer
+On a hosting provisioned by cloud-init ([HOSTING-SETUP.md](HOSTING-SETUP.md)), prefer
 `sudo /opt/botforge/bin/add-env.sh <env> --token <TOKEN>` — the commands
 below are its manual equivalent.
 
@@ -11,13 +11,13 @@ to `/opt/botforge/runners/actions-runner-linux-x64-<VERSION>.tar.gz`,
 next to the environment directories, and extracted into each new
 environment — several environments share the same archive.
 
-Context: `principal` = your admin login on the VPS (sudo),
+Context: `principal` = your admin login on the hosting (sudo),
 `botforge` = the service user that owns `/opt/botforge`.
 
 ## Install
 
 ```bash
-# 0. on GitHub (not on the VPS): open the Runners page and copy the
+# 0. on GitHub (not on the hosting): open the Runners page and copy the
 #    Download command + registration token
 #    Settings → Actions → Runners → New self-hosted runner (Linux / x64)
 
@@ -71,4 +71,4 @@ sudo journalctl -u actions.runner.botforge-...-<env> -e
 gh api /repos/jj-guild/botforge-infra/actions/runners --jq '.runners[] | {name, status, labels: [.labels[].name]}'
 ```
 
-Full narrative guide with security context: [VPS-SETUP.md](VPS-SETUP.md).
+Full narrative guide with security context: [HOSTING-SETUP.md](HOSTING-SETUP.md).
