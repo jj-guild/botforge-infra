@@ -51,7 +51,23 @@ sudo ufw status verbose              # active, OpenSSH allowed
 
 GitHub → `jj-guild/botforge-infra` → **Settings → Actions → Runners →
 New self-hosted runner** (Linux/x64). The token is shown **once**, valid
-**1 hour**. On the VPS, immediately:
+**1 hour**. Same thing via API (handy from a script) — CLI:
+
+```bash
+GH_API='repos/jj-guild/botforge-infra/actions/runners/registration-token'
+gh api -X POST "$GH_API" --jq '.token'
+```
+
+or in JS with octokit:
+
+```js
+const { data } = await octokit.request(
+  "POST /repos/{owner}/{repo}/actions/runners/registration-token",
+  { owner: "jj-guild", repo: "botforge-infra" });
+console.log(data.token); // valid 1 hour
+```
+
+On the VPS, immediately:
 
 ```bash
 sudo /opt/botforge/bin/add-env.sh test --token <TOKEN>
