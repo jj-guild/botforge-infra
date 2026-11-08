@@ -58,14 +58,7 @@ GH_API='repos/jj-guild/botforge-infra/actions/runners/registration-token'
 gh api -X POST "$GH_API" --jq '.token'
 ```
 
-or in JS with octokit:
-
-```js
-const { data } = await octokit.request(
-  "POST /repos/{owner}/{repo}/actions/runners/registration-token",
-  { owner: "jj-guild", repo: "botforge-infra" });
-console.log(data.token); // valid 1 hour
-```
+(scriptable — any HTTP client works, e.g. octokit in JS).
 
 On the VPS, immediately:
 
