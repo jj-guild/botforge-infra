@@ -1,5 +1,9 @@
 # Runner cheat-sheet — install & uninstall
 
+On a VPS provisioned by cloud-init ([VPS-SETUP.md](VPS-SETUP.md)), prefer
+`sudo /opt/kingdoms/bin/add-env.sh <env> --token <TOKEN>` — the commands
+below are its manual equivalent.
+
 Every command, in order, nothing else. One runner per environment,
 always in `/opt/kingdoms/runners/<env>/` (replace `<env>` throughout:
 `test`, `prod`, `drasah`, …). The runner tarball is downloaded **once**
