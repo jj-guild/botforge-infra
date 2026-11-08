@@ -121,30 +121,27 @@ jobs:
             git commit -m "$msg"
           fi
       - name: Restore the pinned state at its new path (rename rides the sync)
+        # HEAD^ is the pre-sync tip of the state branch in both merge paths
+        # (merge commit first parent, or the read-tree fallback commit): its
+        # state file is the branch's own pin, authoritative over main's copy.
         if: env.skip != 'true'
         run: |
           set -euo pipefail
           env="${{ matrix.env }}"
           state_file="envs/${env}/state/botforge-bot.yml"
-          src=""
-          if [[ -f "/tmp/state-preserve/botforge-bot.yml" ]]; then src="/tmp/state-preserve/botforge-bot.yml"; fi
-          if [[ -z "$src" && -f "/tmp/state-preserve/kingdoms-bot.yml" ]]; then src="/tmp/state-preserve/kingdoms-bot.yml"; fi
-          if [[ -n "$src" ]]; then
+          pre="HEAD^"
+          src_p=""
+          for p in "envs/${env}/state/botforge-bot.yml" "envs/${env}/state/kingdoms-bot.yml" "deploy/state/${env}/kingdoms-bot.yml"; do
+            if git cat-file -e "${pre}:${p}" 2>/dev/null; then src_p="$p"; break; fi
+          done
+          if [[ -n "$src_p" ]]; then
             mkdir -p "envs/${env}/state"
-            cp "$src" "${state_file}"
+            git show "${pre}:${src_p}" > "${state_file}"
             rm -f "envs/${env}/state/kingdoms-bot.yml" "deploy/state/${env}/kingdoms-bot.yml"
             rmdir "deploy/state/${env}" "deploy/state" 2>/dev/null || true
-            git add -A "envs/${env}/state" "deploy/state" 2>/dev/null || true
+            git add -A "envs/${env}/state"
             git commit --amend --no-edit
-            echo "pinned state preserved at ${state_file}"
-          elif [[ -f "deploy/state/${env}/kingdoms-bot.yml" ]]; then
-            # One-time migration (envs/ layout): state branches created before
-            # the move still carry the file at deploy/state/<env>/.
-            mkdir -p "envs/${env}/state"
-            git mv "deploy/state/${env}/kingdoms-bot.yml" "${state_file}"
-            rmdir "deploy/state/${env}" "deploy/state" 2>/dev/null || true
-            git commit --amend --no-edit
-            echo "state file migrated to ${state_file}"
+            echo "pinned state preserved at ${state_file} (from ${src_p} @ ${pre})"
           fi
       - name: Push the synced state branch
         if: env.skip != 'true'
