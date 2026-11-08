@@ -1,6 +1,6 @@
 # Environments
 
-The Kingdoms platform runs the same stack in three kinds of environments:
+The BotForge platform runs the same stack in three kinds of environments:
 
 - **test** and **prod** — the shared validation and production
   environments, deployed from pinned state on their `deploy/<env>` state
@@ -9,7 +9,7 @@ The Kingdoms platform runs the same stack in three kinds of environments:
   user, mapped to their integration branch `vibe/<alias>/main`: the env
   runs whatever its user's integration branch head builds (**autopin**,
   no command needed). It is the user's sandbox: their bot, their Discord,
-  their runner (see kingdoms `docs/CONVENTIONS.md` § *Integration
+  their runner (see botforge `docs/CONVENTIONS.md` § *Integration
   branches*).
 
 This page is the environment matrix; the deployment procedure lives in
@@ -18,7 +18,7 @@ This page is the environment matrix; the deployment procedure lives in
 | | test | prod |
 | --- | --- | --- |
 | Manifest | `envs/test/docker-compose.yml` | `envs/prod/docker-compose.yml` |
-| Bot image | `ghcr.io/...` pinned by the state branch: `pr-<id>-<timestamp>-<sha>` for `/deploy`, `sha-<sha>` for main | `ghcr.io/...` released tag `vX.Y.Z` via `KINGDOMS_BOT_IMAGE` |
+| Bot image | `ghcr.io/...` pinned by the state branch: `pr-<id>-<timestamp>-<sha>` for `/deploy`, `sha-<sha>` for main | `ghcr.io/...` released tag `vX.Y.Z` via `BOTFORGE_IMAGE` |
 | Image pull policy | `missing` | `always` |
 | Host | VPS (runner) | VPS (runner) |
 | Secrets | GitHub environment secrets (injected by the runner) | GitHub environment secrets |
@@ -47,30 +47,30 @@ and fail closed when one is missing.
 | Variable | Description |
 | -------- | ----------- |
 | `DISCORD_TOKEN` | Discord bot token (required) |
-| `BOT_ADMINS` | Comma-separated Discord user IDs of the bot operators (kingdoms-services#35), provisioned as an environment **variable**; empty means `/status` reports no operator |
-| `KINGDOMS_DEPLOY_URL` | URL shown by the `/status` Services field: the `/deploy` deployment comment permalink, a tree link (`/tree/<sha>`) for main, the release URL for prod (empty → `n/a`) |
-| `KINGDOMS_DEPLOY_LABEL` | Label shown by the `/status` Services field: `pr-<id>-<timestamp>-<sha>` for a PR deploy, `main@<sha>` for main, `vX.Y.Z` for a release (empty → package version) |
-| `KINGDOMS_DEPLOY_RUN_URL` | URL of the deploy job shown by the `/status` Infra field — injected by the deploy workflow itself (`github.server_url/repository/actions/runs/<run_id>`), so the running bot links the exact job that deployed it |
-| `KINGDOMS_DEPLOY_INFRA_LABEL` | Short label of the deployed infra state (`deploy/<env>@<sha>`), shown by the `/status` Infra field — injected by the deploy workflow |
-| `KINGDOMS_DEPLOY_INFRA_URL` | Tree URL of the deployed infra state commit, the link behind `deploy/<env>@<sha>` |
-| `KINGDOMS_DEPLOY_INFRA_COMMIT_TS` | Unix timestamp of the deployed infra state commit, exported by the deploy workflow from the pinned state checkout — the `Committed` relative time of the announcement Infra section, distinct from the `Deployed` run time |
-| `KINGDOMS_DEPLOY_KIND` | Deploy kind for the typed `/status` links: `pr`, `main`, or `release` — written by the deploy pipelines in the pinned state file |
-| `KINGDOMS_DEPLOY_REF` | Deploy reference for the typed link: PR number, short sha, or release tag |
-| `KINGDOMS_DEPLOY_TREE_URL` | Tree URL behind the `tree` link of a main/release version |
-| `KINGDOMS_DEPLOY_TS` | Unix timestamp of the image build/pin, written by the Pin state workflow — the `Built` relative time of the announcement Services section |
-| `KINGDOMS_DEPLOY_COMMIT_TS` | Unix timestamp of the deployed services commit (its sha rides inside `deploy_tree_url`), resolved by the Pin state workflow via the GitHub API — the `Committed` relative time of the announcement Services section |
-| `KINGDOMS_DEPLOY_RUN_NUMBER` | Number of the deploy job — renders as `Deployment #<n>` in the Deploy field |
-| `KINGDOMS_DEPLOY_RUN_TS` | Unix timestamp of the deploy job start (relative Discord time in the Infra field) |
-| `KINGDOMS_DEPLOY_IMAGE` | Pinned container image reference, exported by `scripts/deploy.sh` from the state file — rendered as the `Image` line of the `/status` Services field (links to the GHCR package page) |
-| `KINGDOMS_DEPLOY_BRANCH` | Source branch of the deployed services commit (e.g. the PR branch, `main`), written by the deploy pipelines in the pinned state — rendered as the `Branch` line of the `/status` Services field |
-| `KINGDOMS_DEPLOY_PR_TITLE` | Title of the pull request that triggered the deployment (empty for main/release deploys) — rendered in the `Pull-request #<n>` label of the `/status` Services field |
-| `KINGDOMS_DEPLOY_ENV` | Environment name (`test`, `prod`) injected by the deploy workflow — the bot's startup announcement env badge and `/status` identity (kingdoms-infra#78 spec 1) |
+| `BOT_ADMINS` | Comma-separated Discord user IDs of the bot operators (botforge-services#35), provisioned as an environment **variable**; empty means `/status` reports no operator |
+| `BOTFORGE_DEPLOY_URL` | URL shown by the `/status` Services field: the `/deploy` deployment comment permalink, a tree link (`/tree/<sha>`) for main, the release URL for prod (empty → `n/a`) |
+| `BOTFORGE_DEPLOY_LABEL` | Label shown by the `/status` Services field: `pr-<id>-<timestamp>-<sha>` for a PR deploy, `main@<sha>` for main, `vX.Y.Z` for a release (empty → package version) |
+| `BOTFORGE_DEPLOY_RUN_URL` | URL of the deploy job shown by the `/status` Infra field — injected by the deploy workflow itself (`github.server_url/repository/actions/runs/<run_id>`), so the running bot links the exact job that deployed it |
+| `BOTFORGE_DEPLOY_INFRA_LABEL` | Short label of the deployed infra state (`deploy/<env>@<sha>`), shown by the `/status` Infra field — injected by the deploy workflow |
+| `BOTFORGE_DEPLOY_INFRA_URL` | Tree URL of the deployed infra state commit, the link behind `deploy/<env>@<sha>` |
+| `BOTFORGE_DEPLOY_INFRA_COMMIT_TS` | Unix timestamp of the deployed infra state commit, exported by the deploy workflow from the pinned state checkout — the `Committed` relative time of the announcement Infra section, distinct from the `Deployed` run time |
+| `BOTFORGE_DEPLOY_KIND` | Deploy kind for the typed `/status` links: `pr`, `main`, or `release` — written by the deploy pipelines in the pinned state file |
+| `BOTFORGE_DEPLOY_REF` | Deploy reference for the typed link: PR number, short sha, or release tag |
+| `BOTFORGE_DEPLOY_TREE_URL` | Tree URL behind the `tree` link of a main/release version |
+| `BOTFORGE_DEPLOY_TS` | Unix timestamp of the image build/pin, written by the Pin state workflow — the `Built` relative time of the announcement Services section |
+| `BOTFORGE_DEPLOY_COMMIT_TS` | Unix timestamp of the deployed services commit (its sha rides inside `deploy_tree_url`), resolved by the Pin state workflow via the GitHub API — the `Committed` relative time of the announcement Services section |
+| `BOTFORGE_DEPLOY_RUN_NUMBER` | Number of the deploy job — renders as `Deployment #<n>` in the Deploy field |
+| `BOTFORGE_DEPLOY_RUN_TS` | Unix timestamp of the deploy job start (relative Discord time in the Infra field) |
+| `BOTFORGE_DEPLOY_IMAGE` | Pinned container image reference, exported by `scripts/deploy.sh` from the state file — rendered as the `Image` line of the `/status` Services field (links to the GHCR package page) |
+| `BOTFORGE_DEPLOY_BRANCH` | Source branch of the deployed services commit (e.g. the PR branch, `main`), written by the deploy pipelines in the pinned state — rendered as the `Branch` line of the `/status` Services field |
+| `BOTFORGE_DEPLOY_PR_TITLE` | Title of the pull request that triggered the deployment (empty for main/release deploys) — rendered in the `Pull-request #<n>` label of the `/status` Services field |
+| `BOTFORGE_DEPLOY_ENV` | Environment name (`test`, `prod`) injected by the deploy workflow — the bot's startup announcement env badge and `/status` identity (botforge-infra#78 spec 1) |
 
 | `MONGO_URI` | MongoDB connection string (overridden by compose inside the stack) |
 | `MONGO_DB` | MongoDB database name |
 | `REDIS_URI` | Redis connection string (overridden by compose inside the stack) |
 | `LOG_LEVEL` | Python logging level (`DEBUG`, `INFO`, `WARNING`, `ERROR`) |
-| `KINGDOMS_BOT_IMAGE` | **Prod only**: full bot image reference, e.g. `ghcr.io/merlin-pinpin-org/kingdoms-services:v0.1.0` |
+| `BOTFORGE_IMAGE` | **Prod only**: full bot image reference, e.g. `ghcr.io/jj-guild/botforge-services:v0.1.0` |
 
 The compose manifests override `MONGO_URI` and `REDIS_URI` so the bot always
 targets the in-stack services.
@@ -88,7 +88,7 @@ automatically — adding one is the checklist below, nothing else:
 2. **Runner label**: the environment VPS's self-hosted runner carries
    `env-<name>` (see [VPS-SETUP.md](VPS-SETUP.md)) — one runner per VPS.
 3. **State branch**: `deploy/<name>` cut from `main` with the initial
-   state commit (`envs/<name>/state/kingdoms-bot.yml`); the deploy
+   state commit (`envs/<name>/state/botforge-bot.yml`); the deploy
    workflow reads the pinned image from it.
 4. **GitHub environment**: create the `<name>` environment with its
    secrets/variables (`DISCORD_TOKEN`, `BOT_ADMINS`, …) and its
@@ -108,7 +108,7 @@ autopin) and the flow is simpler:
   `DISCORD_TOKEN` + `BOT_ADMINS` of the user's own bot.
 - **Runner**: label `env-<alias>` on the user's VPS (or the shared one
   for now).
-- **Autopin**: a push to `vibe/<alias>/main` on kingdoms-services builds
+- **Autopin**: a push to `vibe/<alias>/main` on botforge-services builds
   the image (`sha-<sha>`) and pins it on `deploy/<alias>`
   (`deploy_kind: integration`) — the pin push deploys the env. Diagnose
   the chain with `scripts/diagnose_env.sh <alias>` (human report) or
@@ -122,7 +122,7 @@ per-environment data.
 ## Keeping the state branches current (pipeline propagation)
 
 The state branches are cut from `main` once, then evolve on their own:
-the pipelines only ever touch `envs/<env>/state/kingdoms-bot.yml`, so
+the pipelines only ever touch `envs/<env>/state/botforge-bot.yml`, so
 any change to a **deploy workflow, manifest or script merged on `main`
 keeps running in its old revision on the state branch** until it is
 propagated. A missed propagation is invisible — the deploy succeeds with
@@ -152,7 +152,7 @@ git push origin deploy/<env>
 ```
 
 The sync push deploys with the unchanged pinned state — safe by design.
-The `sync-state` workflow pushes with the `kingdoms-deployer` App token —
+The `sync-state` workflow pushes with the `jj-guild-deployer` App token —
 the same actor the deploy pipelines use to write the pinned state, and the
 only non-admin actor in the `deploy/*` ruleset bypass lists.
 
@@ -179,7 +179,7 @@ sets); this table is the expected state, and the
 fails when reality drifts from it — run it on demand, or after every
 ruleset change.
 
-### kingdoms-infra
+### botforge-infra
 
 | Ref / scope | Ruleset | Rules | Required status checks |
 | --- | --- | --- | --- |
@@ -196,7 +196,7 @@ Infra required status checks (all three branch rulesets):
 5. `Smoke test (test stack boot)`
 6. `cla`
 
-### kingdoms-services
+### botforge-services
 
 | Ref / scope | Ruleset | Rules | Required status checks |
 | --- | --- | --- | --- |
@@ -209,7 +209,7 @@ but forbids deleting or force-updating one — a release is immutable once
 cut. The Docker workflow publishes the `vX.Y.Z` image only for the
 `v*.*.*` tag classifier.
 
-### kingdoms
+### botforge
 
 | Ref / scope | Ruleset | Rules | Required status checks |
 | --- | --- | --- | --- |
@@ -227,7 +227,7 @@ policy gates **who may trigger the workflows** (see
 | Deployment branch policy | `deploy/test` (state branch, ADR-0018), `main`, `vibe/**` | `deploy/prod` (state branch, ADR-0018) |
 | Required reviewers | — | `merlin-pinpin` (approval before any prod job consumes prod secrets) |
 | Wait timer | — | — |
-| Actions policy (who may trigger the workflow) | `deploy-test-dispatch`: `kingdoms-deployer[bot]` + admins (via REST API — the UI picker does not list third-party apps); events `workflow_dispatch`, `push` | — (prod deploys are state-branch pushes written by the release pipeline only; the `prod` environment reviewers gate the Deploy environment run) |
+| Actions policy (who may trigger the workflow) | `deploy-test-dispatch`: `jj-guild-deployer[bot]` + admins (via REST API — the UI picker does not list third-party apps); events `workflow_dispatch`, `push` | — (prod deploys are state-branch pushes written by the release pipeline only; the `prod` environment reviewers gate the Deploy environment run) |
 
 Reading the matrix:
 
@@ -236,7 +236,7 @@ Reading the matrix:
   dispatch always references `ref: main` on this repository, so the
   `vibe/**` branch-policy entry is tolerance, not the actual gate — the
   real gates are the Actions policy (who dispatches) and the
-  `KINGDOMS_BOT_IMAGE` input (what image runs).
+  `BOTFORGE_IMAGE` input (what image runs).
 - **prod** deploys only from `main` (a released image, per ADR-0007) and
   requires an explicit human approval before the job starts. Even an
   accidental `workflow_dispatch` of `deploy.yml` cannot consume prod
@@ -247,17 +247,17 @@ Reading the matrix:
 The flow for validating code changes on the test environment (no manual
 branch on this repository):
 
-1. The code change lives on a `vibe/<slug>` branch of **kingdoms-services**,
+1. The code change lives on a `vibe/<slug>` branch of **botforge-services**,
    opened as a PR (draft while work remains).
-2. The **Docker** workflow of kingdoms-services builds the image on
+2. The **Docker** workflow of botforge-services builds the image on
    every PR push; `/deploy` publishes a timestamped tag
    (`pr-<id>-<timestamp>-<sha>`) from the PR head.
 3. A `/deploy` comment on the PR builds/publishes that exact image and
    dispatches this repository's **Pin state** workflow with it via the
-   `kingdoms-deployer` GitHub App (ephemeral token, Actions: write only).
+   `jj-guild-deployer` GitHub App (ephemeral token, Actions: write only).
 4. The pinned state push triggers the deploy chain on the self-hosted
    runner (test VPS); it pulls the
-   authenticated image (package access: kingdoms-infra has role Read on the
+   authenticated image (package access: botforge-infra has role Read on the
    package — [DEPLOY-TEST-APP.md](DEPLOY-TEST-APP.md) §5), and restarts the
    bot with it. The health gate confirms the stack is healthy.
 
@@ -269,15 +269,15 @@ default image (`sha-<sha>` of main).
 
 The `/deploy` dispatch also carries the **deploy URL** and the
 **version label** so the bot's `/status` shows what is running
-(kingdoms-infra#37): a PR deploy's URL is the permalink of the deployment
+(botforge-infra#37): a PR deploy's URL is the permalink of the deployment
 comment (label `pr-<id>-<timestamp>-<sha>`), a config-change deploy on
 
 `main` points at the deployed source tree `/tree/<sha>` (label
 `main@<sha>`), and a prod deploy points at the released `vX.Y.Z` GitHub
 release (label `vX.Y.Z`).
 
-The Deploy field additionally links the kingdoms-infra deploy job itself
-(`KINGDOMS_DEPLOY_RUN_URL`).
+The Deploy field additionally links the botforge-infra deploy job itself
+(`BOTFORGE_DEPLOY_RUN_URL`).
 
 ## Seeding at deploy time
 

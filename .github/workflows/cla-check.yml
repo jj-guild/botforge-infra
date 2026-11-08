@@ -2,7 +2,7 @@ name: CLA Check
 # Roster-driven CLA check (email process — see CLA.md and the roster):
 # a contributor signs the CLA and emails it to a maintainer; the
 # maintainer's roster PR (cla: accepted) is the recorded acceptance.
-# This check reads CONTRIBUTORS.md on kingdoms main and verifies the PR
+# This check reads CONTRIBUTORS.md on botforge main and verifies the PR
 # author has an accepted, DATED CLA. The /cla comment flow is gone —
 # the roster is the only record. Job name must stay `cla` exactly: the
 # main ruleset matches the required check context by name.
@@ -25,10 +25,10 @@ jobs:
   cla:
     runs-on: ubuntu-latest
     steps:
-      - name: Check out the roster (kingdoms main — the CLA record)
+      - name: Check out the roster (botforge main — the CLA record)
         uses: actions/checkout@v4
         with:
-          repository: merlin-pinpin-org/kingdoms
+          repository: jj-guild/botforge
           ref: main
           sparse-checkout: |
             CONTRIBUTORS.md
@@ -78,6 +78,6 @@ jobs:
               print(f"PR author: {why}")
               sys.exit(0)
           print(f"::error::PR author {author}: {why}.")
-          print("::error::Email the signed CLA (CLA.md in the kingdoms repo) to a maintainer — the maintainer's roster PR records 'accepted <date>'; there is no comment flow.")
+          print("::error::Email the signed CLA (CLA.md in the botforge repo) to a maintainer — the maintainer's roster PR records 'accepted <date>'; there is no comment flow.")
           sys.exit(1)
           PY

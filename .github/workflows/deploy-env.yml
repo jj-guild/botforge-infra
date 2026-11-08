@@ -37,8 +37,8 @@ on:
 
 permissions:
   contents: read
-  # Pull the bot image from ghcr.io/merlin-pinpin-org/kingdoms-services:
-  # the package is owned by the kingdoms-services repository, so the
+  # Pull the bot image from ghcr.io/jj-guild/botforge-services:
+  # the package is owned by the botforge-services repository, so the
   # anonymous pull from the VPS is unauthorized (the package grants
   # Actions access to this repository — see docs/DEPLOY-TEST-APP.md).
   packages: read
@@ -50,7 +50,7 @@ jobs:
     # (one runner per environment VPS). The label list must be a JSON array —
     # a comma-joined string, or the raw format() string, would be one literal
     # label no runner carries, and the job would queue forever.
-    runs-on: ${{ fromJSON(format('["self-hosted", "kingdoms", "env-{0}"]', inputs.environment)) }}
+    runs-on: ${{ fromJSON(format('["self-hosted", "botforge", "env-{0}"]', inputs.environment)) }}
     environment: ${{ inputs.environment }}
     concurrency:
       group: deploy-${{ inputs.environment }}
@@ -88,10 +88,10 @@ jobs:
         id: app-token
         uses: actions/create-github-app-token@v3
         with:
-          app-id: ${{ secrets.KINGDOMS_DEPLOYER_APP_ID }}
-          private-key: ${{ secrets.KINGDOMS_DEPLOYER_APP_PRIVATE_KEY }}
-          owner: merlin-pinpin-org
-          repositories: kingdoms-infra
+          app-id: ${{ secrets.BOTFORGE_DEPLOYER_APP_ID }}
+          private-key: ${{ secrets.BOTFORGE_DEPLOYER_APP_PRIVATE_KEY }}
+          owner: jj-guild
+          repositories: botforge-infra
 
       - name: Deploy the stack (image pinned by the state file)
         run: ./scripts/deploy.sh ${{ inputs.environment }}
@@ -99,7 +99,7 @@ jobs:
           # Same isolated credential store as the login step: the pull
           # reads the credentials from here, never the shared ~/.docker.
           DOCKER_CONFIG: ${{ runner.temp }}/docker-${{ github.run_id }}-${{ github.run_attempt }}
-          BACKUP_DIR: /opt/kingdoms/backups/${{ inputs.environment }}
+          BACKUP_DIR: /opt/botforge/backups/${{ inputs.environment }}
           # The failed-health-gate recovery path (rollback.sh --auto) pushes
           # the state revert to deploy/<env> with this token — the same
           # single-writer App as the pin (ADR-0018). On prod the push is
@@ -111,9 +111,9 @@ jobs:
           # into the shell environment.
           DISCORD_TOKEN: ${{ secrets.DISCORD_TOKEN }}
           BOT_ADMINS: ${{ vars.BOT_ADMINS }}
-          MONGO_DB: ${{ vars.MONGO_DB || 'kingdoms' }}
+          MONGO_DB: ${{ vars.MONGO_DB || 'botforge' }}
           LOG_LEVEL: ${{ vars.LOG_LEVEL || 'INFO' }}
-          # Liquipedia API compliance (kingdoms-services#247): the sync's
+          # Liquipedia API compliance (botforge-services#247): the sync's
           # User-Agent must identify the project and carry a contact;
           # non-secret, GitHub environment variable on every env.
           # PROVIDER_CONTACT is the generic variable (every provider).
@@ -124,20 +124,20 @@ jobs:
           TEST_GUILD_ID: ${{ vars.TEST_GUILD_ID }}
           # The deploy run links itself in /status (Infra field) so the
           # running bot can point at the exact job that deployed it.
-          KINGDOMS_DEPLOY_RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
-          KINGDOMS_DEPLOY_RUN_NUMBER: ${{ github.run_number }}
-          KINGDOMS_DEPLOY_RUN_TS: ${{ steps.infra-id.outputs.run_ts }}
+          BOTFORGE_DEPLOY_RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          BOTFORGE_DEPLOY_RUN_NUMBER: ${{ github.run_number }}
+          BOTFORGE_DEPLOY_RUN_TS: ${{ steps.infra-id.outputs.run_ts }}
           # The environment name reaches the bot (announcement env badge,
-          # kingdoms-deploy footer, /status) — kingdoms-infra#78 spec 1.
-          KINGDOMS_DEPLOY_ENV: ${{ inputs.environment }}
+          # botforge-deploy footer, /status) — botforge-infra#78 spec 1.
+          BOTFORGE_DEPLOY_ENV: ${{ inputs.environment }}
           # The deployed infra state identity (branch@sha -> tree), shown as
           # the Branch/@<sha> lines of the /status Infra field.
-          KINGDOMS_DEPLOY_INFRA_LABEL: ${{ steps.infra-id.outputs.label }}
-          KINGDOMS_DEPLOY_INFRA_URL: ${{ github.server_url }}/${{ github.repository }}/tree/${{ github.sha }}
+          BOTFORGE_DEPLOY_INFRA_LABEL: ${{ steps.infra-id.outputs.label }}
+          BOTFORGE_DEPLOY_INFRA_URL: ${{ github.server_url }}/${{ github.repository }}/tree/${{ github.sha }}
           # The infra state commit date, distinct from the deploy run date
-          # in the announcement (kingdoms-services#109: Committed vs Deployed).
-          KINGDOMS_DEPLOY_INFRA_COMMIT_TS: ${{ steps.infra-id.outputs.commit_ts }}
-      # ── Post-deploy battery (kingdoms-infra#78) ─────────────────────
+          # in the announcement (botforge-services#109: Committed vs Deployed).
+          BOTFORGE_DEPLOY_INFRA_COMMIT_TS: ${{ steps.infra-id.outputs.commit_ts }}
+      # ── Post-deploy battery (botforge-infra#78) ─────────────────────
       # Read-only, Docker/API only: no test tooling on the env runner.
       # Exit 10 = confirmed P0 (wrong/missing identity) -> auto-rollback.
       # P2 findings (inconclusive) report only — never roll back an
@@ -163,8 +163,8 @@ jobs:
           } >> "$GITHUB_STEP_SUMMARY"
 
   journeys:
-    # Cross-repo behavioral verification (kingdoms-infra#78 §3): the
-    # SimCord journeys of kingdoms-services, run at the pinned commit on
+    # Cross-repo behavioral verification (botforge-infra#78 §3): the
+    # SimCord journeys of botforge-services, run at the pinned commit on
     # an ephemeral GitHub-hosted runner. No environment: (no secrets, no
     # second approval), no concurrency coupling with the deploy group,
     # and zero test tooling on the env VPS. Does not gate the deploy:
@@ -179,12 +179,12 @@ jobs:
           ref: deploy/${{ inputs.environment }}
       - name: Run the journeys at the pinned commit
         run: |
-          commit="$(grep -E '^deploy_commit:' envs/${{ inputs.environment }}/state/kingdoms-bot.yml | head -1 | cut -d' ' -f2-)"
+          commit="$(grep -E '^deploy_commit:' envs/${{ inputs.environment }}/state/botforge-bot.yml | head -1 | cut -d' ' -f2-)"
           if [ -z "$commit" ]; then
             echo "P2: state file has no deploy_commit — journeys skipped (inconclusive)" >> "$GITHUB_STEP_SUMMARY"
             exit 0
           fi
-          git clone --quiet https://github.com/merlin-pinpin-org/kingdoms-services.git svc
+          git clone --quiet https://github.com/jj-guild/botforge-services.git svc
           cd svc
           git checkout "$commit"
           curl -LsSf https://astral.sh/uv/install.sh | sh
@@ -203,7 +203,7 @@ jobs:
           } >> "$GITHUB_STEP_SUMMARY"
 
   post-deploy-seed:
-    # Optional seeding at deploy time (kingdoms #seed-on-deploy): the
+    # Optional seeding at deploy time (botforge #seed-on-deploy): the
     # same idempotent CLIs as env-seed.yml, run ON the env runner after
     # the deploy succeeds. Three guards make it explicit by design:
     # 1. an explicit confirmation string (SEED <env>) — a checked box,
@@ -216,7 +216,7 @@ jobs:
     name: Post-deploy seed (${{ inputs.seed_type }})
     needs: deploy
     if: needs.deploy.result == 'success' && inputs.seed_type != ''
-    runs-on: ${{ fromJSON(format('["self-hosted", "kingdoms", "env-{0}"]', inputs.environment)) }}
+    runs-on: ${{ fromJSON(format('["self-hosted", "botforge", "env-{0}"]', inputs.environment)) }}
     environment: ${{ inputs.environment }}
     concurrency:
       group: data-transfer-${{ inputs.environment }}
@@ -226,12 +226,12 @@ jobs:
         uses: actions/checkout@v4
         with:
           ref: deploy/${{ inputs.environment }}
-      - name: Check out kingdoms-services (seed dumps)
+      - name: Check out botforge-services (seed dumps)
         uses: actions/checkout@v4
         with:
-          repository: merlin-pinpin-org/kingdoms-services
+          repository: jj-guild/botforge-services
           ref: main
-          path: kingdoms-services
+          path: botforge-services
       - name: Validate the seed request (explicit confirmation, prod guard)
         env:
           SEED_TYPE: ${{ inputs.seed_type }}
@@ -275,10 +275,10 @@ jobs:
           ENVIRONMENT: ${{ inputs.environment }}
         run: |
           cd "envs/${ENVIRONMENT}"
-          state="state/kingdoms-bot.yml"
+          state="state/botforge-bot.yml"
           pinned="$(grep -E '^image:' "$state" | head -1 | cut -d' ' -f2-)"
           [[ -n "$pinned" ]] || { echo "ERROR: $state has no pinned image" >&2; exit 1; }
-          export KINGDOMS_BOT_IMAGE="$pinned"
+          export BOTFORGE_IMAGE="$pinned"
           {
             echo "## Seed scan — ${ENVIRONMENT} (${SEED_TYPE})"
             echo ""
@@ -300,20 +300,20 @@ jobs:
           cd "envs/${ENVIRONMENT}"
           case "$SEED_TYPE" in
             users)
-              users_file="$(find "${GITHUB_WORKSPACE}/kingdoms-services/data/core" -maxdepth 1 -name '*users.csv' 2>/dev/null | sort | tail -1)"
-              [[ -n "$users_file" ]] || { echo "ERROR: no users dump found — check out kingdoms-services first (seed-on-deploy uses the repo checkout)" >&2; exit 1; }
-              docker compose cp "$users_file" kingdoms-core:/tmp/seed-users.csv
-              docker compose exec -T kingdoms-core python -m                 kingdoms.core.services.identity_import_cli /tmp/seed-users.csv
+              users_file="$(find "${GITHUB_WORKSPACE}/botforge-services/data/core" -maxdepth 1 -name '*users.csv' 2>/dev/null | sort | tail -1)"
+              [[ -n "$users_file" ]] || { echo "ERROR: no users dump found — check out botforge-services first (seed-on-deploy uses the repo checkout)" >&2; exit 1; }
+              docker compose cp "$users_file" botforge-core:/tmp/seed-users.csv
+              docker compose exec -T botforge-core python -m                 botforge.core.services.identity_import_cli /tmp/seed-users.csv
               ;;
             ladder-season)
-              season_file="$(find "${GITHUB_WORKSPACE}/kingdoms-services/data/core" -maxdepth 1 -name '*season.yaml' 2>/dev/null | sort | tail -1)"
-              users_file="$(find "${GITHUB_WORKSPACE}/kingdoms-services/data/core" -maxdepth 1 -name '*users.csv' 2>/dev/null | sort | tail -1)"
-              matches_file="$(find "${GITHUB_WORKSPACE}/kingdoms-services/data/mods/ladder" -maxdepth 1 -name '*matches.csv' 2>/dev/null | sort | tail -1)"
+              season_file="$(find "${GITHUB_WORKSPACE}/botforge-services/data/core" -maxdepth 1 -name '*season.yaml' 2>/dev/null | sort | tail -1)"
+              users_file="$(find "${GITHUB_WORKSPACE}/botforge-services/data/core" -maxdepth 1 -name '*users.csv' 2>/dev/null | sort | tail -1)"
+              matches_file="$(find "${GITHUB_WORKSPACE}/botforge-services/data/mods/ladder" -maxdepth 1 -name '*matches.csv' 2>/dev/null | sort | tail -1)"
               [[ -n "$season_file" && -n "$users_file" && -n "$matches_file" ]] || { echo "ERROR: missing season/users/matches dump" >&2; exit 1; }
-              docker compose cp "$season_file" kingdoms-core:/tmp/seed-season.yaml
-              docker compose cp "$users_file" kingdoms-core:/tmp/seed-users.csv
-              docker compose cp "$matches_file" kingdoms-core:/tmp/seed-matches.csv
-              docker compose exec -T kingdoms-core python -m                 kingdoms.mods.ladder.season_import_cli                 /tmp/seed-season.yaml /tmp/seed-users.csv /tmp/seed-matches.csv                 "$SEED_GUILD"
+              docker compose cp "$season_file" botforge-core:/tmp/seed-season.yaml
+              docker compose cp "$users_file" botforge-core:/tmp/seed-users.csv
+              docker compose cp "$matches_file" botforge-core:/tmp/seed-matches.csv
+              docker compose exec -T botforge-core python -m                 botforge.mods.ladder.season_import_cli                 /tmp/seed-season.yaml /tmp/seed-users.csv /tmp/seed-matches.csv                 "$SEED_GUILD"
               ;;
           esac
       - name: Seed report

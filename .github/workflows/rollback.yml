@@ -9,7 +9,7 @@
 #
 # Two triggers:
 # - repository_dispatch (rollback-state): called by the post-deploy
-#   battery (kingdoms-infra#78) when it confirms the deployment is
+#   battery (botforge-infra#78) when it confirms the deployment is
 #   broken (identity mismatch, unhealthy stack);
 # - workflow_dispatch (env + reason): the manual recovery path.
 #
@@ -65,10 +65,10 @@ jobs:
         id: app-token
         uses: actions/create-github-app-token@v3
         with:
-          app-id: ${{ secrets.KINGDOMS_DEPLOYER_APP_ID }}
-          private-key: ${{ secrets.KINGDOMS_DEPLOYER_APP_PRIVATE_KEY }}
-          owner: merlin-pinpin-org
-          repositories: kingdoms-infra
+          app-id: ${{ secrets.BOTFORGE_DEPLOYER_APP_ID }}
+          private-key: ${{ secrets.BOTFORGE_DEPLOYER_APP_PRIVATE_KEY }}
+          owner: jj-guild
+          repositories: botforge-infra
 
       - name: Check out the state branch
         uses: actions/checkout@v4
@@ -89,7 +89,7 @@ jobs:
             exit 1
           fi
           git config --global user.name "kingdoms-deployer[bot]"
-          git config --global user.email "noreply@merlin-pinpin.org"
+          git config --global user.email "noreply@jj-guild.org"
           git revert --no-edit HEAD >/dev/null
           {
             echo "revert_sha=$(git rev-parse HEAD)"
@@ -103,7 +103,7 @@ jobs:
           APP_TOKEN: ${{ steps.app-token.outputs.token }}
         run: |
           set -euo pipefail
-          git remote set-url origin "https://x-access-token:${APP_TOKEN}@github.com/merlin-pinpin-org/kingdoms-infra.git"
+          git remote set-url origin "https://x-access-token:${APP_TOKEN}@github.com/jj-guild/botforge-infra.git"
           git push origin "HEAD:deploy/${{ env.env_name }}"
           echo "revert pushed to deploy/${{ env.env_name }} — the Deploy environment workflow re-applies the previous image"
 
@@ -117,7 +117,7 @@ jobs:
         run: |
           set -euo pipefail
           branch="vibe/rollback-${{ env.env_name }}-${GITHUB_RUN_ID}"
-          git remote set-url origin "https://x-access-token:${APP_TOKEN}@github.com/merlin-pinpin-org/kingdoms-infra.git"
+          git remote set-url origin "https://x-access-token:${APP_TOKEN}@github.com/jj-guild/botforge-infra.git"
           git push origin "HEAD:refs/heads/${branch}"
           body_file="$(mktemp)"
           {
@@ -128,7 +128,7 @@ jobs:
             echo "- The code on \`main\` is untouched: a rejected deployment rolls the pinned state back, not the source."
           } > "${body_file}"
           gh pr create \
-            --repo merlin-pinpin-org/kingdoms-infra \
+            --repo jj-guild/botforge-infra \
             --head "${branch}" \
             --base deploy/prod \
             --title "rollback(prod): revert the pin ${PIN_SHA:0:7} — ${REASON}" \

@@ -1,14 +1,14 @@
-# kingdoms-infra
+# botforge-infra
 
-Infrastructure as code for the Kingdoms Discord bot platform: Docker
+Infrastructure as code for the BotForge Discord bot platform: Docker
 images, Docker Compose environments, CI/CD workflows, GitOps manifests and
 deployment scripts.
 
 ## Related repositories
 
-- [kingdoms](https://github.com/merlin-pinpin-org/kingdoms) — source of truth:
+- [botforge](https://github.com/jj-guild/botforge) — source of truth:
   architecture, ADRs, roadmap, mods documentation
-- [kingdoms-services](https://github.com/merlin-pinpin-org/kingdoms-services) —
+- [botforge-services](https://github.com/jj-guild/botforge-services) —
   all Python code (generic core, Discord platform, mods, YAML configs)
 
 ## Layout
@@ -65,4 +65,4 @@ You do not need an AI agent to contribute: see
 PR), [docs/DEVELOPER.md](docs/DEVELOPER.md) for the developer guide
 (environment model, checks, deploy chain) and [AGENTS.md](AGENTS.md) for
 the agent entry points. Every infrastructure change must be reflected in
-the `kingdoms` documentation before merge.
+the `botforge` documentation before merge.

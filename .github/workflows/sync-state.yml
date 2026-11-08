@@ -63,21 +63,21 @@ jobs:
         id: app-token
         uses: actions/create-github-app-token@v3
         with:
-          app-id: ${{ secrets.KINGDOMS_DEPLOYER_APP_ID }}
-          private-key: ${{ secrets.KINGDOMS_DEPLOYER_APP_PRIVATE_KEY }}
-          owner: merlin-pinpin-org
-          repositories: kingdoms-infra
+          app-id: ${{ secrets.BOTFORGE_DEPLOYER_APP_ID }}
+          private-key: ${{ secrets.BOTFORGE_DEPLOYER_APP_PRIVATE_KEY }}
+          owner: jj-guild
+          repositories: botforge-infra
       - name: Configure git
         run: |
           git config --global user.name "kingdoms-deployer[bot]"
-          git config --global user.email "noreply@merlin-pinpin.org"
+          git config --global user.email "noreply@jj-guild.org"
       - name: Skip when the state branch does not exist yet
         # A personal env's state branch is created by its first autopin;
         # syncing a missing branch would fail on the checkout.
         env:
           APP_TOKEN: ${{ steps.app-token.outputs.token }}
         run: |
-          if ! git ls-remote "https://x-access-token:${APP_TOKEN}@github.com/merlin-pinpin-org/kingdoms-infra.git" "refs/heads/deploy/${{ matrix.env }}" | grep -q .; then
+          if ! git ls-remote "https://x-access-token:${APP_TOKEN}@github.com/jj-guild/botforge-infra.git" "refs/heads/deploy/${{ matrix.env }}" | grep -q .; then
             echo "deploy/${{ matrix.env }} does not exist yet — the first pin-state creates it; nothing to sync."
             echo "skip=true" >> "$GITHUB_ENV"
           fi
@@ -87,6 +87,19 @@ jobs:
           ref: deploy/${{ matrix.env }}
           fetch-depth: 0
           persist-credentials: false
+      - name: Preserve the pinned state across the merge
+        # The state file is authoritative on the state branch (written by the
+        # deploy pipelines); the merge from main must not overwrite or drop
+        # it — main carries its own copy of the pin under the old name before
+        # the botforge rename.
+        if: env.skip != 'true'
+        run: |
+          set -euo pipefail
+          env="${{ matrix.env }}"
+          mkdir -p /tmp/state-preserve
+          for f in "envs/${env}/state/botforge-bot.yml" "envs/${env}/state/kingdoms-bot.yml" "deploy/state/${env}/kingdoms-bot.yml"; do
+            if [[ -f "$f" ]]; then cp "$f" "/tmp/state-preserve/$(basename "$f")"; fi
+          done
       - name: Merge origin/main into the state branch
         if: env.skip != 'true'
         run: |
@@ -97,20 +110,38 @@ jobs:
             echo "deploy/${{ matrix.env }} already contains main — nothing to sync."
             exit 0
           fi
-          git merge origin/main --no-edit -m "deploy(${{ matrix.env }}): sync state branch with main"
-      - name: Migrate the state file to the envs/ layout (one-time)
+          msg="deploy(${{ matrix.env }}): sync state branch with main"
+          if ! git merge origin/main --no-edit -m "$msg"; then
+            # The state-file rename (kingdoms-bot.yml → botforge-bot.yml) can
+            # raise a modify/delete conflict that -X cannot resolve. Fall back
+            # to the ADR-0018 invariant: a state branch is exactly main + its
+            # own pinned state file (restored by the next step).
+            git merge --abort
+            git read-tree -u --reset origin/main
+            git commit -m "$msg"
+          fi
+      - name: Restore the pinned state at its new path (rename rides the sync)
         if: env.skip != 'true'
         run: |
           set -euo pipefail
           env="${{ matrix.env }}"
-          state_file="envs/${env}/state/kingdoms-bot.yml"
-          old_file="deploy/state/${env}/kingdoms-bot.yml"
-          # The merge from main cannot carry the state file to its new path
-          # (main never had it): move it as part of the merge commit, so the
-          # deploy workflow triggered by the push reads a complete tree.
-          if [[ ! -f "${state_file}" && -f "${old_file}" ]]; then
+          state_file="envs/${env}/state/botforge-bot.yml"
+          src=""
+          if [[ -f "/tmp/state-preserve/botforge-bot.yml" ]]; then src="/tmp/state-preserve/botforge-bot.yml"; fi
+          if [[ -z "$src" && -f "/tmp/state-preserve/kingdoms-bot.yml" ]]; then src="/tmp/state-preserve/kingdoms-bot.yml"; fi
+          if [[ -n "$src" ]]; then
             mkdir -p "envs/${env}/state"
-            git mv "${old_file}" "${state_file}"
+            cp "$src" "${state_file}"
+            rm -f "envs/${env}/state/kingdoms-bot.yml" "deploy/state/${env}/kingdoms-bot.yml"
+            rmdir "deploy/state/${env}" "deploy/state" 2>/dev/null || true
+            git add -A "envs/${env}/state" "deploy/state" 2>/dev/null || true
+            git commit --amend --no-edit
+            echo "pinned state preserved at ${state_file}"
+          elif [[ -f "deploy/state/${env}/kingdoms-bot.yml" ]]; then
+            # One-time migration (envs/ layout): state branches created before
+            # the move still carry the file at deploy/state/<env>/.
+            mkdir -p "envs/${env}/state"
+            git mv "deploy/state/${env}/kingdoms-bot.yml" "${state_file}"
             rmdir "deploy/state/${env}" "deploy/state" 2>/dev/null || true
             git commit --amend --no-edit
             echo "state file migrated to ${state_file}"
@@ -120,5 +151,5 @@ jobs:
         env:
           APP_TOKEN: ${{ steps.app-token.outputs.token }}
         run: |
-          git remote set-url origin "https://x-access-token:${APP_TOKEN}@github.com/merlin-pinpin-org/kingdoms-infra.git"
+          git remote set-url origin "https://x-access-token:${APP_TOKEN}@github.com/jj-guild/botforge-infra.git"
           git push origin HEAD:deploy/${{ matrix.env }}

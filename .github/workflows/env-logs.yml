@@ -1,5 +1,5 @@
 # Dump the logs of a live environment (repository_dispatch: env-logs,
-# called by kingdoms-services ops-commands.yml on a /logs PR comment).
+# called by botforge-services ops-commands.yml on a /logs PR comment).
 # Runs ON the environment's own runner and uploads the dump as a
 # PRIVATE workflow artifact; the caller posts the relevant excerpts back
 # on the requesting PR/issue. Read-only: never deploys, never pulls,
@@ -54,7 +54,7 @@ concurrency:
 jobs:
   logs:
     name: Dump logs (${{ github.event.client_payload.environment || inputs.environment }})
-    runs-on: ${{ fromJSON(format('["self-hosted", "kingdoms", "env-{0}"]', github.event.client_payload.environment || inputs.environment)) }}
+    runs-on: ${{ fromJSON(format('["self-hosted", "botforge", "env-{0}"]', github.event.client_payload.environment || inputs.environment)) }}
     environment: ${{ github.event.client_payload.environment || inputs.environment }}
     steps:
       - name: Resolve the environment (untrusted input, validated as data)
