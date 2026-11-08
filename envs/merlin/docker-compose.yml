@@ -1,19 +1,19 @@
 # Reset policy: this environment's data may be wiped by the /reset-env
-# keyword (kingdoms.env/resettable flag below). Environments without the
+# keyword (botforge.env/resettable flag below). Environments without the
 # flag fail closed — prod never carries it.
 
-# kingdoms.env/resettable: opt-in to /reset-env (the env-reset roster
+# botforge.env/resettable: opt-in to /reset-env (the env-reset roster
 # capability checks it in envctl.sh before wiping any data volume).
-x-kingdoms-env-resettable: true
+x-botforge-env-resettable: true
 
 services:
-  kingdoms-bot:
-    # Test images are tagged with the commit SHA (built by the kingdoms-services
+  botforge-bot:
+    # Test images are tagged with the commit SHA (built by the botforge-services
     # Docker workflow: sha-<sha>, or pr-<n>-sha-<sha> for /deploy-test).
     # The image comes from the pinned state file on the deploy/test branch
-    # (ADR-0018): deploy.sh exports KINGDOMS_BOT_IMAGE from it. No default:
+    # (ADR-0018): deploy.sh exports BOTFORGE_IMAGE from it. No default:
     # a deploy without pinned state is a bug.
-    image: ${KINGDOMS_BOT_IMAGE:?KINGDOMS_BOT_IMAGE must be pinned by deploy/merlin/state/kingdoms-bot.yml}
+    image: ${BOTFORGE_IMAGE:?BOTFORGE_IMAGE must be pinned by deploy/merlin/state/botforge-bot.yml}
     # `always`: the deploy must run the exact pinned image, never a stale
     # local copy of the same tag.
     pull_policy: always
@@ -22,7 +22,7 @@ services:
       # GitHub environment secrets (nothing secret is stored on the VPS);
       # non-secret values have overridable defaults.
       DISCORD_TOKEN: ${DISCORD_TOKEN:?DISCORD_TOKEN is required}
-      KINGDOMS_VERSION: ${KINGDOMS_VERSION:-}
+      BOTFORGE_VERSION: ${BOTFORGE_VERSION:-}
       BOT_ADMINS: ${BOT_ADMINS:-}
       # Liquipedia API contact (User-Agent) — the bot process runs the
       # panel's map import (fetch_map_seed), not only the core sync.
@@ -32,40 +32,40 @@ services:
       # its ladders to this guild (ladder:aoe2:<guild_id>); the matches seed
       # fail-closes without it. Test envs only: prod never declares one.
       CICD_GUILD_ID: ${TEST_GUILD_ID:-}
-      KINGDOMS_DEPLOY_URL: ${KINGDOMS_DEPLOY_URL:-}
-      KINGDOMS_DEPLOY_LABEL: ${KINGDOMS_DEPLOY_LABEL:-}
-      KINGDOMS_DEPLOY_RUN_URL: ${KINGDOMS_DEPLOY_RUN_URL:-}
-      KINGDOMS_DEPLOY_INFRA_LABEL: ${KINGDOMS_DEPLOY_INFRA_LABEL:-}
-      KINGDOMS_DEPLOY_INFRA_URL: ${KINGDOMS_DEPLOY_INFRA_URL:-}
-      KINGDOMS_DEPLOY_INFRA_COMMIT_TS: ${KINGDOMS_DEPLOY_INFRA_COMMIT_TS:-}
-      KINGDOMS_DEPLOY_KIND: ${KINGDOMS_DEPLOY_KIND:-}
-      KINGDOMS_DEPLOY_REF: ${KINGDOMS_DEPLOY_REF:-}
-      KINGDOMS_DEPLOY_TREE_URL: ${KINGDOMS_DEPLOY_TREE_URL:-}
-      KINGDOMS_DEPLOY_TS: ${KINGDOMS_DEPLOY_TS:-}
-      KINGDOMS_DEPLOY_COMMIT_TS: ${KINGDOMS_DEPLOY_COMMIT_TS:-}
-      KINGDOMS_DEPLOY_COMMIT: ${KINGDOMS_DEPLOY_COMMIT:-}
-      KINGDOMS_DEPLOY_CI_RUN_ID: ${KINGDOMS_DEPLOY_CI_RUN_ID:-}
-      KINGDOMS_DEPLOY_CI_RUN_NUMBER: ${KINGDOMS_DEPLOY_CI_RUN_NUMBER:-}
-      KINGDOMS_DEPLOY_CI_RUN_TS: ${KINGDOMS_DEPLOY_CI_RUN_TS:-}
-      KINGDOMS_DEPLOY_RUN_NUMBER: ${KINGDOMS_DEPLOY_RUN_NUMBER:-}
-      KINGDOMS_DEPLOY_RUN_TS: ${KINGDOMS_DEPLOY_RUN_TS:-}
-      KINGDOMS_DEPLOY_IMAGE: ${KINGDOMS_DEPLOY_IMAGE:-}
-      KINGDOMS_DEPLOY_BRANCH: ${KINGDOMS_DEPLOY_BRANCH:-}
-      KINGDOMS_DEPLOY_PR_TITLE: ${KINGDOMS_DEPLOY_PR_TITLE:-}
-      KINGDOMS_DEPLOY_ENV: ${KINGDOMS_DEPLOY_ENV:-}
-      MONGO_URI: mongodb://kingdoms-mongo:27017
-      REDIS_URI: redis://kingdoms-redis:6379
-      MONGO_DB: ${MONGO_DB:-kingdoms}
+      BOTFORGE_DEPLOY_URL: ${BOTFORGE_DEPLOY_URL:-}
+      BOTFORGE_DEPLOY_LABEL: ${BOTFORGE_DEPLOY_LABEL:-}
+      BOTFORGE_DEPLOY_RUN_URL: ${BOTFORGE_DEPLOY_RUN_URL:-}
+      BOTFORGE_DEPLOY_INFRA_LABEL: ${BOTFORGE_DEPLOY_INFRA_LABEL:-}
+      BOTFORGE_DEPLOY_INFRA_URL: ${BOTFORGE_DEPLOY_INFRA_URL:-}
+      BOTFORGE_DEPLOY_INFRA_COMMIT_TS: ${BOTFORGE_DEPLOY_INFRA_COMMIT_TS:-}
+      BOTFORGE_DEPLOY_KIND: ${BOTFORGE_DEPLOY_KIND:-}
+      BOTFORGE_DEPLOY_REF: ${BOTFORGE_DEPLOY_REF:-}
+      BOTFORGE_DEPLOY_TREE_URL: ${BOTFORGE_DEPLOY_TREE_URL:-}
+      BOTFORGE_DEPLOY_TS: ${BOTFORGE_DEPLOY_TS:-}
+      BOTFORGE_DEPLOY_COMMIT_TS: ${BOTFORGE_DEPLOY_COMMIT_TS:-}
+      BOTFORGE_DEPLOY_COMMIT: ${BOTFORGE_DEPLOY_COMMIT:-}
+      BOTFORGE_DEPLOY_CI_RUN_ID: ${BOTFORGE_DEPLOY_CI_RUN_ID:-}
+      BOTFORGE_DEPLOY_CI_RUN_NUMBER: ${BOTFORGE_DEPLOY_CI_RUN_NUMBER:-}
+      BOTFORGE_DEPLOY_CI_RUN_TS: ${BOTFORGE_DEPLOY_CI_RUN_TS:-}
+      BOTFORGE_DEPLOY_RUN_NUMBER: ${BOTFORGE_DEPLOY_RUN_NUMBER:-}
+      BOTFORGE_DEPLOY_RUN_TS: ${BOTFORGE_DEPLOY_RUN_TS:-}
+      BOTFORGE_DEPLOY_IMAGE: ${BOTFORGE_DEPLOY_IMAGE:-}
+      BOTFORGE_DEPLOY_BRANCH: ${BOTFORGE_DEPLOY_BRANCH:-}
+      BOTFORGE_DEPLOY_PR_TITLE: ${BOTFORGE_DEPLOY_PR_TITLE:-}
+      BOTFORGE_DEPLOY_ENV: ${BOTFORGE_DEPLOY_ENV:-}
+      MONGO_URI: mongodb://botforge-mongo:27017
+      REDIS_URI: redis://botforge-redis:6379
+      MONGO_DB: ${MONGO_DB:-botforge}
       LOG_LEVEL: ${LOG_LEVEL:-INFO}
       # ADR-0020 process split: the bot talks to svc-core over gRPC.
-      CORE_URI: ${CORE_URI:-kingdoms-core:50051}
+      CORE_URI: ${CORE_URI:-botforge-core:50051}
       # Provider stats (live dashboard enrichment): the bot reads the
       # ext-librematch leaderboard stats through the same gRPC contract
-      # core uses (kingdoms #147 grouped dashboard).
-      EXT_LIBREMATCH_URI: ${EXT_LIBREMATCH_URI:-kingdoms-ext-librematch:50061}
+      # core uses (botforge #147 grouped dashboard).
+      EXT_LIBREMATCH_URI: ${EXT_LIBREMATCH_URI:-botforge-ext-librematch:50061}
       # The game service (svc-aoe2): the live dashboard + the activity
       # feed read it (GAME_<KEY>_URI convention).
-      GAME_AOE2_URI: ${GAME_AOE2_URI:-kingdoms-game-aoe2:50071}
+      GAME_AOE2_URI: ${GAME_AOE2_URI:-botforge-game-aoe2:50071}
     healthcheck:
       # The image HEALTHCHECK also probes /healthz; the explicit compose
       # healthcheck makes the deployment health gate (scripts/deploy.sh)
@@ -76,49 +76,49 @@ services:
       retries: 5
       start_period: 30s
     depends_on:
-      kingdoms-mongo:
+      botforge-mongo:
         condition: service_healthy
-      kingdoms-redis:
+      botforge-redis:
         condition: service_healthy
-      kingdoms-core:
+      botforge-core:
         condition: service_healthy
     restart: unless-stopped
 
-  # ── ADR-0020 process split (kingdoms-infra#89) ──────────────────────────
-  # One image (ghcr.io/merlin-pinpin-org/kingdoms-services), four processes:
-  # the entrypoint dispatches on KINGDOMS_PROCESS. gRPC ports are exposed
+  # ── ADR-0020 process split (botforge-infra#89) ──────────────────────────
+  # One image (ghcr.io/jj-guild/botforge-services), four processes:
+  # the entrypoint dispatches on BOTFORGE_PROCESS. gRPC ports are exposed
   # on the internal docker network only (no host publish, no ingress): the
   # processes talk to each other, nobody outside the network does.
 
-  kingdoms-core:
+  botforge-core:
     # svc-core: the domain process (MongoDB/Redis owner, gRPC server on
     # 50051). Same pinned image as the bot: all four processes deploy
     # atomically from a single pin, and version skew between core and
     # its clients cannot exceed one deploy.
-    image: ${KINGDOMS_BOT_IMAGE:?KINGDOMS_BOT_IMAGE must be pinned by deploy/merlin/state/kingdoms-bot.yml}
+    image: ${BOTFORGE_IMAGE:?BOTFORGE_IMAGE must be pinned by deploy/merlin/state/botforge-bot.yml}
     pull_policy: always
     environment:
-      KINGDOMS_PROCESS: core
-      KINGDOMS_VERSION: ${KINGDOMS_VERSION:-}
-      MONGO_URI: mongodb://kingdoms-mongo:27017
-      REDIS_URI: redis://kingdoms-redis:6379
+      BOTFORGE_PROCESS: core
+      BOTFORGE_VERSION: ${BOTFORGE_VERSION:-}
+      MONGO_URI: mongodb://botforge-mongo:27017
+      REDIS_URI: redis://botforge-redis:6379
       CORE_GRPC_PORT: "50051"
       LOG_LEVEL: ${LOG_LEVEL:-INFO}
-      # Liquipedia MediaWiki API compliance (kingdoms-services#247): the
+      # Liquipedia MediaWiki API compliance (botforge-services#247): the
       # map sync's User-Agent must identify the project and carry a
       # contact; non-secret GitHub environment variable (deploy-env.yml).
       PROVIDER_CONTACT: ${PROVIDER_CONTACT:-}
       # ADR-0020 providers: core aggregates ext-librematch and ext-aoe2lobby
       # over the docker network; without URIs it degrades cleanly (marked
       # offline in the live dashboard) — the ext processes still serve.
-      EXT_LIBREMATCH_URI: ${EXT_LIBREMATCH_URI:-kingdoms-ext-librematch:50061}
-      EXT_AOE2LOBBY_URI: ${EXT_AOE2LOBBY_URI:-kingdoms-ext-aoe2lobby:50062}
-      # Game content provider (ext-aoe2techtree, kingdoms.v1.Content):
+      EXT_LIBREMATCH_URI: ${EXT_LIBREMATCH_URI:-botforge-ext-librematch:50061}
+      EXT_AOE2LOBBY_URI: ${EXT_AOE2LOBBY_URI:-botforge-ext-aoe2lobby:50062}
+      # Game content provider (ext-aoe2techtree, botforge.v1.Content):
       # localized faction/map data over the docker network; without the
       # URI the core refresh falls back to the vendored dataset in-process.
-      EXT_AOE2TECHTREE_URI: ${EXT_AOE2TECHTREE_URI:-kingdoms-ext-aoe2techtree:50063}
+      EXT_AOE2TECHTREE_URI: ${EXT_AOE2TECHTREE_URI:-botforge-ext-aoe2techtree:50063}
       # The enrollments push (UpdateEnrollments) targets the game service.
-      GAME_AOE2_URI: ${GAME_AOE2_URI:-kingdoms-game-aoe2:50071}
+      GAME_AOE2_URI: ${GAME_AOE2_URI:-botforge-game-aoe2:50071}
     expose:
       - "50051"
     healthcheck:
@@ -132,21 +132,21 @@ services:
       retries: 5
       start_period: 15s
     depends_on:
-      kingdoms-mongo:
+      botforge-mongo:
         condition: service_healthy
-      kingdoms-redis:
+      botforge-redis:
         condition: service_healthy
     restart: unless-stopped
 
-  kingdoms-ext-librematch:
+  botforge-ext-librematch:
     # ext-librematch: AoE2 data provider (poll-only). Provider processes
     # own their external API secrets (#89 secret split); optional secrets —
     # the provider serves its declared capabilities either way.
-    image: ${KINGDOMS_BOT_IMAGE:?KINGDOMS_BOT_IMAGE must be pinned by deploy/merlin/state/kingdoms-bot.yml}
+    image: ${BOTFORGE_IMAGE:?BOTFORGE_IMAGE must be pinned by deploy/merlin/state/botforge-bot.yml}
     pull_policy: always
     environment:
-      KINGDOMS_PROCESS: ext-librematch
-      KINGDOMS_VERSION: ${KINGDOMS_VERSION:-}
+      BOTFORGE_PROCESS: ext-librematch
+      BOTFORGE_VERSION: ${BOTFORGE_VERSION:-}
       EXT_GRPC_PORT: "50061"
       LIBREMATCH_API_URL: ${LIBREMATCH_API_URL:-}
       LIBREMATCH_API_KEY: ${LIBREMATCH_API_KEY:-}
@@ -160,29 +160,29 @@ services:
       retries: 5
       start_period: 15s
     restart: unless-stopped
-  kingdoms-game-aoe2:
-    # svc-aoe2: the game domain process (kingdoms.v1.GameData) — folds the
+  botforge-game-aoe2:
+    # svc-aoe2: the game domain process (botforge.v1.GameData) — folds the
     # providers' match events into the enriched per-player dashboards and
     # serves them (WatchDashboard / WatchPlayerEvents) to the bot. The bot's
     # live surfaces (the ephemeral dashboard, the activity feed's match
     # cards) read this service; without it the live chain is severed.
-    image: ${KINGDOMS_BOT_IMAGE:?KINGDOMS_BOT_IMAGE must be pinned by deploy/merlin/state/kingdoms-bot.yml}
+    image: ${BOTFORGE_IMAGE:?BOTFORGE_IMAGE must be pinned by deploy/merlin/state/botforge-bot.yml}
     pull_policy: always
     environment:
-      KINGDOMS_PROCESS: game-aoe2
-      KINGDOMS_VERSION: ${KINGDOMS_VERSION:-}
+      BOTFORGE_PROCESS: game-aoe2
+      BOTFORGE_VERSION: ${BOTFORGE_VERSION:-}
       GAME_GRPC_PORT: "50071"
       # the per-player realtime state persists to Mongo (the
       # player_state collection) — the panels read a snapshot, the
       # requests never query the providers.
-      MONGO_URI: mongodb://kingdoms-mongo:27017
-      MONGO_DB: ${MONGO_DB:-kingdoms}
-      EXT_AOE2LOBBY_URI: ${EXT_AOE2LOBBY_URI:-kingdoms-ext-aoe2lobby:50062}
-      EXT_LIBREMATCH_URI: ${EXT_LIBREMATCH_URI:-kingdoms-ext-librematch:50061}
+      MONGO_URI: mongodb://botforge-mongo:27017
+      MONGO_DB: ${MONGO_DB:-botforge}
+      EXT_AOE2LOBBY_URI: ${EXT_AOE2LOBBY_URI:-botforge-ext-aoe2lobby:50062}
+      EXT_LIBREMATCH_URI: ${EXT_LIBREMATCH_URI:-botforge-ext-librematch:50061}
       # the providers panel shows every provider; the techtree is
       # deployed, liquipedia probes empty until it joins the stack.
-      EXT_AOE2TECHTREE_URI: ${EXT_AOE2TECHTREE_URI:-kingdoms-ext-aoe2techtree:50063}
-      EXT_LIQUIPEDIA_URI: ${EXT_LIQUIPEDIA_URI:-kingdoms-ext-liquipedia:50064}
+      EXT_AOE2TECHTREE_URI: ${EXT_AOE2TECHTREE_URI:-botforge-ext-aoe2techtree:50063}
+      EXT_LIQUIPEDIA_URI: ${EXT_LIQUIPEDIA_URI:-botforge-ext-liquipedia:50064}
       LOG_LEVEL: ${LOG_LEVEL:-INFO}
     expose:
       - "50071"
@@ -193,25 +193,25 @@ services:
       retries: 5
       start_period: 15s
     depends_on:
-      kingdoms-ext-aoe2lobby:
+      botforge-ext-aoe2lobby:
         condition: service_healthy
-      kingdoms-ext-librematch:
+      botforge-ext-librematch:
         condition: service_healthy
     restart: unless-stopped
-  kingdoms-ext-aoe2lobby:
+  botforge-ext-aoe2lobby:
     # ext-aoe2lobby: AoE2 live lobby events (aoe2lobby.com WebSocket).
-    image: ${KINGDOMS_BOT_IMAGE:?KINGDOMS_BOT_IMAGE must be pinned by deploy/merlin/state/kingdoms-bot.yml}
+    image: ${BOTFORGE_IMAGE:?BOTFORGE_IMAGE must be pinned by deploy/merlin/state/botforge-bot.yml}
     pull_policy: always
     environment:
-      KINGDOMS_PROCESS: ext-aoe2lobby
-      KINGDOMS_VERSION: ${KINGDOMS_VERSION:-}
+      BOTFORGE_PROCESS: ext-aoe2lobby
+      BOTFORGE_VERSION: ${BOTFORGE_VERSION:-}
       EXT_GRPC_PORT: "50062"
       AOE2LOBBY_WS_URL: ${AOE2LOBBY_WS_URL:-}
       AOE2LOBBY_API_KEY: ${AOE2LOBBY_API_KEY:-}
       # The last received ws frame + its derived info persist to Mongo
       # (the ws_last_frame collection) — the debugging trail.
-      MONGO_URI: mongodb://kingdoms-mongo:27017
-      MONGO_DB: ${MONGO_DB:-kingdoms}
+      MONGO_URI: mongodb://botforge-mongo:27017
+      MONGO_DB: ${MONGO_DB:-botforge}
       LOG_LEVEL: ${LOG_LEVEL:-INFO}
     expose:
       - "50062"
@@ -223,17 +223,17 @@ services:
       start_period: 15s
     restart: unless-stopped
 
-  kingdoms-ext-aoe2techtree:
-    # ext-aoe2techtree: AoE2 game content provider (kingdoms.v1.Content).
+  botforge-ext-aoe2techtree:
+    # ext-aoe2techtree: AoE2 game content provider (botforge.v1.Content).
     # Serves localized faction/map content from the vendored aoe2techtree
     # dataset (default) or a replacement HTTP API (AOE2TECHTREE_SOURCE=api +
     # AOE2TECHTREE_API_URL) — the upstream is swappable without touching
     # the contract or the core. No secrets in the default dataset mode.
-    image: ${KINGDOMS_BOT_IMAGE:?KINGDOMS_BOT_IMAGE must be pinned by deploy/state/merlin/kingdoms-bot.yml}
+    image: ${BOTFORGE_IMAGE:?BOTFORGE_IMAGE must be pinned by deploy/state/merlin/botforge-bot.yml}
     pull_policy: always
     environment:
-      KINGDOMS_PROCESS: ext-aoe2techtree
-      KINGDOMS_VERSION: ${KINGDOMS_VERSION:-}
+      BOTFORGE_PROCESS: ext-aoe2techtree
+      BOTFORGE_VERSION: ${BOTFORGE_VERSION:-}
       EXT_GRPC_PORT: "50063"
       AOE2TECHTREE_SOURCE: ${AOE2TECHTREE_SOURCE:-dataset}
       AOE2TECHTREE_API_URL: ${AOE2TECHTREE_API_URL:-}
@@ -248,22 +248,22 @@ services:
       retries: 5
       start_period: 15s
     restart: unless-stopped
-  kingdoms-ext-liquipedia:
+  botforge-ext-liquipedia:
     # ext-liquipedia: the Liquipedia maps content provider (ADR-0020) —
     # it owns the MediaWiki access (identified User-Agent, shared
     # pacing clock, 429 backoff) and its tables. Without this service
     # the map import falls back to the in-process path in the bot,
     # which hammers the API from the wrong process (the merlin env's
     # 429s). PROVIDER_CONTACT is the ToS contact address.
-    image: ${KINGDOMS_BOT_IMAGE:?KINGDOMS_BOT_IMAGE must be pinned by the deploy state}
+    image: ${BOTFORGE_IMAGE:?BOTFORGE_IMAGE must be pinned by the deploy state}
     pull_policy: always
     environment:
-      KINGDOMS_PROCESS: ext-liquipedia
-      KINGDOMS_VERSION: ${KINGDOMS_VERSION:-}
+      BOTFORGE_PROCESS: ext-liquipedia
+      BOTFORGE_VERSION: ${BOTFORGE_VERSION:-}
       EXT_GRPC_PORT: "50064"
       PROVIDER_CONTACT: ${PROVIDER_CONTACT:-}
-      MONGO_URI: mongodb://kingdoms-mongo:27017
-      MONGO_DB: ${MONGO_DB:-kingdoms}
+      MONGO_URI: mongodb://botforge-mongo:27017
+      MONGO_DB: ${MONGO_DB:-botforge}
       # DEBUG until the Liquipedia 429s are diagnosed: the 429 handler
       # logs the request URL + headers and the response rate-limit headers.
       # HARDCODED: the deploy workflow exports LOG_LEVEL=INFO, which
@@ -279,7 +279,7 @@ services:
       start_period: 15s
     restart: unless-stopped
 
-  kingdoms-mongo:
+  botforge-mongo:
     image: mongo:7.0
     # Loopback binding only: the database listens on the docker network
     # for the bot; the host publish is for operator debugging (mongosh
@@ -291,7 +291,7 @@ services:
     ports:
       - "127.0.0.1:27018:27017"
     volumes:
-      - /opt/kingdoms/envs/merlin/mongo:/data/db
+      - /opt/botforge/envs/merlin/mongo:/data/db
     healthcheck:
       # mongosh cold-start on a busy shared VPS can exceed 5s; without
       # margin the probe is killed mid-handshake and mongo flaps
@@ -303,14 +303,14 @@ services:
       start_period: 30s
     restart: unless-stopped
 
-  kingdoms-redis:
+  botforge-redis:
     image: redis:7.2
-    # Loopback binding only — same rationale as kingdoms-mongo above;
+    # Loopback binding only — same rationale as botforge-mongo above;
     # per-env host port 127.0.0.1:6380, container port 6379.
     ports:
       - "127.0.0.1:6380:6379"
     volumes:
-      - /opt/kingdoms/envs/merlin/redis:/data
+      - /opt/botforge/envs/merlin/redis:/data
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 10s

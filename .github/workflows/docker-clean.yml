@@ -42,7 +42,7 @@ concurrency:
 jobs:
   clean:
     name: ${{ inputs.mode }} (${{ inputs.environment }})
-    runs-on: ${{ fromJSON(format('["self-hosted", "kingdoms", "env-{0}"]', inputs.environment)) }}
+    runs-on: ${{ fromJSON(format('["self-hosted", "botforge", "env-{0}"]', inputs.environment)) }}
     environment: ${{ inputs.environment }}
     steps:
       - name: Resolve the environment (untrusted input, validated as data)
@@ -62,10 +62,10 @@ jobs:
           esac
           echo "name=${INPUT_ENV}" >> "$GITHUB_OUTPUT"
 
-      - name: Check out the roster (kingdoms/CONTRIBUTORS.md)
+      - name: Check out the roster (botforge/CONTRIBUTORS.md)
         uses: actions/checkout@v4
         with:
-          repository: merlin-pinpin-org/kingdoms
+          repository: jj-guild/botforge
           ref: main
           path: roster
           sparse-checkout: CONTRIBUTORS.md
@@ -76,14 +76,14 @@ jobs:
           ENVIRONMENT: ${{ inputs.environment }}
         run: |
           set -euo pipefail
-          # The roster lives in kingdoms/CONTRIBUTORS.md — the source of
+          # The roster lives in botforge/CONTRIBUTORS.md — the source of
           # truth for who may operate an environment. The gate resolves
           # the requestor's login against it. Checked out above: the VPS
           # runners carry no gh CLI, and this keeps the gate offline-safe.
           ROSTER="${GITHUB_WORKSPACE}/roster/CONTRIBUTORS.md"
           [[ -s "${ROSTER}" ]] || { echo "::error::roster not found at ${ROSTER}"; exit 1; }
           if ! grep -qE "^\| @${REQUESTOR} \|" "${ROSTER}"; then
-            echo "::error::@${REQUESTOR} has no roster entry (kingdoms/CONTRIBUTORS.md) — docker clean denied"
+            echo "::error::@${REQUESTOR} has no roster entry (botforge/CONTRIBUTORS.md) — docker clean denied"
             exit 1
           fi
           # Extract the row: login | alias | since | cla | teams | roles | owns | scope

@@ -1,5 +1,5 @@
 blank_issues_enabled: false
 contact_links:
   - name: Documentation (source of truth)
-    url: https://github.com/merlin-pinpin-org/kingdoms
-    about: Architecture, ADRs and skills live in the kingdoms repo before any issue here.
+    url: https://github.com/jj-guild/botforge
+    about: Architecture, ADRs and skills live in the botforge repo before any issue here.

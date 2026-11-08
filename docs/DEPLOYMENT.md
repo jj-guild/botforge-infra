@@ -1,6 +1,6 @@
 # Deployment
 
-This guide describes how the Kingdoms stack is deployed to each environment.
+This guide describes how the BotForge stack is deployed to each environment.
 
 ## Environments
 
@@ -13,23 +13,23 @@ a pinned state on its `deploy/<env>` state branch (ADR-0018):
 | `prod` | `envs/prod/docker-compose.yml` | VPS; released `vX.Y.Z` images only, promoted after validation on `test` and approved by the `prod` environment reviewers |
 
 Each environment runs the same services (ADR-0020 process split,
-kingdoms-infra#89):
+botforge-infra#89):
 
-- `kingdoms-bot` — the Discord bot process (image
-  `ghcr.io/merlin-pinpin-org/kingdoms-services`, published by the `Docker`
-  workflow of the `kingdoms-services` repo; `KINGDOMS_PROCESS=bot`)
-- `kingdoms-core` — svc-core, the domain process (MongoDB/Redis owner,
+- `botforge-bot` — the Discord bot process (image
+  `ghcr.io/jj-guild/botforge-services`, published by the `Docker`
+  workflow of the `botforge-services` repo; `BOTFORGE_PROCESS=bot`)
+- `botforge-core` — svc-core, the domain process (MongoDB/Redis owner,
   gRPC server on the internal network, port 50051)
-- `kingdoms-ext-librematch` — AoE2 data provider process (gRPC, port 50061;
+- `botforge-ext-librematch` — AoE2 data provider process (gRPC, port 50061;
   owns the LibreMatch/Worlds Edge API secrets)
-- `kingdoms-ext-aoe2lobby` — AoE2 live lobby events provider process (gRPC,
+- `botforge-ext-aoe2lobby` — AoE2 live lobby events provider process (gRPC,
   port 50062; owns the aoe2lobby.com secrets)
-- `kingdoms-mongo` — MongoDB 7.0 (persistence)
-- `kingdoms-redis` — Redis 7.2 (hot state)
+- `botforge-mongo` — MongoDB 7.0 (persistence)
+- `botforge-redis` — Redis 7.2 (hot state)
 
-One image backs the four Kingdoms processes: the container entrypoint
-dispatches on `KINGDOMS_PROCESS`. All four deploy atomically from a single
-pinned image (`KINGDOMS_BOT_IMAGE`), so version skew between core and its
+One image backs the four BotForge processes: the container entrypoint
+dispatches on `BOTFORGE_PROCESS`. All four deploy atomically from a single
+pinned image (`BOTFORGE_IMAGE`), so version skew between core and its
 clients cannot exceed one deploy. The gRPC ports are **internal to the
 docker network** — never published to the host, never exposed publicly:
 the processes talk to each other, nobody outside the network does.
@@ -42,7 +42,7 @@ its port only once the servicers are up). The deploy health gate
 
 ## Transition plan — mono-process → 4 processes
 
-The ADR-0020 split moves the deployed stack from one `kingdoms-bot`
+The ADR-0020 split moves the deployed stack from one `botforge-bot`
 container to four processes with **no player-facing downtime**:
 
 1. **Order**: the new services ship in the manifest *before* the image that
@@ -50,23 +50,23 @@ container to four processes with **no player-facing downtime**:
    in dependency order: stores → core → bot; the providers have no
    inbound dependency and start in parallel. The first deploy of the split
    manifest with the current image is a no-op for the new services: the
-   entrypoint of the pre-split image ignores `KINGDOMS_PROCESS` and runs
+   entrypoint of the pre-split image ignores `BOTFORGE_PROCESS` and runs
    the bot, and the TCP health checks pass because the processes bind
    their ports. **Wait — this is only true once the pinned image contains
    the split entrypoint; the split manifest must be deployed *together with*
    the first split image pin.** The deploy is therefore: merge this
    manifest change, then pin/deploy the first split image (from the
-   kingdoms-services PR that ships the split entrypoint) in one deploy —
+   botforge-services PR that ships the split entrypoint) in one deploy —
    the same single-pin deploy as always.
 2. **Version skew during the transition**: the gRPC contracts tolerate one
-   version of skew (additive-only changes to `kingdoms.v1`); the pin is
+   version of skew (additive-only changes to `botforge.v1`); the pin is
    atomic, so in practice the four processes always run the same image.
 3. **Rollback per process**: rollback is per-pin, not per-process — one
    image backs the four processes, and `scripts/rollback.sh` re-applies the
    previous pin as before. A single misbehaving process can be restarted
    (`docker compose restart <service>`) without a pin move.
 4. **Pin-state behavior across the split**: unchanged (ADR-0018). The state
-   file keeps pinning `KINGDOMS_BOT_IMAGE`; the three new services read
+   file keeps pinning `BOTFORGE_IMAGE`; the three new services read
    the same variable — one pin moves the four processes together.
 
 ## Prerequisites
@@ -74,10 +74,10 @@ container to four processes with **no player-facing downtime**:
 - Docker and Docker Compose on the host
 - GitHub **environments** for the target environment (Settings →
   Environments): the `DISCORD_TOKEN` **secret** at minimum; the `BOT_ADMINS`
-  **variable** (bot operators, kingdoms-services#35) so `/status` can list
-  them; `MONGO_DB`, `LOG_LEVEL`, `KINGDOMS_BOT_IMAGE` (prod),
-  `KINGDOMS_DEPLOY_URL` (deployed-artifact link shown by `/status`,
-  kingdoms-infra#37) are optional. The runner injects them at
+  **variable** (bot operators, botforge-services#35) so `/status` can list
+  them; `MONGO_DB`, `LOG_LEVEL`, `BOTFORGE_IMAGE` (prod),
+  `BOTFORGE_DEPLOY_URL` (deployed-artifact link shown by `/status`,
+  botforge-infra#37) are optional. The runner injects them at
   deploy time — no secret is ever stored on the VPS or in the repository
   ([GitHub environment secrets docs](https://docs.github.com/en/actions/reference/environments#environment-secrets)).
 
@@ -94,7 +94,7 @@ whether a pin needs a PR — approving a production deployment is merging
 it):
 
 - `test` — **deployed by state push** (ADR-0018): a `/deploy` (or
-  `/deploy <env>`) PR comment in `kingdoms-services` builds the PR image
+  `/deploy <env>`) PR comment in `botforge-services` builds the PR image
   (`pr-<id>-<timestamp>-<sha>`) and pins it in the `deploy/test` state
   branch via the **GitHub App** (ephemeral token — setup in
   [DEPLOY-TEST-APP.md](DEPLOY-TEST-APP.md));
@@ -105,8 +105,8 @@ it):
   the audit trail.
 - `prod` — **deployed by state push** (ADR-0018): released `vX.Y.Z`
   images only, promoted by the [Promote
-  release](https://github.com/merlin-pinpin-org/kingdoms-services/blob/main/.github/workflows/release.yml)
-  workflow of `kingdoms-services` once the release has been validated
+  release](https://github.com/jj-guild/botforge-services/blob/main/.github/workflows/release.yml)
+  workflow of `botforge-services` once the release has been validated
   on `test`; the Deploy environment run then waits for the `prod`
   environment reviewers before deploying. The branch ruleset requires a
   PR, so approving a prod deployment is merging it.
@@ -122,9 +122,9 @@ Every deployment enforces three safety gates:
    The bot serves a liveness endpoint (`GET /healthz`, port 8000) for the
    whole lifetime of the process; the compose healthcheck probes it and the
    gate reports a crash-looping bot as `unhealthy`.
-3. **Post-deploy battery** (kingdoms-infra#78): after the health gate,
+3. **Post-deploy battery** (botforge-infra#78): after the health gate,
    `scripts/post_deploy_battery.sh` verifies the deployment identity —
-   the running `kingdoms-bot` container image equals the image pinned in
+   the running `botforge-bot` container image equals the image pinned in
    the state file, every service reports healthy, and the Discord
    application has its commands registered (read-only REST check).
    Severity semantics — the false-negative trap: a **confirmed**
@@ -133,7 +133,7 @@ Every deployment enforces three safety gates:
    (Discord 5xx, rate limit, missing configuration) is **P2**, reported
    in the run's Step Summary only — never roll back an unproven state.
    A second GitHub-hosted job (`SimCord journeys`) checks out
-   `kingdoms-services` at the pinned commit and runs the behavioral
+   `botforge-services` at the pinned commit and runs the behavioral
    journeys: it does not gate the deployment (a behavioral regression is
    a P1 report, not a state problem), and zero test tooling ever
    touches the env VPS (the journeys run on the ephemeral runner).
@@ -164,7 +164,7 @@ the concurrency-zombie trap behind the 2026-09-24 prod incident) lives in
 | The deploy job is queued forever, `runner_name: null` | No runner carries the `env-<env>` label, or the runner is offline | Check the runner on the VPS (`sudo ./svc.sh status`, [VPS-SETUP.md](VPS-SETUP.md)) |
 | The deploy fails: `DISCORD_TOKEN is not set` | The GitHub `<env>` environment secret is missing | Settings → Environments → `<env>`; the manifests fail closed on missing secrets |
 | The deploy fails at the health gate and rolls back | A service never reports `healthy` within the timeout | Inspect `docker compose logs` on the VPS; the automatic rollback already restored the latest backup |
-| The image pull fails: `unauthorized` | `kingdoms-infra` lost its Read role on the bot image package | [DEPLOY-TEST-APP.md](DEPLOY-TEST-APP.md) §5 (package Actions access) |
+| The image pull fails: `unauthorized` | `botforge-infra` lost its Read role on the bot image package | [DEPLOY-TEST-APP.md](DEPLOY-TEST-APP.md) §5 (package Actions access) |
 | A deploy-chain fix merged on `main` does not change behavior | Deploy runs use the workflow revision of the state branch | Wait for the state-branch propagation ([ENVIRONMENTS.md](ENVIRONMENTS.md) § "Keeping the state branches current") |
 
 ## Database backup and restore

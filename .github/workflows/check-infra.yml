@@ -35,13 +35,13 @@ jobs:
         run: |
           shopt -s nullglob
           for manifest in envs/*/docker-compose.yml; do
-            echo "Checking kingdoms-bot healthcheck in ${manifest}"
+            echo "Checking botforge-bot healthcheck in ${manifest}"
             grep -q "healthcheck:" "${manifest}"
             grep -q "healthz" "${manifest}"
           done
       - name: Check every service declares a healthcheck
         run: |
-          # ADR-0020 process split (kingdoms-infra#89): a service without a
+          # ADR-0020 process split (botforge-infra#89): a service without a
           # healthcheck would silently bypass the deploy health gate.
           shopt -s nullglob
           for manifest in envs/*/docker-compose.yml; do

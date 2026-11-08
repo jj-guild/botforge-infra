@@ -1,4 +1,4 @@
-# Contributing to Kingdoms (kingdoms-infra)
+# Contributing to BotForge (botforge-infra)
 
 This repository holds the infrastructure: Docker Compose environments,
 CI/CD workflows, GitOps state branches and the deployment scripts run on
@@ -11,14 +11,14 @@ with a public clone and no credentials.
 - Docker + Docker Compose (manifest validation, local stack)
 - `shellcheck` (script linting; install it via your package manager)
 - Python 3.12+ and a clone of
-  [`kingdoms-services`](https://github.com/merlin-pinpin-org/kingdoms-services)
+  [`botforge-services`](https://github.com/jj-guild/botforge-services)
   are **not** needed here — infra checks are self-contained.
 
 ## Set up
 
 ```bash
-git clone https://github.com/merlin-pinpin-org/kingdoms-infra.git
-cd kingdoms-infra
+git clone https://github.com/jj-guild/botforge-infra.git
+cd botforge-infra
 ```
 
 There is no build step: this repository is manifests, workflows and
@@ -30,7 +30,7 @@ missing, never a green-ish skip.
 ## Your first contribution
 
 1. **Pick or create an issue** (from a
-   [template](https://github.com/merlin-pinpin-org/kingdoms-infra/issues/new/choose) —
+   [template](https://github.com/jj-guild/botforge-infra/issues/new/choose) —
    blank issues are disabled; non-compliant ones are flagged `invalid`).
 2. **Create a branch** from `main`:
 
@@ -55,7 +55,7 @@ missing, never a green-ish skip.
 
    ```bash
    DISCORD_TOKEN=ci-placeholder \
-   KINGDOMS_BOT_IMAGE=ghcr.io/merlin-pinpin-org/kingdoms-services:sha-ci \
+   BOTFORGE_IMAGE=ghcr.io/jj-guild/botforge-services:sha-ci \
      docker compose -f envs/test/docker-compose.yml config --quiet
    ```
 
@@ -84,7 +84,7 @@ missing, never a green-ish skip.
 - Deploy scripts stay idempotent, fail-closed and rollback-capable.
 - Never handle secret values: real credentials live only in GitHub
   environment secrets (entered by ops in the web UI).
-- Every infrastructure change is reflected in the `kingdoms`
+- Every infrastructure change is reflected in the `botforge`
   documentation (source of truth) before merge.
 - A required status check never uses a `paths:` filter (it must report
   on every PR or it silently blocks merges).
@@ -92,7 +92,7 @@ missing, never a green-ish skip.
 ## The vibe-coding model
 
 This project is primarily built through an AI-agent workflow
-([operating model](https://github.com/merlin-pinpin-org/kingdoms/blob/main/docs/VIBEWORKFLOW.md));
+([operating model](https://github.com/jj-guild/botforge/blob/main/docs/VIBEWORKFLOW.md));
 agent sessions run the same checks you just ran. Human contributions are
 welcome and follow exactly the path above — no agent required.
 

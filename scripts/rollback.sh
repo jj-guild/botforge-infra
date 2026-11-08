@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Roll back the Kingdoms stack to its last known-good state.
+# Roll back the BotForge stack to its last known-good state.
 #
 # Two paths (ADR-0018, the state is the source of truth):
 #
@@ -43,7 +43,7 @@ for arg in "$@"; do
     esac
 done
 BACKUP_DIR="${BACKUP_DIR:-${REPO_ROOT}/backups}"
-STATE_FILE="envs/${ENVIRONMENT}/state/kingdoms-bot.yml"
+STATE_FILE="envs/${ENVIRONMENT}/state/botforge-bot.yml"
 
 
 log() { echo "[rollback:${ENVIRONMENT}] $*"; }
@@ -82,7 +82,7 @@ reapply_previous_state() {
         return 1
     fi
     git -C "${REPO_ROOT}" remote set-url origin \
-        "https://x-access-token:${ROLLBACK_TOKEN}@github.com/merlin-pinpin-org/kingdoms-infra.git"
+        "https://x-access-token:${ROLLBACK_TOKEN}@github.com/jj-guild/botforge-infra.git"
     if ! git -C "${REPO_ROOT}" push origin "HEAD:deploy/${ENVIRONMENT}" 2>/dev/null; then
         # Non-fast-forward (the ruleset forbids it) or a rejection: put the
         # working tree back and fall through to the caller's fallback.

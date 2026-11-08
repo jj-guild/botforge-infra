@@ -1,19 +1,19 @@
-# Code ownership (kingdoms-infra).
+# Code ownership (botforge-infra).
 # Combined with the "main" ruleset (require code owner review, 1
 # approval), no change to these paths merges without a maintainer.
-# Teams: @merlin-pinpin-org/maintainers (developer + ops) reviews
+# Teams: @jj-guild/maintainers (developer + ops) reviews
 # everything; ops additionally owns the production manifests.
 #
 # Default: a maintainer reviews everything
-*                       @merlin-pinpin-org/maintainers
+*                       @jj-guild/maintainers
 
 # Production manifests: ops must review (on top of the default)
-/envs/prod/            @merlin-pinpin-org/ops
+/envs/prod/            @jj-guild/ops
 
 # Environment configuration, deployment scripts and workflows
 # Pinned deployment state (ADR-0018): the deploy pipelines write it on the
 # state branches; on main, a maintainer reviews any manual change.
-/envs/*/state/         @merlin-pinpin-org/maintainers
-/envs/test/            @merlin-pinpin-org/maintainers
-/scripts/               @merlin-pinpin-org/maintainers
-/.github/workflows/     @merlin-pinpin-org/maintainers
+/envs/*/state/         @jj-guild/maintainers
+/envs/test/            @jj-guild/maintainers
+/scripts/               @jj-guild/maintainers
+/.github/workflows/     @jj-guild/maintainers
