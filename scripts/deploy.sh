@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Deploy the Kingdoms stack to a target environment (test, prod).
+# Deploy the BotForge stack to a target environment (test, prod).
 # Idempotent, with mandatory pre-deploy backup and post-deploy health gate.
 
 set -Eeuo pipefail
@@ -10,7 +10,7 @@ mapfile -t ENVIRONMENTS < <(cd "${REPO_ROOT}/envs" && ls -d */ 2>/dev/null | tr 
 ENVIRONMENT="${1:-test}"
 ENV_DIR="${REPO_ROOT}/envs/${ENVIRONMENT}"
 COMPOSE_FILE="${ENV_DIR}/docker-compose.yml"
-MONGO_SERVICE="kingdoms-mongo"
+MONGO_SERVICE="botforge-mongo"
 HEALTH_TIMEOUT="${HEALTH_TIMEOUT:-90}"
 
 usage() {
@@ -35,34 +35,34 @@ die() { echo "[deploy:${ENVIRONMENT}] ERROR: $*" >&2; exit 1; }
 # it is the source of truth for the deployed image and deploy URL —
 # the deploy workflow checks out the state branch commit, so the
 # pinned values cannot drift or be spoofed via workflow inputs.
-STATE_FILE="${REPO_ROOT}/envs/${ENVIRONMENT}/state/kingdoms-bot.yml"
+STATE_FILE="${REPO_ROOT}/envs/${ENVIRONMENT}/state/botforge-bot.yml"
 if [[ -f "${STATE_FILE}" ]]; then
     pinned_image="$(grep -E '^image:' "${STATE_FILE}" | head -1 | cut -d' ' -f2-)"
     pinned_url="$(grep -E '^deploy_url:' "${STATE_FILE}" | head -1 | cut -d' ' -f2-)"
     pinned_label="$(grep -E '^version_label:' "${STATE_FILE}" | head -1 | cut -d' ' -f2-)"
     [[ -n "${pinned_image:-}" ]] || die "state file ${STATE_FILE} has no image"
-    export KINGDOMS_BOT_IMAGE="${pinned_image}"
+    export BOTFORGE_IMAGE="${pinned_image}"
     [[ -n "${pinned_url:-}" ]] || pinned_url=""
-    export KINGDOMS_DEPLOY_URL="${pinned_url}"
+    export BOTFORGE_DEPLOY_URL="${pinned_url}"
     # The pinned image reference is also exposed to the bot so /status can
-    # link the exact running container image (KINGDOMS_DEPLOY_IMAGE).
-    export KINGDOMS_DEPLOY_IMAGE="${pinned_image}"
+    # link the exact running container image (BOTFORGE_DEPLOY_IMAGE).
+    export BOTFORGE_DEPLOY_IMAGE="${pinned_image}"
     [[ -n "${pinned_label:-}" ]] || pinned_label=""
-    export KINGDOMS_DEPLOY_LABEL="${pinned_label}"
-    # Typed /status links (kingdoms-services#81): deploy kind, ref, tree and
+    export BOTFORGE_DEPLOY_LABEL="${pinned_label}"
+    # Typed /status links (botforge-services#81): deploy kind, ref, tree and
     # timestamp, written by the pipelines alongside the pinned image.
     for field in kind ref tree_url ts commit_ts branch pr_title commit ci_run_id ci_run_number ci_run_ts; do
         value="$(grep -E "^deploy_${field}:" "${STATE_FILE}" | head -1 | cut -d' ' -f2- || true)"
-        export "KINGDOMS_DEPLOY_${field^^}"="${value}"
+        export "BOTFORGE_DEPLOY_${field^^}"="${value}"
     done
-    log "state: image=${KINGDOMS_BOT_IMAGE} label=${KINGDOMS_DEPLOY_LABEL:-<none>} deploy_url=${KINGDOMS_DEPLOY_URL:-<none>} kind=${KINGDOMS_DEPLOY_KIND:-<none>} ref=${KINGDOMS_DEPLOY_REF:-<none>}"
+    log "state: image=${BOTFORGE_IMAGE} label=${BOTFORGE_DEPLOY_LABEL:-<none>} deploy_url=${BOTFORGE_DEPLOY_URL:-<none>} kind=${BOTFORGE_DEPLOY_KIND:-<none>} ref=${BOTFORGE_DEPLOY_REF:-<none>}"
 fi
 
 # Every process (bot, core, ext, game) logs its version at startup; the
 # running version is the deployed image tag (ADR-0018 pinned reference).
-if [[ -n "${KINGDOMS_BOT_IMAGE:-}" ]]; then
-    export KINGDOMS_VERSION="${KINGDOMS_BOT_IMAGE##*:}"
-    log "version: ${KINGDOMS_VERSION}"
+if [[ -n "${BOTFORGE_IMAGE:-}" ]]; then
+    export BOTFORGE_VERSION="${BOTFORGE_IMAGE##*:}"
+    log "version: ${BOTFORGE_VERSION}"
 fi
 
 cd "${ENV_DIR}"
@@ -75,14 +75,14 @@ docker compose pull --quiet
 
 # Resolve the pulled image digest and expose tag@digest to the bot:
 # /status and the boot announcement render the exact running image
-# (KINGDOMS_DEPLOY_IMAGE), not just its mutable tag (ADR-0018).
-if [[ -n "${KINGDOMS_BOT_IMAGE:-}" ]]; then
-    image_digest="$(docker image inspect --format '{{index .RepoDigests 0}}' "${KINGDOMS_BOT_IMAGE}" 2>/dev/null || true)"
+# (BOTFORGE_DEPLOY_IMAGE), not just its mutable tag (ADR-0018).
+if [[ -n "${BOTFORGE_IMAGE:-}" ]]; then
+    image_digest="$(docker image inspect --format '{{index .RepoDigests 0}}' "${BOTFORGE_IMAGE}" 2>/dev/null || true)"
     if [[ "${image_digest}" == *"@sha256:"* ]]; then
         digest="${image_digest##*@}"
-        tag="${KINGDOMS_BOT_IMAGE##*:}"
-        export KINGDOMS_DEPLOY_IMAGE="${tag}@${digest}"
-        log "image resolved to ${KINGDOMS_DEPLOY_IMAGE}"
+        tag="${BOTFORGE_IMAGE##*:}"
+        export BOTFORGE_DEPLOY_IMAGE="${tag}@${digest}"
+        log "image resolved to ${BOTFORGE_DEPLOY_IMAGE}"
     else
         log "image digest not resolvable; /status shows the pinned tag"
     fi
@@ -123,13 +123,13 @@ else
 fi
 
 # One-shot data migration (externalized volumes): the stores ride bind
-# mounts on the VPS filesystem (/opt/kingdoms/envs/<env>/{mongo,redis})
+# mounts on the VPS filesystem (/opt/botforge/envs/<env>/{mongo,redis})
 # — the data survives reset-env, volume prunes and compose down -v.
 # The FIRST deploy after the switch must carry the legacy named volumes'
 # content over: with the stack stopped (a stopped mongod flushes its
 # files — a live file copy would corrupt WiredTiger), the copy is safe.
 # Runs only when the legacy volume exists AND the target dir is empty.
-DATA_ROOT="/opt/kingdoms/envs/${ENVIRONMENT}"
+DATA_ROOT="/opt/botforge/envs/${ENVIRONMENT}"
 _migrate_store() {
     local name="$1" dir="$2"
     mkdir -p "${dir}"
@@ -143,13 +143,13 @@ _migrate_store() {
         log "migration done: ${dir} now holds ${name}'s data (legacy volume kept until cleaned)"
     fi
 }
-docker compose stop kingdoms-mongo kingdoms-redis >/dev/null 2>&1 || true
+docker compose stop botforge-mongo botforge-redis >/dev/null 2>&1 || true
 _migrate_store mongo_data "${DATA_ROOT}/mongo"
 _migrate_store redis_data "${DATA_ROOT}/redis"
 
 log "applying the stack"
-# ADR-0020 process split (kingdoms-infra#89): the stack is now four
-# Kingdoms processes (bot, core, ext-librematch, ext-aoe2lobby) plus the
+# ADR-0020 process split (botforge-infra#89): the stack is now four
+# BotForge processes (bot, core, ext-librematch, ext-aoe2lobby) plus the
 # stores. `up` is still one atomic converge: compose starts the
 # dependencies first (depends_on service_healthy), so core comes up
 # before the bot and the providers; the health gate below then verifies

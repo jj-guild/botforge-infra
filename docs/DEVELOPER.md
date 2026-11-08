@@ -1,14 +1,14 @@
-# kingdoms-infra — developer guide
+# botforge-infra — developer guide
 
-`kingdoms-infra` holds the infrastructure of the Kingdoms Discord bot
+`botforge-infra` holds the infrastructure of the BotForge Discord bot
 platform: Docker environments, CI/CD workflows, GitOps manifests and the
 deployment scripts executed on the VPS runners.
 
 Read the shared
-[conventions](https://github.com/merlin-pinpin-org/kingdoms/blob/main/docs/CONVENTIONS.md)
+[conventions](https://github.com/jj-guild/botforge/blob/main/docs/CONVENTIONS.md)
 and the
-[operating model](https://github.com/merlin-pinpin-org/kingdoms/blob/main/docs/VIBEWORKFLOW.md)
-in the `kingdoms` repo. This page covers what is specific to working *in
+[operating model](https://github.com/jj-guild/botforge/blob/main/docs/VIBEWORKFLOW.md)
+in the `botforge` repo. This page covers what is specific to working *in
 this repo*.
 
 ## Layout
@@ -43,7 +43,7 @@ stores (MongoDB, Redis) move to the managed external clusters — the
 compose stops carrying them in test and prod, the daily dump targets the
 clusters and a restore drill is rehearsed (issue #127); and the bot
 scales to **N bot containers from the same image** (at least 3 in test
-and prod), each loading its mod set from a `KINGDOMS_MODS` environment
+and prod), each loading its mod set from a `BOTFORGE_MODS` environment
 variable — the environment model above stays unchanged, only the number
 of bot services per env grows.
 
@@ -64,10 +64,10 @@ the CI workflows instead.
 
 ## Deploy chain (summary)
 
-1. `/deploy [env]` on a `kingdoms-services` PR (or a release) dispatches
+1. `/deploy [env]` on a `botforge-services` PR (or a release) dispatches
    `pin-state` with the image and deploy metadata.
 2. `pin-state.yml` merges `main` into `deploy/<env>` and writes the pin
-   (`envs/<env>/state/kingdoms-bot.yml`) atomically (single-writer
+   (`envs/<env>/state/botforge-bot.yml`) atomically (single-writer
    concurrency `deploy-state-<env>`, ADR-0018).
 3. The push triggers `deploy.yml` → `deploy-env.yml`, which runs on the
    `env-<env>` self-hosted runner, applies the pinned state with
@@ -101,7 +101,7 @@ support rollback (`deploy.sh`, database restore via `restore_db.sh`).
 - `paths:` filters on the deploy chain must include `scripts/deploy.sh`
   and the workflow files themselves, or a merge triggers no deploy.
 - Dynamic `runs-on` needs
-  `fromJSON(format('[\"self-hosted\", \"kingdoms\", \"env-{0}\"]', inputs.environment))`
+  `fromJSON(format('[\"self-hosted\", \"botforge\", \"env-{0}\"]', inputs.environment))`
   — `format()` alone yields a string, which becomes one literal label.
 - Reusable workflows cannot elevate permissions: the caller grants
   `packages: read`.
@@ -129,7 +129,7 @@ Symptoms, in order of probability:
    approval (required reviewers); GitHub notifies through the review
    banner, not the usual run events.
 3. The deploy job is queued and `labels` shows one comma-joined string
-   (`self-hosted,kingdoms,env-prod`) → pre-`fromJSON` bug: no runner will
+   (`self-hosted,botforge,env-prod`) → pre-`fromJSON` bug: no runner will
    ever match; cancel the run.
 4. Everything green on GitHub but nothing on the VPS → runner offline
    (`sudo ./svc.sh status`, VPS-SETUP troubleshooting).
@@ -146,6 +146,6 @@ from the run page.
 
 ## Keeping docs in sync
 
-Any infrastructure change must be reflected in the `kingdoms` documentation
+Any infrastructure change must be reflected in the `botforge` documentation
 (source of truth) before merge, and in this repo's own `docs/` pages
 (ENVIRONMENTS, GITOPS, DEPLOYMENT) when they describe the changed behavior.

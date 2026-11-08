@@ -50,11 +50,11 @@ COMPOSE_FILE="${REPO_ROOT}/envs/${ENVIRONMENT}/docker-compose.yml"
 # Same substitution inputs as deploy.sh: the pinned image comes from the
 # state file (compose fails closed without it), DISCORD_TOKEN from the
 # GitHub environment secrets. Logs are read-only — the state is untouched.
-STATE_FILE="${REPO_ROOT}/envs/${ENVIRONMENT}/state/kingdoms-bot.yml"
+STATE_FILE="${REPO_ROOT}/envs/${ENVIRONMENT}/state/botforge-bot.yml"
 if [[ -f "${STATE_FILE}" ]]; then
     pinned_image="$(grep -E '^image:' "${STATE_FILE}" | head -1 | cut -d' ' -f2-)"
     [[ -n "${pinned_image:-}" ]] || die "state file ${STATE_FILE} has no image"
-    export KINGDOMS_BOT_IMAGE="${pinned_image}"
+    export BOTFORGE_IMAGE="${pinned_image}"
 fi
 [[ -n "${DISCORD_TOKEN:-}" ]] \
     || die "DISCORD_TOKEN is not set (provide it via the GitHub environment secrets)"

@@ -1,9 +1,9 @@
-# Kingdoms Contributor License Agreement (CLA)
+# BotForge Contributor License Agreement (CLA)
 
-Thank you for contributing to Kingdoms!
+Thank you for contributing to BotForge!
 
 This is a lightweight, individual Contributor License Agreement. By accepting
-it, you keep ownership of your contributions and grant the Kingdoms project
+it, you keep ownership of your contributions and grant the BotForge project
 maintainers the rights they need to distribute the project (including under
 the current AGPL-3.0 license and, if the maintainers ever choose so, under a
 different or additional license).
@@ -11,11 +11,11 @@ different or additional license).
 ## 1. Definitions
 
 - **"You"**: the individual copyright owner submitting contributions to the
-  Kingdoms repositories (`kingdoms`, `kingdoms-services`, `kingdoms-infra`).
+  BotForge repositories (`botforge`, `botforge-services`, `botforge-infra`).
 - **"Contribution"**: any source code, documentation, configuration, or other
   work you intentionally submit for inclusion in the project (excluding
   changes clearly marked as third-party code).
-- **"Project"**: the Kingdoms project and its repositories.
+- **"Project"**: the BotForge project and its repositories.
 - **"Maintainers"**: the project owner and persons authorized by them.
 
 ## 2. Grant of rights

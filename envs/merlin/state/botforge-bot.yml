@@ -1,0 +1,20 @@
+# Desired state of botforge-bot on the merlin environment (ADR-0018).
+# Written by the deploy pipelines only (jj-guild-deployer GitHub App);
+# a push to this branch deploys this exact image.
+image: ghcr.io/jj-guild/botforge-services:pr-212-20261007101324-b9e4474
+version_label: merlin@b9e4474
+deploy_url: https://github.com/jj-guild/botforge-services/tree/b9e44749d4ecb863bcaa41c8bddc82639a970f0c
+deploy_kind: integration
+deploy_ref: b9e4474
+deploy_tree_url: https://github.com/jj-guild/botforge-services/tree/b9e44749d4ecb863bcaa41c8bddc82639a970f0c
+deploy_ts: 1791368042
+deploy_commit_ts: 1791367943
+deploy_commit: b9e44749d4ecb863bcaa41c8bddc82639a970f0c
+deploy_ci_run_id: 37605848504
+deploy_ci_run_number: 684
+deploy_ci_run_ts: 1791367946
+deployed_by: merlin-pinpin (autopin vibe/merlin/main)
+deployed_at: "2026-10-07T10:14:02Z"
+source: 
+deploy_branch: vibe/arch-conformity-86e552
+deploy_pr_title: Architecture conformity: the five rules hold — provider isolation, one game home, the bot touches no provider

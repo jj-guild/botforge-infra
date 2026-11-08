@@ -13,7 +13,7 @@
 # else lives on.
 #   1. the env-reset roster capability (self env only; ops anywhere) —
 #      and never prod, for any role, no approval path;
-#   2. the env's compose manifest opts in via x-kingdoms-env-resettable
+#   2. the env's compose manifest opts in via x-botforge-env-resettable
 #      (an allowlist: envctl.sh fails closed without the flag).
 #
 # The prod environment is gated like any workflow touching it: the
@@ -54,7 +54,7 @@ concurrency:
 jobs:
   control:
     name: ${{ inputs.command }} (${{ inputs.environment }})
-    runs-on: ${{ fromJSON(format('["self-hosted", "kingdoms", "env-{0}"]', inputs.environment)) }}
+    runs-on: ${{ fromJSON(format('["self-hosted", "botforge", "env-{0}"]', inputs.environment)) }}
     environment: ${{ inputs.environment }}
     steps:
       - name: Resolve the environment (untrusted input, validated as data)

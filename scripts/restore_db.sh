@@ -21,8 +21,8 @@ if [[ -n "${MONGO_ARCHIVE}" && ! -f "${MONGO_ARCHIVE}" && -f "${BACKUP_DIR:-${RE
 fi
 CONFIRM="${3:-}"
 COMPOSE_FILE="${REPO_ROOT}/envs/${ENVIRONMENT}/docker-compose.yml"
-MONGO_SERVICE="kingdoms-mongo"
-REDIS_SERVICE="kingdoms-redis"
+MONGO_SERVICE="botforge-mongo"
+REDIS_SERVICE="botforge-redis"
 
 usage() {
     echo "Usage: $0 <${ENVIRONMENTS[*]}> <archive.gz> [--yes]"

@@ -1,15 +1,15 @@
 # Deploy GitHub App setup (one-time)
 
-`/deploy` (a PR comment on `kingdoms-services`) must trigger the
+`/deploy` (a PR comment on `botforge-services`) must trigger the
 **Pin state** workflow of this repository. GitHub Actions cannot listen to
 another repository's events, so the trigger crosses repositories; it does so
 with a **GitHub App** instead of a permanent personal access token:
 
-- the app is installed on **`merlin-pinpin-org/kingdoms-infra` only**;
+- the app is installed on **`jj-guild/botforge-infra` only**;
 - it holds two permissions: **Actions: write** and **Contents: write**
   (ADR-0018: it pins the deployed image in the `deploy/<env>` state
   branches; it still cannot read secrets, comment, or touch `main`);
-- the workflow in `kingdoms-services` mints an **ephemeral token** from it
+- the workflow in `botforge-services` mints an **ephemeral token** from it
   (valid for at most one hour, `actions/create-github-app-token@v3`), so no
   permanent credential ever leaves GitHub;
 - `deploy.yml` exposes its `workflow_dispatch` trigger to the allowed
@@ -24,8 +24,8 @@ As the developer (Settings → Developer settings → [New GitHub App](https://g
 
 | Field | Value |
 | --- | --- |
-| GitHub App name | `kingdoms-deployer` |
-| Homepage URL | `https://github.com/merlin-pinpin-org/kingdoms` |
+| GitHub App name | `jj-guild-deployer` |
+| Homepage URL | `https://github.com/jj-guild/botforge` |
 | **Repository permissions** | **Actions: Read and write** + **Contents: Read and write** (state-branch commits, ADR-0018) |
 | Where can this app be installed | **Only on this account** |
 
@@ -38,31 +38,31 @@ if you lose it, generate a new one (and update the secret below). Do not
 confuse it with the *client secret*, which serves the OAuth user flow and
 is not used here.
 
-## 2. Install it on kingdoms-infra only
+## 2. Install it on botforge-infra only
 
-Install the app (`kingdoms-deployer`) on `merlin-pinpin-org/kingdoms-infra`
+Install the app (`jj-guild-deployer`) on `jj-guild/botforge-infra`
 only — leave every other repository unchecked, especially
-`kingdoms-services` and `kingdoms`.
+`botforge-services` and `botforge`.
 
-## 3. Store its credentials on kingdoms-services
+## 3. Store its credentials on botforge-services
 
-On `merlin-pinpin-org/kingdoms-services` (Settings → Secrets and variables →
+On `jj-guild/botforge-services` (Settings → Secrets and variables →
 Actions → New repository secret), add:
 
 | Secret | Value |
 | --- | --- |
-| `KINGDOMS_DEPLOYER_APP_ID` | The App ID shown on the app's page |
-| `KINGDOMS_DEPLOYER_APP_PRIVATE_KEY` | The `.pem` private key (download it when generated; the full file content, including the BEGIN/END lines) |
+| `BOTFORGE_DEPLOYER_APP_ID` | The App ID shown on the app's page |
+| `BOTFORGE_DEPLOYER_APP_PRIVATE_KEY` | The `.pem` private key (download it when generated; the full file content, including the BEGIN/END lines) |
 
-The `Deploy PR (comment)` workflow of `kingdoms-services` reads these
+The `Deploy PR (comment)` workflow of `botforge-services` reads these
 two secrets. The **re-pin job** of this repository's Deploy environment workflow
 (a config change on `main` re-pins the state of non-protected
-environments) needs the same credentials on `kingdoms-infra`: add `KINGDOMS_DEPLOYER_APP_ID` and
-`KINGDOMS_DEPLOYER_APP_PRIVATE_KEY` as repository secrets of
-`kingdoms-infra` too (Settings → Secrets and variables → Actions).
+environments) needs the same credentials on `botforge-infra`: add `BOTFORGE_DEPLOYER_APP_ID` and
+`BOTFORGE_DEPLOYER_APP_PRIVATE_KEY` as repository secrets of
+`botforge-infra` too (Settings → Secrets and variables → Actions).
 
 Once the app is installed with Contents: write and the secrets set,
-`/deploy` comments on PRs of `kingdoms-services` dispatch the
+`/deploy` comments on PRs of `botforge-services` dispatch the
 [Pin state](../.github/workflows/pin-state.yml) workflow of this repository
 (`repository_dispatch`, `pin-state`): it pins the PR image in the
 `deploy/<env>` state branch — merging `main` in the same commit — and the
@@ -83,18 +83,18 @@ manually from the Actions tab.
 > **Prerequisite unblocked (2026-09):** third-party GitHub Apps can only be
 > added to actor allow lists **when the repository belongs to an
 > organization**. The repositories moved from the personal account
-> `merlin-pinpin` to the `merlin-pinpin-org` organization, and the app has
+> `merlin-pinpin` to the `jj-guild` organization, and the app has
 > since recorded activity here (it dispatched the Pin state run), so the
-> actor picker now lists `kingdoms-deployer[bot]`. On the personal-account
+> actor picker now lists `jj-guild-deployer[bot]`. On the personal-account
 > repository the picker did not list the app and this policy was deferred
 > — this note records why.
 
-To add the policy, on `merlin-pinpin-org/kingdoms-infra` (Settings →
+To add the policy, on `jj-guild/botforge-infra` (Settings →
 Actions → Policies → New policy):
 
 - **Name**: `deploy-test-dispatch`;
 - **Target**: the workflow `.github/workflows/deploy.yml`;
-- **Actor rule** (allow list): **`kingdoms-deployer[bot]`** only — add the
+- **Actor rule** (allow list): **`jj-guild-deployer[bot]`** only — add the
   human administrators too if they want a manual fallback (otherwise
   nobody can dispatch the workflow by hand);
 - **Event rule** (allow list): `workflow_dispatch` and `push` — `push`
@@ -114,13 +114,13 @@ app would break `/deploy` entirely.
 > (checked 2026-09, on an organization repository, with the app having
 > recorded dispatch activity) does not offer third-party GitHub Apps in
 > the allowed-actors list — only users, repository roles, and
-> GitHub-owned bots. If it does not list `kingdoms-deployer[bot]`, create
+> GitHub-owned bots. If it does not list `jj-guild-deployer[bot]`, create
 > or edit the policy through the **REST API** instead of the UI, which
 > accepts bot identities by ID:
 >
 > ```bash
-> # Bot id: kingdoms-deployer[bot] = 332499271
-> gh api --method POST /repos/merlin-pinpin-org/kingdoms-infra/actions/policies \
+> # Bot id: jj-guild-deployer[bot] = 332499271
+> gh api --method POST /repos/jj-guild/botforge-infra/actions/policies \
 >   -f name=deploy-test-dispatch \
 >   -f enforcement=active \
 >   -f workflow_path=.github/workflows/deploy.yml \
@@ -129,9 +129,9 @@ app would break `/deploy` entirely.
 > ```
 >
 > Then verify with a `/deploy`: the run must still be created by
-> `kingdoms-deployer[bot]` — an actor list without the app breaks the
+> `jj-guild-deployer[bot]` — an actor list without the app breaks the
 > `/deploy` flow. To adjust the policy later, use
-> `gh api /repos/merlin-pinpin-org/kingdoms-infra/actions/policies` to list
+> `gh api /repos/jj-guild/botforge-infra/actions/policies` to list
 > the policy ids and the update endpoint on the same API.
 > The exact body-parameter names are documented in the
 > [Actions policies REST API](https://docs.github.com/en/rest/actions/policies)
@@ -139,10 +139,10 @@ app would break `/deploy` entirely.
 > command, and fall back to the UI with the repository-admin role if a
 > parameter is rejected.
 
-## 5. Grant kingdoms-infra access to the bot image package
+## 5. Grant botforge-infra access to the bot image package
 
-The bot image package `ghcr.io/merlin-pinpin-org/kingdoms-services` is
-owned by the **kingdoms-services** repository (its Docker workflow
+The bot image package `ghcr.io/jj-guild/botforge-services` is
+owned by the **botforge-services** repository (its Docker workflow
 publishes it). It is not public, and after the organization transfer a
 package's access no longer extends to the other repositories: the
 deploy job pulling it from the test VPS fails with
@@ -151,10 +151,10 @@ deploy job pulling it from the test VPS fails with
 Two halves, both required:
 
 - **Package side (GitHub UI, org owner):** on
-  [the package settings](https://github.com/orgs/merlin-pinpin-org/packages/container/package/kingdoms-services/settings),
-  **Manage Actions access** → *Add repository* → `kingdoms-infra` → role
+  [the package settings](https://github.com/orgs/jj-guild/packages/container/package/botforge-services/settings),
+  **Manage Actions access** → *Add repository* → `botforge-infra` → role
   **Read** (pull only; the repo never pushes to this package). Do the
-  same for the `kingdoms` repo only if a workflow there ever needs to
+  same for the `botforge` repo only if a workflow there ever needs to
   pull the image.
 - **Workflow side (in this repository):** `deploy.yml` logs in to ghcr.io with the job's `GITHUB_TOKEN`
   (`permissions: packages: read`) before running `scripts/deploy.sh`,
@@ -166,9 +166,9 @@ anonymous and fails closed.
 
 ## Verify
 
-1. Comment `/deploy` on any PR of `kingdoms-services`.
+1. Comment `/deploy` on any PR of `botforge-services`.
 2. The PR gets a 🚀 comment, then a ✅ one.
 3. A **Pin state** run followed by a **Deploy environment** run appear in
-   this repository's Actions (triggered by `kingdoms-deployer[bot]`),
+   this repository's Actions (triggered by `jj-guild-deployer[bot]`),
    run on the self-hosted runner, and the bot on the test VPS restarts
    with the PR image.

@@ -1,16 +1,16 @@
 #!/usr/bin/env bash
-# Control the Kingdoms stack of a target environment (test, prod):
+# Control the BotForge stack of a target environment (test, prod):
 # start | stop | restart | status | reset. Runs ON the environment's
 # runner (called by .github/workflows/env-control.yml) and dumps the
 # result; it never deploys, never pulls, never touches the pinned state.
 #
 # reset stops the stack and recreates it fresh — the DATA SURVIVES:
 # mongo and redis ride bind mounts on the VPS filesystem
-# (/opt/kingdoms/envs/<env>/{mongo,redis}), never docker volumes, so a
+# (/opt/botforge/envs/<env>/{mongo,redis}), never docker volumes, so a
 # reset (docker compose down --volumes) nor any volume prune can wipe
 # them. Double gate before it can run:
 #   1. the env-reset roster capability (self env only; ops anywhere),
-#   2. the env itself opts in: x-kingdoms-env-resettable: true in its
+#   2. the env itself opts in: x-botforge-env-resettable: true in its
 #      compose manifest (an allowlist — prod never carries the flag, and
 #      a new environment without it fails closed).
 set -Eeuo pipefail
@@ -40,11 +40,11 @@ COMPOSE_FILE="${REPO_ROOT}/envs/${ENVIRONMENT}/docker-compose.yml"
 # Same substitution inputs as deploy.sh: the pinned image comes from the
 # state file (compose fails closed without it), DISCORD_TOKEN from the
 # GitHub environment secrets. Control commands never change the state.
-STATE_FILE="${REPO_ROOT}/envs/${ENVIRONMENT}/state/kingdoms-bot.yml"
+STATE_FILE="${REPO_ROOT}/envs/${ENVIRONMENT}/state/botforge-bot.yml"
 if [[ -f "${STATE_FILE}" ]]; then
     pinned_image="$(grep -E '^image:' "${STATE_FILE}" | head -1 | cut -d' ' -f2-)"
     [[ -n "${pinned_image:-}" ]] || die "state file ${STATE_FILE} has no image"
-    export KINGDOMS_BOT_IMAGE="${pinned_image}"
+    export BOTFORGE_IMAGE="${pinned_image}"
 fi
 [[ -n "${DISCORD_TOKEN:-}" ]] \
     || die "DISCORD_TOKEN is not set (provide it via the GitHub environment secrets)"
@@ -77,14 +77,14 @@ case "${COMMAND}" in
         done
         log "CLEARING collections: ${COLLECTIONS[*]}"
         for col in "${COLLECTIONS[@]}"; do
-            docker compose exec -T kingdoms-mongo mongosh --quiet --eval "
-                const dropped = db.getSiblingDB('kingdoms').getCollection('${col}').drop();
+            docker compose exec -T botforge-mongo mongosh --quiet --eval "
+                const dropped = db.getSiblingDB('botforge').getCollection('${col}').drop();
                 print('${col} dropped: ' + dropped);
             "
         done
         ;;
     reset)
-        # Allowlist: only manifests carrying x-kingdoms-env-resettable: true.
+        # Allowlist: only manifests carrying x-botforge-env-resettable: true.
         # Read the flag from the compose FILE, not from `docker compose config`:
         # the config output strips top-level x- extension fields (compose-spec),
         # so the flag is invisible there (the 2026-10-15 /reset-env failure).
@@ -96,11 +96,11 @@ except ImportError:
     sys.exit(2)
 with open(sys.argv[1], encoding="utf-8") as handle:
     data = yaml.safe_load(handle) or {}
-print(data.get("x-kingdoms-env-resettable") is True)
+print(data.get("x-botforge-env-resettable") is True)
 ' "${COMPOSE_FILE}")"
         [[ "$resettable" == "True" ]] \
-            || die "reset is not allowed on this environment (no x-kingdoms-env-resettable flag in its compose manifest)"
-        log "RESETTING: stopping the stack (the externalized data under /opt/kingdoms/envs/${ENVIRONMENT} survives)"
+            || die "reset is not allowed on this environment (no x-botforge-env-resettable flag in its compose manifest)"
+        log "RESETTING: stopping the stack (the externalized data under /opt/botforge/envs/${ENVIRONMENT} survives)"
         docker compose down --volumes
         ;;
     status)

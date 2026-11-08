@@ -1,6 +1,6 @@
 # GitOps
 
-The Kingdoms infrastructure follows GitOps principles: the desired state of
+The BotForge infrastructure follows GitOps principles: the desired state of
 every environment is described by versioned files in this repository, and
 the deployed state converges to them through automation.
 
@@ -17,7 +17,7 @@ the deployed state converges to them through automation.
    nobody applies changes by hand.
 4. **Continuously reconciled**: `scripts/deploy.sh` is idempotent; re-running
    it converges the environment to the manifest state.
-5. **Verified after apply** (kingdoms-infra#78): the post-deploy battery
+5. **Verified after apply** (botforge-infra#78): the post-deploy battery
    reads the pinned state from the state file and confirms the running
    deployment matches it — a confirmed mismatch rolls back
    automatically, an inconclusive check reports only, and the
