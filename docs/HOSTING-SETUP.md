@@ -3,16 +3,20 @@
 > **Short on time?** [HOSTING-INSTALL-QUICKSTART.md](HOSTING-INSTALL-QUICKSTART.md) is the copy-paste version (OVH Public Cloud included).
 
 This guide turns a fresh hosting into a fully automated GitOps deployment
-target **at first boot**, via one cloud-init user-data block. It is
-written as commands to copy-paste: it assumes you already know ssh,
-GitHub Actions runners and Docker — no tutorials, one verification
-command per step.
+target **at first boot**, via one cloud-init user-data block. Every step
+has copy-paste commands and a verification command with the output you
+should expect.
+
+**First time doing this?** Read [HOSTING-INSTALL-QUICKSTART.md](HOSTING-INSTALL-QUICKSTART.md)
+first — it is the same procedure written for beginners (plain-words
+explanations, where to click, what to copy). This page is the full
+reference. A short glossary is at the end of this page.
 
 Tracked by jj-guild/botforge-services#331 (lot 2).
 
 ## What you are building
 
-- One hosting hosting **one or more environments** (a full stack per
+- One hosting server (a VM) hosting **one or more environments** (a full stack per
   environment: bot + MongoDB + Redis). Each environment gets exactly
   **one self-hosted runner labeled `env-<name>`** under
   `/opt/botforge/runners/<env>/` — the deploy workflows route jobs by
@@ -27,11 +31,20 @@ Tracked by jj-guild/botforge-services#331 (lot 2).
 
 ## 0. Prerequisites
 
-- A hosting with **Debian 13 (trixie)** (Ubuntu 26.04 LTS also works — the
-  cloud-init block auto-detects the distro for the Docker apt repo via
-  `/etc/os-release`), at least **2 GB RAM / 20 GB
-  disk**, and your SSH key (any provider: OVH, Scaleway, Hetzner,
-  DigitalOcean…).
+- A cloud provider account (any: OVH Public Cloud, Scaleway, Hetzner,
+  DigitalOcean…) and a hosting instance (VM) with **Debian 13 (trixie)**
+  (Ubuntu 26.04 LTS also works — the cloud-init block auto-detects the
+  distro for the Docker apt repo via `/etc/os-release`), at least
+  **2 GB RAM / 20 GB disk**.
+- An **SSH key pair** on your computer. If you don't have one yet:
+  `ssh-keygen -t ed25519 -C "you@example.com"` (Enter to accept the
+  defaults), then copy the public key with `cat ~/.ssh/id_ed25519.pub`.
+  You paste the **public** key at instance creation; the private key
+  stays on your computer and is what lets you `ssh` in.
+- Per environment, the env's **Discord bot token** (Discord developer
+  portal → your application → Bot → Reset Token → copy) and the
+  **Discord user IDs** of its operators (Discord → Settings → Advanced →
+  Developer Mode → right-click a user → Copy ID).
 - On GitHub (`jj-guild/botforge-infra`), per environment you
   will host:
   - a **GitHub environment** named `<env>` — created in step 3 with its
@@ -192,12 +205,12 @@ the `kc` / `kcl` shell aliases via `/etc/profile.d/botforge.sh`.
 **Verify** (first ssh login):
 
 ```bash
-ssh <host>
-sudo cloud-init status --wait        # ends with "done"
-docker run hello-world
-docker compose version
-ls /opt/botforge/bin                 # bootstrap.sh install-runner.sh add-env.sh
-sudo -u botforge docker ps           # docker group membership OK
+ssh <host>                           # e.g. ssh debian@203.0.113.10 (user = image name)
+sudo cloud-init status --wait        # Expected at the end: "status: done"
+docker run hello-world               # Expected: "Hello from Docker!"
+docker compose version               # Expected: Docker Compose version v2…
+ls /opt/botforge/bin                 # Expected: bootstrap.sh install-runner.sh add-env.sh
+sudo -u botforge docker ps           # Expected: empty list, no permission error
 ```
 
 The aliases load on the **next** login (profile.d): `exit`, reconnect,
@@ -371,6 +384,29 @@ The laptop CLI (`vpsctl`: bootstrap / diagnose / start / stop / restart
 / status / logs against the hosting from your own machine, configured only
 through a `~/.ssh/config` alias) is **not** part of this guide — it is
 tracked in jj-guild/botforge-services#349.
+
+## Glossary (first-timer)
+
+- **Instance / VM / hosting server**: the virtual server you rent from a
+  cloud provider. It has an IP address and you connect to it with `ssh`.
+- **cloud-init / user-data**: a script you hand to the provider at
+  instance creation; it runs automatically at first boot. Our block
+  installs Docker, the `botforge` user, the firewall and the folders.
+- **Self-hosted runner**: a small program on the server that executes
+  GitHub Actions jobs. One per environment, labeled `botforge,env-<env>`.
+- **Registration token**: a one-time, 1-hour password GitHub gives you to
+  attach a runner to the repo. Shown once — copy it immediately.
+- **Environment** (`test`, `dev-merlin`, …): one isolated stack (bot +
+  MongoDB + Redis) on the server, with its own runner, GitHub secrets and
+  `deploy/<env>` state branch.
+- **Secret vs variable** (GitHub): a secret (e.g. `DISCORD_TOKEN`) is
+  encrypted and only injected into deploy jobs — never displayed, never
+  written on the server. A variable (e.g. `BOT_ADMINS`) is a plain
+  non-secret setting.
+- **State branch `deploy/<env>`**: a git branch that holds the exact
+  image pinned for that env. Pushing to it = deploying that image.
+- **Deploy**: running the `Deploy environment` workflow in the Actions tab;
+  the runner on the server pulls the pinned image and starts the stack.
 
 ## See also
 
