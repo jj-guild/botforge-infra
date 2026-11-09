@@ -9,8 +9,8 @@ a pinned state on its `deploy/<env>` state branch (ADR-0018):
 
 | Environment | Manifest | Purpose |
 | ----------- | -------- | ------- |
-| `test` | `envs/test/docker-compose.yml` | VPS; deployed on demand (`/deploy` PR comment via the jj-guild-deployer GitHub App, or test-config change on main). Commit-SHA-tagged images | validation environment |
-| `prod` | `envs/prod/docker-compose.yml` | VPS; released `vX.Y.Z` images only, promoted after validation on `test` and approved by the `prod` environment reviewers |
+| `test` | `envs/test/docker-compose.yml` | hosting; deployed on demand (`/deploy` PR comment via the jj-guild-deployer GitHub App, or test-config change on main). Commit-SHA-tagged images | validation environment |
+| `prod` | `envs/prod/docker-compose.yml` | hosting; released `vX.Y.Z` images only, promoted after validation on `test` and approved by the `prod` environment reviewers |
 
 Each environment runs the same services (ADR-0020 process split,
 botforge-infra#89):
@@ -78,7 +78,7 @@ container to four processes with **no player-facing downtime**:
   them; `MONGO_DB`, `LOG_LEVEL`, `BOTFORGE_IMAGE` (prod),
   `BOTFORGE_DEPLOY_URL` (deployed-artifact link shown by `/status`,
   botforge-infra#37) are optional. The runner injects them at
-  deploy time — no secret is ever stored on the VPS or in the repository
+  deploy time — no secret is ever stored on the hosting or in the repository
   ([GitHub environment secrets docs](https://docs.github.com/en/actions/reference/environments#environment-secrets)).
 
 ## Deploying
@@ -86,7 +86,7 @@ container to four processes with **no player-facing downtime**:
 Deployment is **GitOps-driven**: the pinned state on the `deploy/<env>`
 state branches is applied by the deploy chain (`deploy.yml` routing →
 `deploy-env.yml` per-environment deploy) running on a **self-hosted runner
-installed on the VPS** — see [VPS-SETUP.md](VPS-SETUP.md) for the
+installed on the hosting** — see [HOSTING-SETUP.md](HOSTING-SETUP.md) for the
 step-by-step server installation. Environments are data, not workflows:
 per-environment gating is GitHub-native (the `<env>` GitHub environment
 carries the required reviewers; the `deploy/<env>` branch ruleset decides
@@ -136,9 +136,9 @@ Every deployment enforces three safety gates:
    `botforge-services` at the pinned commit and runs the behavioral
    journeys: it does not gate the deployment (a behavioral regression is
    a P1 report, not a state problem), and zero test tooling ever
-   touches the env VPS (the journeys run on the ephemeral runner).
+   touches the env hosting (the journeys run on the ephemeral runner).
 
-For a manual, reproducible deployment (test only, e.g. on the VPS):
+For a manual, reproducible deployment (test only, e.g. on the hosting):
 
 ```bash
 DISCORD_TOKEN=... ./scripts/deploy.sh test
@@ -161,9 +161,9 @@ the concurrency-zombie trap behind the 2026-09-24 prod incident) lives in
 | ------- | ----- | ---------- |
 | Newer deploy runs stay `pending`, no deployment status, no notification, runner never asked | A stale `waiting`/`pending` run holds the `deploy-<env>` concurrency group forever | Cancel the stale run the diagnose script links ([DEVELOPER.md](DEVELOPER.md) runbook) |
 | The run is `waiting` with a pending deployment | Environment approval: the required reviewers have not approved yet | Approve or dismiss the deployment in the GitHub UI |
-| The deploy job is queued forever, `runner_name: null` | No runner carries the `env-<env>` label, or the runner is offline | Check the runner on the VPS (`sudo ./svc.sh status`, [VPS-SETUP.md](VPS-SETUP.md)) |
+| The deploy job is queued forever, `runner_name: null` | No runner carries the `env-<env>` label, or the runner is offline | Check the runner on the hosting (`sudo ./svc.sh status`, [HOSTING-SETUP.md](HOSTING-SETUP.md)) |
 | The deploy fails: `DISCORD_TOKEN is not set` | The GitHub `<env>` environment secret is missing | Settings → Environments → `<env>`; the manifests fail closed on missing secrets |
-| The deploy fails at the health gate and rolls back | A service never reports `healthy` within the timeout | Inspect `docker compose logs` on the VPS; the automatic rollback already restored the latest backup |
+| The deploy fails at the health gate and rolls back | A service never reports `healthy` within the timeout | Inspect `docker compose logs` on the hosting; the automatic rollback already restored the latest backup |
 | The image pull fails: `unauthorized` | `botforge-infra` lost its Read role on the bot image package | [DEPLOY-TEST-APP.md](DEPLOY-TEST-APP.md) §5 (package Actions access) |
 | A deploy-chain fix merged on `main` does not change behavior | Deploy runs use the workflow revision of the state branch | Wait for the state-branch propagation ([ENVIRONMENTS.md](ENVIRONMENTS.md) § "Keeping the state branches current") |
 

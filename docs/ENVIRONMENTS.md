@@ -20,13 +20,13 @@ This page is the environment matrix; the deployment procedure lives in
 | Manifest | `envs/test/docker-compose.yml` | `envs/prod/docker-compose.yml` |
 | Bot image | `ghcr.io/...` pinned by the state branch: `pr-<id>-<timestamp>-<sha>` for `/deploy`, `sha-<sha>` for main | `ghcr.io/...` released tag `vX.Y.Z` via `BOTFORGE_IMAGE` |
 | Image pull policy | `missing` | `always` |
-| Host | VPS (runner) | VPS (runner) |
+| Host | hosting (runner) | hosting (runner) |
 | Secrets | GitHub environment secrets (injected by the runner) | GitHub environment secrets |
 | MongoDB exposed ports | 27017 | — |
 | Redis exposed ports | 6379 | — |
 
 Personal environments publish the same debug ports with a per-env host
-port (co-located envs on a shared VPS must not collide): `merlin` →
+port (co-located envs on a shared hosting must not collide): `merlin` →
 27018/6380, `drasah` → 27019/6381.
 | Redis persistence | volume | volume + AOF |
 | Bot memory limit | — | 512M |
@@ -38,7 +38,7 @@ port (co-located envs on a shared VPS must not collide): `merlin` →
 
 ## Configuration variables
 
-Secrets are **never stored on the VPS**. They live in GitHub
+Secrets are **never stored on the hosting**. They live in GitHub
 *environment secrets* (Settings → Environments → `test` /
 `prod` → Add environment secret) and the self-hosted runner injects them
 into `docker compose` at deploy time. The manifests read them by name
@@ -85,8 +85,8 @@ automatically — adding one is the checklist below, nothing else:
 
 1. **Manifest**: `envs/<name>/docker-compose.yml` on `main` (copy the
    test one; the image is pinned by state, never a floating tag).
-2. **Runner label**: the environment VPS's self-hosted runner carries
-   `env-<name>` (see [VPS-SETUP.md](VPS-SETUP.md)) — one runner per VPS.
+2. **Runner label**: the environment hosting's self-hosted runner carries
+   `env-<name>` (see [HOSTING-SETUP.md](HOSTING-SETUP.md)) — one runner per hosting.
 3. **State branch**: `deploy/<name>` cut from `main` with the initial
    state commit (`envs/<name>/state/botforge-bot.yml`); the deploy
    workflow reads the pinned image from it.
@@ -106,7 +106,7 @@ autopin) and the flow is simpler:
 - **GitHub environment** `<alias>`: branch policy on `deploy/<alias>`,
   no required reviewers (it is the user's sandbox), secrets
   `DISCORD_TOKEN` + `BOT_ADMINS` of the user's own bot.
-- **Runner**: label `env-<alias>` on the user's VPS (or the shared one
+- **Runner**: label `env-<alias>` on the user's hosting (or the shared one
   for now).
 - **Autopin**: a push to `vibe/<alias>/main` on botforge-services builds
   the image (`sha-<sha>`) and pins it on `deploy/<alias>`
@@ -256,14 +256,14 @@ branch on this repository):
    dispatches this repository's **Pin state** workflow with it via the
    `jj-guild-deployer` GitHub App (ephemeral token, Actions: write only).
 4. The pinned state push triggers the deploy chain on the self-hosted
-   runner (test VPS); it pulls the
+   runner (test hosting); it pulls the
    authenticated image (package access: botforge-infra has role Read on the
    package — [DEPLOY-TEST-APP.md](DEPLOY-TEST-APP.md) §5), and restarts the
    bot with it. The health gate confirms the stack is healthy.
 
 So: the image under test is always a PR image tagged by PR number,
 timestamp and commit SHA — never an untagged `latest`, never a hand-built
-local image on the VPS. Rolling back is re-running `/deploy` on the
+local image on the hosting. Rolling back is re-running `/deploy` on the
 previous PR, or letting the next config-change deploy on `main` restore the
 default image (`sha-<sha>` of main).
 

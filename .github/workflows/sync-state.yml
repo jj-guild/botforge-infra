@@ -23,7 +23,7 @@
 # main.
 #
 # One job per environment, parameterized only by the env name: adding an
-# environment is adding it to the matrix (plus its ruleset and VPS install).
+# environment is adding it to the matrix (plus its ruleset and hosting install).
 name: Sync state branches
 
 on:

@@ -1,7 +1,7 @@
 # Daily database dump of every environment: a cron run of
 # scripts/backup_db.sh on each environment's own runner. The archives
-# land in the runner's persistent BACKUP_DIR (VPS disk — no expiry;
-# GitHub artifacts cap at 90 days, so the VPS path is the retention
+# land in the runner's persistent BACKUP_DIR (hosting disk — no expiry;
+# GitHub artifacts cap at 90 days, so the hosting path is the retention
 # answer) and are additionally uploaded as PRIVATE artifacts for
 # off-box access. Read-only for the data: mongodump/BGSAVE never write
 # to the databases they read.
@@ -45,15 +45,15 @@ jobs:
 
       - name: Dump the databases
         env:
-          # VPS-SETUP.md: the persistent backup directory survives
+          # HOSTING-SETUP.md: the persistent backup directory survives
           # checkouts; the same path the deploy backup uses.
-          BACKUP_DIR: /opt/botforge/backups/${{ matrix.environment }}
+          BACKUP_DIR: /opt/botforge/backup/${{ matrix.environment }}
         run: ./scripts/backup_db.sh "${{ matrix.environment }}"
 
       - name: Upload the archives (private artifacts)
         uses: actions/upload-artifact@v4
         with:
           name: db-dump-${{ matrix.environment }}-${{ github.run_id }}
-          path: /opt/botforge/backups/${{ matrix.environment }}-*.archive.gz
+          path: /opt/botforge/backup/${{ matrix.environment }}-*.archive.gz
           retention-days: 90
           if-no-files-found: error

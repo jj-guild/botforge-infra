@@ -20,7 +20,7 @@ labels: documentation
 
 ## Specifications
 
-<!-- Precise scope: which botforge docs pages (VPS-SETUP, deployment,
+<!-- Precise scope: which botforge docs pages (HOSTING-SETUP, deployment,
      architecture), which sections, what diagrams -->
 
 ## Acceptance criteria
