@@ -312,6 +312,9 @@ gh api -X POST "$REG" --jq '.token'
 └── envs.json                         # registry of envs on this machine: env → {labels, runner_dir}
 ```
 
+(libicu is installed by the bootstrap's `libicu-dev` package — if you
+bootstrapped before that fix, run once as root: `sudo apt-get install -y libicu-dev`)
+
 ```bash
 # one-time, shared: download the runner installer to the ROOT of /opt/botforge
 # (runner version = the one shown on the Runners page; 2.338.2 below)
@@ -333,7 +336,6 @@ sudo install -d -o botforge -g botforge \
 # extract the SHARED installer (root-level tarball) into this env's runner dir, configure as botforge:
 sudo -u botforge bash -c "cd /opt/botforge/runners/$ENV && \
   tar xzf /opt/botforge/actions-runner-linux-x64-2.338.2.tar.gz && \
-  ./bin/installdependencies.sh 2>/dev/null || true   # no-op if libicu already present (it is, via the bootstrap packages) && \
   ./config.sh --url https://github.com/jj-guild/botforge-infra --token $TOKEN --labels botforge,env-$ENV"
 
 # as root: install + start the systemd service (runs as botforge):
