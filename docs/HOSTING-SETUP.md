@@ -246,55 +246,51 @@ the pinned runner tarball (shared by all environments), the helper
 scripts `/opt/botforge/bin/{bootstrap,install-runner,add-env}.sh`, and
 the `kc` / `kcl` shell aliases via `/etc/profile.d/botforge.sh`.
 
-#### 3. Register one runner per env — line by line
+#### 3. Register one runner per env — one block, no prompts
 
-Token (shown **once**, valid **1 h**) — UI: <https://github.com/jj-guild/botforge-infra/settings/actions/runners/new> (Settings → Actions → Runners → New self-hosted runner, Linux/x64), or API (scriptable with any HTTP client):
-
-```bash
-REG='repos/jj-guild/botforge-infra/actions/runners/registration-token'
-gh api -X POST "$REG" --jq '.token'
-```
-
-Then, **on the server**, exactly the commands GitHub prints on that page:
+**Where you work:** over SSH as the image user (`debian`), the runner of
+env `<env>` lives in **`/opt/botforge/runners/<env>`** (e.g. `test`),
+owned by `botforge` — never in your home directory. `<TOKEN>` = the fresh
+registration token from above (valid **1 h**). Runner version =
+the one shown on the Runners page (`2.338.2` below).
 
 ```bash
-# Download
-# Create a folder
-$ mkdir actions-runner && cd actions-runner
-# Download the latest runner package
-$ curl -o actions-runner-linux-x64-2.338.2.tar.gz -L https://github.com/actions/runner/releases/download/v2.338.2/actions-runner-linux-x64-2.338.2.tar.gz
-# Optional: Validate the hash
-$ echo "baebf204307bac6193480852732f0aba2ae97b6c5597c244f4d5558390147c40  actions-runner-linux-x64-2.338.2.tar.gz" | shasum -a 256 -c
-# Extract the installer
-$ tar xzf ./actions-runner-linux-x64-2.338.2.tar.gz
-Configure
-# Create the runner and start the configuration experience
-$ ./config.sh --url https://github.com/jj-guild/botforge-infra --token <TOKEN>
-# Last step, run it!
-$ ./run.sh
+ENV=test            # the environment this runner serves
+TOKEN=<TOKEN>       # fresh token, 1 h validity
+
+# as root: prepare the per-env dir, then download + extract + configure AS botforge in it
+sudo install -d -o botforge -g botforge "/opt/botforge/runners/$ENV"
+sudo -u botforge bash -c "cd /opt/botforge/runners/$ENV && \
+  curl -o actions-runner-linux-x64-2.338.2.tar.gz -L https://github.com/actions/runner/releases/download/v2.338.2/actions-runner-linux-x64-2.338.2.tar.gz && \
+  echo 'baebf204307bac6193480852732f0aba2ae97b6c5597c244f4d5558390147c40  actions-runner-linux-x64-2.338.2.tar.gz' | shasum -a 256 -c && \
+  tar xzf actions-runner-linux-x64-2.338.2.tar.gz && \
+  ./config.sh --url https://github.com/jj-guild/botforge-infra --token $TOKEN --labels botforge,env-$ENV"
+
+# back as root: install + start the systemd service
+cd "/opt/botforge/runners/$ENV" && sudo ./svc.sh install && sudo ./svc.sh start
+sudo ./svc.sh status        # Expected: active (running)
 ```
 
-(Use the runner version currently shown on the Runners page and your fresh `<TOKEN>`.)
+**Verify on GitHub:** Runners page → the runner is **Idle** (green), labels
+`self-hosted, botforge, env-<env>`.
 
-After GitHub's block, our per-env settings (labels the deploy workflows route on; service so it survives reboots):
+Repeat per environment (`ENV=dev-merlin`, `ENV=dev-drasah`…) with a **fresh
+token each time**. (Equivalent one-command wrapper:
+`sudo /opt/botforge/bin/add-env.sh <env> --token <TOKEN>`.)
 
-```bash
-$ ./config.sh --url https://github.com/jj-guild/botforge-infra --token <TOKEN> --labels botforge,env-test
-$ sudo ./svc.sh install && sudo ./svc.sh start
-# equivalently: sudo /opt/botforge/bin/add-env.sh test --token <TOKEN>
-```
+<details><summary>First time? why a token, why labels, why that dir</summary>
 
-Repeat per env (`test`, `dev-merlin`, `dev-drasah`…) with a **fresh token each time**.
-
-**Verify:** Runners page → each env runner **Idle** (green), labels `self-hosted, botforge, env-<env>`; on the server `cd /opt/botforge/runners/<env> && sudo ./svc.sh status` → active (running).
-
-<details><summary>First time? why a token, why labels</summary>
-
-- The token is a one-time, 1-hour password that attaches a runner to the repo — GitHub shows it once, so copy it immediately and use it within the hour.
-- Labels are how workflows pick the right runner: our deploy workflows require `self-hosted, botforge, env-<env>`.
-- `svc.sh install` makes it a systemd service, so it restarts on reboot; `run.sh` is only for a quick manual test.
+- The **token** is a one-time, 1-hour password that attaches a runner to
+  the repo — copy it immediately, use it within the hour.
+- **Labels** are how deploy workflows pick the right runner:
+  `self-hosted, botforge, env-<env>`.
+- The runner must run **as `botforge`** in `/opt/botforge/runners/<env>`
+  so the deploy jobs can write `_work/` there and read
+  `/opt/botforge/envs/<env>`; the systemd service (installed by
+  `svc.sh` as root) makes it survive reboots.
 
 </details>
+
 
 #### 4. GitHub environment secrets (per env)
 
