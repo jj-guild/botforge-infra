@@ -39,6 +39,14 @@ mkdir -p /opt/botforge/bin /opt/botforge/backup /opt/botforge/data /opt/botforge
 [[ -f /opt/botforge/envs.json ]] || echo '{}' > /opt/botforge/envs.json
 chown -R botforge:botforge /opt/botforge
 
+# load kc/kcl/ll for every interactive user — login shells via
+# /etc/profile.d, non-login shells via ~/.bashrc
+chmod 755 /etc/profile.d
+for h in /root /home/*; do
+  [[ -f "$h/.bashrc" ]] || continue
+  grep -q 'profile.d/botforge.sh' "$h/.bashrc" || printf '\n# BotForge helpers (kc/kcl/ll)\n[ -f /etc/profile.d/botforge.sh ] && . /etc/profile.d/botforge.sh\n' >> "$h/.bashrc"
+done
+
 # --- pinned runner binary, downloaded ONCE, shared by every env ---
 RUNNER_VERSION="2.338.2"  # <- version shown on the Runners page
 curl -fsSLo "/opt/botforge/actions-runner-linux-x64-${RUNNER_VERSION}.tar.gz" \
@@ -139,7 +147,7 @@ echo "env '$ENV_NAME' recorded in $ENVS_JSON"
 EOF__opt_botforge_bin_add-env.sh
 chmod 0755 "/opt/botforge/bin/add-env.sh"
 
-install -m 0644 -d "$(dirname "/etc/profile.d/botforge.sh")"
+install -m 0755 -d "$(dirname "/etc/profile.d/botforge.sh")"
 cat > "/etc/profile.d/botforge.sh" <<'EOF__etc_profile.d_botforge.sh'
 # BotForge compose helpers (installed by cloud-init — docs/HOSTING-SETUP.md).
 _kwork() {  # print the env's compose dir: the runner's _work checkout
@@ -163,6 +171,8 @@ kcl() {  # kcl <env> [service...] — docker compose logs -f (placeholders are f
   local env="${1:?usage: kcl <env> [service...]}"; shift
   kc "$env" logs -f "$@"
 }
+
+alias ll='ls -al'
 EOF__etc_profile.d_botforge.sh
 chmod 0644 "/etc/profile.d/botforge.sh"
 

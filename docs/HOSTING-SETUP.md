@@ -120,6 +120,14 @@ write_files:
       [[ -f /opt/botforge/envs.json ]] || echo '{}' > /opt/botforge/envs.json
       chown -R botforge:botforge /opt/botforge
 
+      # load kc/kcl/ll for every interactive user — login shells via
+      # /etc/profile.d, non-login shells via ~/.bashrc
+      chmod 755 /etc/profile.d
+      for h in /root /home/*; do
+        [[ -f "$h/.bashrc" ]] || continue
+        grep -q 'profile.d/botforge.sh' "$h/.bashrc" || printf '\n# BotForge helpers (kc/kcl/ll)\n[ -f /etc/profile.d/botforge.sh ] && . /etc/profile.d/botforge.sh\n' >> "$h/.bashrc"
+      done
+
       # --- pinned runner binary, downloaded ONCE, shared by every env ---
       RUNNER_VERSION="2.338.2"  # <- version shown on the Runners page
       curl -fsSLo "/opt/botforge/actions-runner-linux-x64-${RUNNER_VERSION}.tar.gz" \
@@ -238,6 +246,8 @@ write_files:
         local env="${1:?usage: kcl <env> [service...]}"; shift
         kc "$env" logs -f "$@"
       }
+
+      alias ll='ls -al'
 runcmd:
   - bash /opt/botforge/bin/bootstrap.sh
 ```
@@ -451,6 +461,13 @@ interactive shell on the hosting.
 
 
 ## Troubleshooting
+
+- **`kc`/`kcl`: command not found, or `source /etc/profile.d/botforge.sh`
+  says Permission denied** → `/etc/profile.d` must be traversable:
+  `sudo chmod 755 /etc/profile.d`. The aliases load at login (profile.d)
+  and in every interactive shell (the bootstrap appends a hook to each
+  `~/.bashrc`). Reconnect, or in the current session: `source ~/.bashrc`.
+  `ll` = `ls -al` is defined in the same file.
 
 - **Re-running the bootstrap is safe (idempotent)**: user creation is
   guarded, `mkdir -p`, `apt install`, `ufw allow` and the `curl` download
