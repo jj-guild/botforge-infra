@@ -12,7 +12,7 @@ mapfile -t ENVIRONMENTS < <(cd "${REPO_ROOT}/envs" && ls -d */ 2>/dev/null | tr 
 [[ ${#ENVIRONMENTS[@]} -gt 0 ]] || { echo "ERROR: no environment found under envs/" >&2; exit 1; }
 ENVIRONMENT="${1:-test}"
 # The backup directory must survive repo checkouts: CD passes a
-# persistent path via the BACKUP_DIR variable (VPS-SETUP.md).
+# persistent path via the BACKUP_DIR variable (HOSTING-SETUP.md).
 BACKUP_DIR="${2:-${BACKUP_DIR:-${REPO_ROOT}/backups}}"
 COMPOSE_FILE="${REPO_ROOT}/envs/${ENVIRONMENT}/docker-compose.yml"
 MONGO_SERVICE="botforge-mongo"
@@ -59,7 +59,7 @@ if ! docker compose exec -T "${REDIS_SERVICE}" sh -c '
     rm -f "${REDIS_DUMP}"
     # The Redis dataset is a CACHE (hot workflow state, TTLs) — its loss
     # degrades nothing durable; a BGSAVE failure (typically the host's
-    # missing vm.overcommit_memory=1 starving the fork on a busy VPS)
+    # missing vm.overcommit_memory=1 starving the fork on a busy hosting)
     # must not block a deployment behind a mandatory backup. The Mongo
     # archive (the durable data) stays mandatory.
     log "WARNING: redis BGSAVE failed; continuing without the Redis snapshot (cache-only data)"

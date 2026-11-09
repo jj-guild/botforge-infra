@@ -19,7 +19,7 @@ services:
     pull_policy: always
     environment:
       # Secrets are injected at deploy time by the CD pipeline from the
-      # GitHub environment secrets (nothing secret is stored on the VPS);
+      # GitHub environment secrets (nothing secret is stored on the hosting);
       # non-secret values have overridable defaults.
       DISCORD_TOKEN: ${DISCORD_TOKEN:?DISCORD_TOKEN is required}
       BOTFORGE_VERSION: ${BOTFORGE_VERSION:-}
@@ -283,17 +283,17 @@ services:
     image: mongo:7.0
     # Loopback binding only: the database listens on the docker network
     # for the bot; the host publish is for operator debugging (mongosh
-    # from the VPS), never for the network. The VPS firewall (ufw,
-    # VPS-SETUP.md) stays the outer barrier; this is defence in depth.
+    # from the hosting), never for the network. The hosting firewall (ufw,
+    # HOSTING-SETUP.md) stays the outer barrier; this is defence in depth.
     # Host port is per-environment (envs are data): co-located envs on the
-    # same VPS must not collide — this env debug-publishes on
+    # same hosting must not collide — this env debug-publishes on
     # 127.0.0.1:27018, the container port stays 27017.
     ports:
       - "127.0.0.1:27018:27017"
     volumes:
-      - /opt/botforge/envs/merlin/mongo:/data/db
+      - /opt/botforge/data/merlin/mongo:/data/db
     healthcheck:
-      # mongosh cold-start on a busy shared VPS can exceed 5s; without
+      # mongosh cold-start on a busy shared hosting can exceed 5s; without
       # margin the probe is killed mid-handshake and mongo flaps
       # unhealthy (deploy-time false negative, drasah 2026-10-07).
       test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping')"]
@@ -310,7 +310,7 @@ services:
     ports:
       - "127.0.0.1:6380:6379"
     volumes:
-      - /opt/botforge/envs/merlin/redis:/data
+      - /opt/botforge/data/merlin/redis:/data
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 10s

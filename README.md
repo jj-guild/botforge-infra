@@ -20,7 +20,7 @@ deployment scripts.
 | `.github/workflows/` | CI checks + the deploy chain (`deploy.yml` routing, `deploy-env.yml` reusable per-env deploy, `pin-state.yml`, `sync-state.yml`) |
 | `scripts/` | `deploy.sh` (idempotent, health-gated), backup/restore scripts, `diagnose_deploy.sh` (stuck-deploy diagnosis) |
 | `Makefile` | `make check` (script syntax + compose config), `make doctor` (deploy health per env), `make diagnose-deploy-<env>` |
-| `docs/` | Deployment, environments, GitOps and VPS setup guides |
+| `docs/` | Deployment, environments, GitOps and hosting setup guides |
 
 ## Local development
 
@@ -41,11 +41,11 @@ Deployment is GitOps-driven: environments are data — a directory under
 a GitHub environment with its reviewers. One reusable workflow deploys
 every environment: a push to a `deploy/<env>` state branch (the pinned
 image) triggers the deploy, executed by the environment's **self-hosted
-runner installed on the VPS** — never applied by hand. `test` is deployed
+runner installed on the hosting** — never applied by hand. `test` is deployed
 by PR comments (`/deploy`) and release validation pins; `prod` runs
 released `vX.Y.Z` images only and waits for the environment's required
 reviewers. See [docs/GITOPS.md](docs/GITOPS.md) for the model,
-[docs/VPS-SETUP.md](docs/VPS-SETUP.md) for the complete server
+[docs/HOSTING-SETUP.md](docs/HOSTING-SETUP.md) for the complete server
 installation guide (step by step, no Linux knowledge required), and
 [docs/RUNNER.md](docs/RUNNER.md) for the one-page runner install /
 uninstall cheat-sheet.
