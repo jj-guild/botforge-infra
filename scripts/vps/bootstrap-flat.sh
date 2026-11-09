@@ -35,7 +35,7 @@ ufw allow OpenSSH
 ufw --force enable
 
 # --- multi-env filesystem layout ---
-mkdir -p /opt/botforge/bin /opt/botforge/backups /opt/botforge/runners /opt/botforge/envs
+mkdir -p /opt/botforge/bin /opt/botforge/installer /opt/botforge/backup /opt/botforge/runners /opt/botforge/envs
 chown -R botforge:botforge /opt/botforge
 
 # --- pinned runner binary, downloaded ONCE, shared by every env ---
@@ -104,8 +104,8 @@ done
 [[ -n "$TOKEN" ]] || { echo "ERROR: --token required (Runners page, valid 1h)" >&2; exit 1; }
 [[ "$ENV_NAME" =~ ^[a-z0-9][a-z0-9-]*$ ]] || { echo "ERROR: invalid env name '$ENV_NAME'" >&2; exit 1; }
 [[ ! -d "/opt/botforge/runners/$ENV_NAME" ]] || { echo "ERROR: env '$ENV_NAME' already has a runner dir" >&2; exit 1; }
-mkdir -p "/opt/botforge/backups/$ENV_NAME" "/opt/botforge/envs/$ENV_NAME/mongo" "/opt/botforge/envs/$ENV_NAME/redis"
-chown -R botforge:botforge "/opt/botforge/backups/$ENV_NAME" "/opt/botforge/envs/$ENV_NAME"
+mkdir -p "/opt/botforge/backup/$ENV_NAME" "/opt/botforge/envs/$ENV_NAME/mongo" "/opt/botforge/envs/$ENV_NAME/redis"
+chown -R botforge:botforge "/opt/botforge/backup/$ENV_NAME" "/opt/botforge/envs/$ENV_NAME"
 /opt/botforge/bin/install-runner.sh "$ENV_NAME" --token "$TOKEN"
 EOF__opt_botforge_bin_add-env.sh
 chmod 0755 "/opt/botforge/bin/add-env.sh"

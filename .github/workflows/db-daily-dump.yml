@@ -47,13 +47,13 @@ jobs:
         env:
           # HOSTING-SETUP.md: the persistent backup directory survives
           # checkouts; the same path the deploy backup uses.
-          BACKUP_DIR: /opt/botforge/backups/${{ matrix.environment }}
+          BACKUP_DIR: /opt/botforge/backup/${{ matrix.environment }}
         run: ./scripts/backup_db.sh "${{ matrix.environment }}"
 
       - name: Upload the archives (private artifacts)
         uses: actions/upload-artifact@v4
         with:
           name: db-dump-${{ matrix.environment }}-${{ github.run_id }}
-          path: /opt/botforge/backups/${{ matrix.environment }}-*.archive.gz
+          path: /opt/botforge/backup/${{ matrix.environment }}-*.archive.gz
           retention-days: 90
           if-no-files-found: error
