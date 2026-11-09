@@ -25,10 +25,13 @@ Tracked by jj-guild/botforge-services#331 (lot 2).
   that label.
 - Persistent data outside the runner's work directory:
   `/opt/botforge/backup/<env>/` (deployment backups) and
-  `/opt/botforge/volumes/<env>/{mongo,redis}` (bind-mount targets — they
+  `/opt/botforge/data/<env>/{mongo,redis}` (bind-mount targets — they
   survive a `docker compose down --volumes` reset).
-- `/opt/botforge/installer/` holds the runner tarball **once**, shared by
-  every environment (no 218 MB download per env).
+- The runner tarball is downloaded **once**, at the root of
+  `/opt/botforge/` (`actions-runner-linux-x64-<version>.tar.gz`), and only
+  extracted per env into `runners/<env>/` — no 218 MB download per env.
+- `/opt/botforge/envs.json` lists the envs installed on this machine;
+  `add-env.sh` maintains it and the `kc`/`kcl` aliases check it.
 - Secrets (the Discord bot token) are **never stored on the hosting**: they
   live in GitHub *environment secrets* and the runner injects them at
   deploy time.
@@ -112,13 +115,13 @@ write_files:
       ufw --force enable
 
       # --- multi-env filesystem layout ---
-      mkdir -p /opt/botforge/bin /opt/botforge/installer /opt/botforge/backup /opt/botforge/runners /opt/botforge/volumes
+      mkdir -p /opt/botforge/bin /opt/botforge/backup /opt/botforge/data /opt/botforge/runners
+      [[ -f /opt/botforge/envs.json ]] || echo '[]' > /opt/botforge/envs.json
       chown -R botforge:botforge /opt/botforge
 
       # --- pinned runner binary, downloaded ONCE, shared by every env ---
       RUNNER_VERSION="2.338.2"  # <- version shown on the Runners page
-      echo "$RUNNER_VERSION" > /opt/botforge/installer/.runner-version
-      curl -fsSLo "/opt/botforge/installer/actions-runner-linux-x64-${RUNNER_VERSION}.tar.gz" \
+      curl -fsSLo "/opt/botforge/actions-runner-linux-x64-${RUNNER_VERSION}.tar.gz" \
         "https://github.com/actions/runner/releases/download/v${RUNNER_VERSION}/actions-runner-linux-x64-${RUNNER_VERSION}.tar.gz"
       chown -R botforge:botforge /opt/botforge
   - path: /opt/botforge/bin/install-runner.sh
@@ -144,10 +147,12 @@ write_files:
       RDIR="/opt/botforge/runners/$ENV_NAME"
       [[ ! -d "$RDIR" ]] || { echo "ERROR: $RDIR already exists (env '$ENV_NAME' already installed)" >&2; exit 1; }
 
-      RUNNER_VERSION="$(cat /opt/botforge/installer/.runner-version)"
-      TARBALL="/opt/botforge/installer/actions-runner-linux-x64-${RUNNER_VERSION}.tar.gz"
-      [[ -f "$TARBALL" ]] || curl -fsSLo "$TARBALL" \
-        "https://github.com/actions/runner/releases/download/v${RUNNER_VERSION}/actions-runner-linux-x64-${RUNNER_VERSION}.tar.gz"
+      TARBALL="$(ls /opt/botforge/actions-runner-linux-x64-*.tar.gz 2>/dev/null | head -1)"
+      if [[ -z "$TARBALL" ]]; then
+        RUNNER_VERSION="2.338.2"  # <- version shown on the Runners page
+        TARBALL="/opt/botforge/actions-runner-linux-x64-${RUNNER_VERSION}.tar.gz"
+        curl -fsSLo "$TARBALL" "https://github.com/actions/runner/releases/download/v${RUNNER_VERSION}/actions-runner-linux-x64-${RUNNER_VERSION}.tar.gz"
+      fi
 
       mkdir -p "$RDIR"
       chown -R botforge:botforge "$RDIR"
@@ -177,8 +182,9 @@ write_files:
       [[ -n "$TOKEN" ]] || { echo "ERROR: --token required (Runners page, valid 1h)" >&2; exit 1; }
       [[ "$ENV_NAME" =~ ^[a-z0-9][a-z0-9-]*$ ]] || { echo "ERROR: invalid env name '$ENV_NAME'" >&2; exit 1; }
       [[ ! -d "/opt/botforge/runners/$ENV_NAME" ]] || { echo "ERROR: env '$ENV_NAME' already has a runner dir" >&2; exit 1; }
-      mkdir -p "/opt/botforge/backup/$ENV_NAME" "/opt/botforge/volumes/$ENV_NAME/mongo" "/opt/botforge/volumes/$ENV_NAME/redis"
-      chown -R botforge:botforge "/opt/botforge/backup/$ENV_NAME" "/opt/botforge/volumes/$ENV_NAME"
+      mkdir -p "/opt/botforge/backup/$ENV_NAME" "/opt/botforge/data/$ENV_NAME/mongo" "/opt/botforge/data/$ENV_NAME/redis"
+      chown -R botforge:botforge "/opt/botforge/backup/$ENV_NAME" "/opt/botforge/data/$ENV_NAME"
+      jq --arg e "$ENV_NAME" 'if index($e) then . else . + [$e] end' /opt/botforge/envs.json > /opt/botforge/envs.json.tmp && mv /opt/botforge/envs.json.tmp /opt/botforge/envs.json
       /opt/botforge/bin/install-runner.sh "$ENV_NAME" --token "$TOKEN"
   - path: /etc/profile.d/botforge.sh
     permissions: "0644"
@@ -194,6 +200,7 @@ write_files:
       }
       kc() {  # kc <env> <compose args...> — compose in the right dir, with the right vars
         local env="${1:?usage: kc <env> <compose args...>}"; shift
+        jq -e --arg e "$env" 'index($e) != null' /opt/botforge/envs.json >/dev/null || { echo "unknown env '$env' — see /opt/botforge/envs.json" >&2; return 1; }
         local dir; dir="$(_kwork "$env")" || return 1
         cd "$dir" || return 1
         export BOTFORGE_IMAGE="$(grep -E '^image:' state/botforge-bot.yml 2>/dev/null | head -1 | cut -d' ' -f2-)"
@@ -250,12 +257,15 @@ the `kc` / `kcl` shell aliases via `/etc/profile.d/botforge.sh`.
 
 #### 3. Register one runner per env
 
-**Token** (shown once, valid **1 h**) — get it here:
-<https://github.com/jj-guild/botforge-infra/settings/actions/runners/new>
+**Get a token — default: the web UI** (what 80% of people do):
+open <https://github.com/jj-guild/botforge-infra/settings/actions/runners/new>
 (GitHub → repo `jj-guild/botforge-infra` → Settings → Actions → Runners →
-New self-hosted runner, Linux/x64). Or via API — **run this on your own
-computer, not on the hosting** (needs gh installed + authenticated:
-`gh auth login`; you only copy the token value to the server):
+New self-hosted runner, Linux/x64), copy the token. It is shown **once**
+and is valid **1 h**.
+
+**Only if you script it** (20%): run this on **your own computer** (needs
+`gh` installed + `gh auth login`), then paste the token value on the
+server:
 
 ```bash
 # on YOUR machine:
@@ -263,33 +273,39 @@ REG='repos/jj-guild/botforge-infra/actions/runners/registration-token'
 gh api -X POST "$REG" --jq '.token'
 ```
 
-**Layout under `/opt/botforge/`:** `bin/` (scripts) · `installer/` (runner
-tarball, downloaded **once**, shared) · `backup/<env>/` (per-env deploy
-backups) · `runners/<env>/` (one extracted runner per env, user
-`botforge`) · `volumes/<env>/{mongo,redis}` (per-env data bind mounts).
+**Layout under `/opt/botforge/`:**
+
+```
+/opt/botforge/
+├── bin/                              # our scripts (install, add-env, logs…)
+├── backup/                           # dumps, one subdir per env: backup/<env>/
+├── data/                             # docker volumes, per env: data/<env>/{mongo,redis}
+├── runners/                          # one installed runner per env: runners/<env>/
+├── actions-runner-linux-x64-2.338.2.tar.gz   # the installer, downloaded ONCE at the root
+└── envs.json                         # the env list on this machine (drives the kc/kcl CLI)
+```
 
 ```bash
-# one-time, shared: download the runner installer into /opt/botforge/installer
+# one-time, shared: download the runner installer to the ROOT of /opt/botforge
 # (runner version = the one shown on the Runners page; 2.338.2 below)
-sudo install -d -o botforge -g botforge /opt/botforge/installer
-sudo -u botforge bash -c 'cd /opt/botforge/installer && \
+sudo -u botforge bash -c 'cd /opt/botforge && \
   curl -fsSLo actions-runner-linux-x64-2.338.2.tar.gz -L https://github.com/actions/runner/releases/download/v2.338.2/actions-runner-linux-x64-2.338.2.tar.gz && \
   echo "baebf204307bac6193480852732f0aba2ae97b6c5597c244f4d5558390147c40  actions-runner-linux-x64-2.338.2.tar.gz" | shasum -a 256 -c'
 
 # per environment — fresh token each time (valid 1 h):
 # which env this runner serves:
 ENV=test
-# the token from the link above:
+# the token from the UI (or from the gh command above):
 TOKEN=<TOKEN>
 
 # per-env dirs (runner dir + backup dir + data bind mounts):
 sudo install -d -o botforge -g botforge \
   "/opt/botforge/runners/$ENV" "/opt/botforge/backup/$ENV" \
-  "/opt/botforge/volumes/$ENV/mongo" "/opt/botforge/volumes/$ENV/redis"
+  "/opt/botforge/data/$ENV/mongo" "/opt/botforge/data/$ENV/redis"
 
-# extract the SHARED installer into this env's runner dir, configure as botforge:
+# extract the SHARED installer (root-level tarball) into this env's runner dir, configure as botforge:
 sudo -u botforge bash -c "cd /opt/botforge/runners/$ENV && \
-  tar xzf /opt/botforge/installer/actions-runner-linux-x64-2.338.2.tar.gz && \
+  tar xzf /opt/botforge/actions-runner-linux-x64-2.338.2.tar.gz && \
   ./config.sh --url https://github.com/jj-guild/botforge-infra --token $TOKEN --labels botforge,env-$ENV"
 
 # as root: install + start the systemd service (runs as botforge):
@@ -300,8 +316,9 @@ sudo ./svc.sh status
 
 **Verify on GitHub:** Runners page → the runner is **Idle** (green), labels
 `self-hosted, botforge, env-<env>`. Repeat per env (`ENV=dev-merlin`…) with a
-fresh token each time. (One-command wrapper doing all of the above:
-`sudo /opt/botforge/bin/add-env.sh <env> --token <TOKEN>`.)
+fresh token each time. (One-command wrapper doing all of the above —
+including the `envs.json` entry: `sudo /opt/botforge/bin/add-env.sh <env>
+--token <TOKEN>`.)
 
 <details><summary>First time? why a token, why labels, why that layout</summary>
 
@@ -311,8 +328,9 @@ fresh token each time. (One-command wrapper doing all of the above:
   `self-hosted, botforge, env-<env>`.
 - The runner runs **as `botforge`** in `/opt/botforge/runners/<env>` so
   deploy jobs can write `_work/` there; the **installer tarball is
-  downloaded once** into `/opt/botforge/installer/` and only extracted
-  per env. `svc.sh` makes the service survive reboots.
+  downloaded once** at the root of `/opt/botforge/` and only extracted
+  per env. `svc.sh` makes the service survive reboots. `envs.json` records
+  which envs live on this machine and the `kc`/`kcl` aliases read it.
 
 </details>
 
@@ -402,6 +420,12 @@ interactive shell on the hosting.
 
 ## Troubleshooting
 
+- **Re-running the bootstrap is safe (idempotent)**: user creation is
+  guarded, `mkdir -p`, `apt install`, `ufw allow` and the `curl` download
+  are all re-runnable. To start completely fresh instead: delete
+  `/opt/botforge` entirely (`sudo rm -rf /opt/botforge`) and re-run the
+  one-liner — on a fresh hosting both are equivalent.
+
 - **cloud-init failed or is slow**: `sudo cloud-init status --long`,
   `sudo tail -n 50 /var/log/cloud-init-output.log`.
 - **`kc` says "no _work checkout"**: the runner never ran a job —
@@ -425,7 +449,7 @@ interactive shell on the hosting.
   but your shell predates it — switch again with `sudo -iu botforge`.
 - **Known pitfalls from past sessions**: Discord throttling ~2 h after
   intensive provisioning; `systemd-resolved` DNS quirks; the
-  `/opt/botforge/volumes/<env>` bind mounts survive a hosting reset **by
+  `/opt/botforge/data/<env>` bind mounts survive a hosting reset **by
   design** (that is the data).
 
 ## Glossary (first-timer)

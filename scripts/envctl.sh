@@ -6,7 +6,7 @@
 #
 # reset stops the stack and recreates it fresh — the DATA SURVIVES:
 # mongo and redis ride bind mounts on the hosting filesystem
-# (/opt/botforge/volumes/<env>/{mongo,redis}), never docker volumes, so a
+# (/opt/botforge/data/<env>/{mongo,redis}), never docker volumes, so a
 # reset (docker compose down --volumes) nor any volume prune can wipe
 # them. Double gate before it can run:
 #   1. the env-reset roster capability (self env only; ops anywhere),
@@ -100,7 +100,7 @@ print(data.get("x-botforge-env-resettable") is True)
 ' "${COMPOSE_FILE}")"
         [[ "$resettable" == "True" ]] \
             || die "reset is not allowed on this environment (no x-botforge-env-resettable flag in its compose manifest)"
-        log "RESETTING: stopping the stack (the externalized data under /opt/botforge/volumes/${ENVIRONMENT} survives)"
+        log "RESETTING: stopping the stack (the externalized data under /opt/botforge/data/${ENVIRONMENT} survives)"
         docker compose down --volumes
         ;;
     status)

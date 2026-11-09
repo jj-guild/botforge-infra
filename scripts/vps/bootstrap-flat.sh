@@ -35,13 +35,13 @@ ufw allow OpenSSH
 ufw --force enable
 
 # --- multi-env filesystem layout ---
-mkdir -p /opt/botforge/bin /opt/botforge/installer /opt/botforge/backup /opt/botforge/runners /opt/botforge/volumes
+mkdir -p /opt/botforge/bin /opt/botforge/backup /opt/botforge/data /opt/botforge/runners
+[[ -f /opt/botforge/envs.json ]] || echo '[]' > /opt/botforge/envs.json
 chown -R botforge:botforge /opt/botforge
 
 # --- pinned runner binary, downloaded ONCE, shared by every env ---
 RUNNER_VERSION="2.338.2"  # <- version shown on the Runners page
-echo "$RUNNER_VERSION" > /opt/botforge/installer/.runner-version
-curl -fsSLo "/opt/botforge/installer/actions-runner-linux-x64-${RUNNER_VERSION}.tar.gz" \
+curl -fsSLo "/opt/botforge/actions-runner-linux-x64-${RUNNER_VERSION}.tar.gz" \
   "https://github.com/actions/runner/releases/download/v${RUNNER_VERSION}/actions-runner-linux-x64-${RUNNER_VERSION}.tar.gz"
 chown -R botforge:botforge /opt/botforge
 EOF__opt_botforge_bin_bootstrap.sh
@@ -69,10 +69,12 @@ done
 RDIR="/opt/botforge/runners/$ENV_NAME"
 [[ ! -d "$RDIR" ]] || { echo "ERROR: $RDIR already exists (env '$ENV_NAME' already installed)" >&2; exit 1; }
 
-RUNNER_VERSION="$(cat /opt/botforge/installer/.runner-version)"
-TARBALL="/opt/botforge/installer/actions-runner-linux-x64-${RUNNER_VERSION}.tar.gz"
-[[ -f "$TARBALL" ]] || curl -fsSLo "$TARBALL" \
-  "https://github.com/actions/runner/releases/download/v${RUNNER_VERSION}/actions-runner-linux-x64-${RUNNER_VERSION}.tar.gz"
+TARBALL="$(ls /opt/botforge/actions-runner-linux-x64-*.tar.gz 2>/dev/null | head -1)"
+if [[ -z "$TARBALL" ]]; then
+  RUNNER_VERSION="2.338.2"  # <- version shown on the Runners page
+  TARBALL="/opt/botforge/actions-runner-linux-x64-${RUNNER_VERSION}.tar.gz"
+  curl -fsSLo "$TARBALL" "https://github.com/actions/runner/releases/download/v${RUNNER_VERSION}/actions-runner-linux-x64-${RUNNER_VERSION}.tar.gz"
+fi
 
 mkdir -p "$RDIR"
 chown -R botforge:botforge "$RDIR"
@@ -104,8 +106,9 @@ done
 [[ -n "$TOKEN" ]] || { echo "ERROR: --token required (Runners page, valid 1h)" >&2; exit 1; }
 [[ "$ENV_NAME" =~ ^[a-z0-9][a-z0-9-]*$ ]] || { echo "ERROR: invalid env name '$ENV_NAME'" >&2; exit 1; }
 [[ ! -d "/opt/botforge/runners/$ENV_NAME" ]] || { echo "ERROR: env '$ENV_NAME' already has a runner dir" >&2; exit 1; }
-mkdir -p "/opt/botforge/backup/$ENV_NAME" "/opt/botforge/volumes/$ENV_NAME/mongo" "/opt/botforge/volumes/$ENV_NAME/redis"
-chown -R botforge:botforge "/opt/botforge/backup/$ENV_NAME" "/opt/botforge/volumes/$ENV_NAME"
+mkdir -p "/opt/botforge/backup/$ENV_NAME" "/opt/botforge/data/$ENV_NAME/mongo" "/opt/botforge/data/$ENV_NAME/redis"
+chown -R botforge:botforge "/opt/botforge/backup/$ENV_NAME" "/opt/botforge/data/$ENV_NAME"
+jq --arg e "$ENV_NAME" 'if index($e) then . else . + [$e] end' /opt/botforge/envs.json > /opt/botforge/envs.json.tmp && mv /opt/botforge/envs.json.tmp /opt/botforge/envs.json
 /opt/botforge/bin/install-runner.sh "$ENV_NAME" --token "$TOKEN"
 EOF__opt_botforge_bin_add-env.sh
 chmod 0755 "/opt/botforge/bin/add-env.sh"
@@ -123,6 +126,7 @@ _kwork() {  # print the env's compose dir: the runner's _work checkout
 }
 kc() {  # kc <env> <compose args...> — compose in the right dir, with the right vars
   local env="${1:?usage: kc <env> <compose args...>}"; shift
+  jq -e --arg e "$env" 'index($e) != null' /opt/botforge/envs.json >/dev/null || { echo "unknown env '$env' — see /opt/botforge/envs.json" >&2; return 1; }
   local dir; dir="$(_kwork "$env")" || return 1
   cd "$dir" || return 1
   export BOTFORGE_IMAGE="$(grep -E '^image:' state/botforge-bot.yml 2>/dev/null | head -1 | cut -d' ' -f2-)"

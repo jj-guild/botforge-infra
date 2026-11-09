@@ -225,7 +225,7 @@ services:
   botforge-mongo:
     image: mongo:7.0
     volumes:
-      - /opt/botforge/volumes/prod/mongo:/data/db
+      - /opt/botforge/data/prod/mongo:/data/db
     healthcheck:
       # mongosh cold-start on a busy shared hosting can exceed 5s; without
       # margin the probe is killed mid-handshake and mongo flaps
@@ -241,7 +241,7 @@ services:
     image: redis:7.2
     command: ["redis-server", "--appendonly", "yes"]
     volumes:
-      - /opt/botforge/volumes/prod/redis:/data
+      - /opt/botforge/data/prod/redis:/data
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 10s

@@ -7,7 +7,7 @@ below are its manual equivalent.
 Every command, in order, nothing else. One runner per environment,
 always in `/opt/botforge/runners/<env>/` (replace `<env>` throughout:
 `test`, `prod`, `drasah`, …). The runner tarball is downloaded **once**
-to `/opt/botforge/installer/actions-runner-linux-x64-<VERSION>.tar.gz`,
+to `/opt/botforge/actions-runner-linux-x64-<VERSION>.tar.gz`,
 next to the environment directories, and extracted into each new
 environment — several environments share the same archive.
 
