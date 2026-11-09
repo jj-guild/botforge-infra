@@ -1,8 +1,7 @@
 #!/usr/bin/env bash
-# BotForge VPS bootstrap — FLAT fallback for providers whose UI has no
-# cloud-init user-data field (e.g. OVH reinstall window). Run as root over SSH:
-#   curl -fsSL https://raw.githubusercontent.com/jj-guild/botforge-infra/main/scripts/vps/bootstrap-flat.sh | sudo bash
-# Generated from docs/VPS-SETUP.md §1 cloud-init block — keep in sync.
+# BotForge hosting bootstrap — FLAT version of the #cloud-config block in docs/HOSTING-SETUP.md.
+# Run as root over SSH:  curl -fsSL <raw-url-of-this-file> | sudo bash
+# Generated from docs/HOSTING-SETUP.md — keep in sync.
 set -Eeuo pipefail
 export DEBIAN_FRONTEND=noninteractive
 
@@ -11,7 +10,7 @@ apt-get upgrade -y
 apt-get install -y ca-certificates curl jq ufw
 
 install -m 0755 -d "$(dirname "/opt/botforge/bin/bootstrap.sh")"
-cat > "/opt/botforge/bin/bootstrap.sh" <<'__BOTFORGE_EOF__'
+cat > "/opt/botforge/bin/bootstrap.sh" <<'EOF__opt_botforge_bin_bootstrap.sh'
 #!/usr/bin/env bash
 set -Eeuo pipefail
 export DEBIAN_FRONTEND=noninteractive
@@ -40,16 +39,16 @@ mkdir -p /opt/botforge/bin /opt/botforge/backups /opt/botforge/runners /opt/botf
 chown -R botforge:botforge /opt/botforge
 
 # --- pinned runner binary, downloaded ONCE, shared by every env ---
-RUNNER_VERSION="2.337.0"  # <- version shown on the Runners page
+RUNNER_VERSION="2.338.2"  # <- version shown on the Runners page
 echo "$RUNNER_VERSION" > /opt/botforge/runners/.runner-version
 curl -fsSLo "/opt/botforge/runners/actions-runner-linux-x64-${RUNNER_VERSION}.tar.gz" \
   "https://github.com/actions/runner/releases/download/v${RUNNER_VERSION}/actions-runner-linux-x64-${RUNNER_VERSION}.tar.gz"
 chown -R botforge:botforge /opt/botforge/runners
-__BOTFORGE_EOF__
+EOF__opt_botforge_bin_bootstrap.sh
 chmod 0755 "/opt/botforge/bin/bootstrap.sh"
 
 install -m 0755 -d "$(dirname "/opt/botforge/bin/install-runner.sh")"
-cat > "/opt/botforge/bin/install-runner.sh" <<'__BOTFORGE_EOF__'
+cat > "/opt/botforge/bin/install-runner.sh" <<'EOF__opt_botforge_bin_install-runner.sh'
 #!/usr/bin/env bash
 # Register one self-hosted runner for <env> and install it as a
 # systemd service. Run as root:
@@ -82,13 +81,13 @@ cd "$RDIR"
 ./svc.sh install botforge
 ./svc.sh start
 echo "runner for env '$ENV_NAME' installed — must show Idle with labels self-hosted,botforge,env-$ENV_NAME"
-__BOTFORGE_EOF__
+EOF__opt_botforge_bin_install-runner.sh
 chmod 0755 "/opt/botforge/bin/install-runner.sh"
 
 install -m 0755 -d "$(dirname "/opt/botforge/bin/add-env.sh")"
-cat > "/opt/botforge/bin/add-env.sh" <<'__BOTFORGE_EOF__'
+cat > "/opt/botforge/bin/add-env.sh" <<'EOF__opt_botforge_bin_add-env.sh'
 #!/usr/bin/env bash
-# Add one environment to a provisioned VPS: per-env dirs + runner
+# Add one environment to a provisioned hosting: per-env dirs + runner
 # (labels botforge,env-<env>) + systemd service. Same command at
 # first boot and later — one command per environment.
 # Run as root:  add-env.sh <env> --token <REGISTRATION_TOKEN>
@@ -108,12 +107,12 @@ done
 mkdir -p "/opt/botforge/backups/$ENV_NAME" "/opt/botforge/envs/$ENV_NAME/mongo" "/opt/botforge/envs/$ENV_NAME/redis"
 chown -R botforge:botforge "/opt/botforge/backups/$ENV_NAME" "/opt/botforge/envs/$ENV_NAME"
 /opt/botforge/bin/install-runner.sh "$ENV_NAME" --token "$TOKEN"
-__BOTFORGE_EOF__
+EOF__opt_botforge_bin_add-env.sh
 chmod 0755 "/opt/botforge/bin/add-env.sh"
 
 install -m 0644 -d "$(dirname "/etc/profile.d/botforge.sh")"
-cat > "/etc/profile.d/botforge.sh" <<'__BOTFORGE_EOF__'
-# BotForge compose helpers (installed by cloud-init — docs/VPS-SETUP.md).
+cat > "/etc/profile.d/botforge.sh" <<'EOF__etc_profile.d_botforge.sh'
+# BotForge compose helpers (installed by cloud-init — docs/HOSTING-SETUP.md).
 _kwork() {  # print the env's compose dir: the runner's _work checkout
   local env="$1" d
   for d in /opt/botforge/runners/"$env"/_work/*/*/envs/"$env"; do
@@ -128,13 +127,13 @@ kc() {  # kc <env> <compose args...> — compose in the right dir, with the righ
   cd "$dir" || return 1
   export BOTFORGE_IMAGE="$(grep -E '^image:' state/botforge-bot.yml 2>/dev/null | head -1 | cut -d' ' -f2-)"
   export DISCORD_TOKEN="${DISCORD_TOKEN:-placeholder}"
-  docker compose "$@"
+  sudo docker compose "$@"
 }
 kcl() {  # kcl <env> [service...] — docker compose logs -f (placeholders are fine)
   local env="${1:?usage: kcl <env> [service...]}"; shift
   kc "$env" logs -f "$@"
 }
-__BOTFORGE_EOF__
+EOF__etc_profile.d_botforge.sh
 chmod 0644 "/etc/profile.d/botforge.sh"
 
 bash /opt/botforge/bin/bootstrap.sh

@@ -114,7 +114,7 @@ write_files:
       chown -R botforge:botforge /opt/botforge
 
       # --- pinned runner binary, downloaded ONCE, shared by every env ---
-      RUNNER_VERSION="2.337.0"  # <- version shown on the Runners page
+      RUNNER_VERSION="2.338.2"  # <- version shown on the Runners page
       echo "$RUNNER_VERSION" > /opt/botforge/runners/.runner-version
       curl -fsSLo "/opt/botforge/runners/actions-runner-linux-x64-${RUNNER_VERSION}.tar.gz" \
         "https://github.com/actions/runner/releases/download/v${RUNNER_VERSION}/actions-runner-linux-x64-${RUNNER_VERSION}.tar.gz"
@@ -196,7 +196,7 @@ write_files:
         cd "$dir" || return 1
         export BOTFORGE_IMAGE="$(grep -E '^image:' state/botforge-bot.yml 2>/dev/null | head -1 | cut -d' ' -f2-)"
         export DISCORD_TOKEN="${DISCORD_TOKEN:-placeholder}"
-        docker compose "$@"
+        sudo docker compose "$@"
       }
       kcl() {  # kcl <env> [service...] — docker compose logs -f (placeholders are fine)
         local env="${1:?usage: kcl <env> [service...]}"; shift
@@ -221,12 +221,12 @@ ssh debian@<instance-ip>
 # No user-data field at creation (e.g. OVH Public Cloud)? This one-liner
 # runs the same bootstrap as the cloud-init block:
 curl -fsSL https://raw.githubusercontent.com/jj-guild/botforge-infra/main/scripts/vps/bootstrap-flat.sh | sudo bash
-# (runner version differs from 2.337.0 -> insert: | sed 's/2\.337\.0/NEW/' before 'sudo bash')
+# (runner version differs from 2.337.0 -> insert: | sed 's/2\.338\.2/NEW/' before 'sudo bash')
 # If you DID paste the cloud-init block: instead check it ran:
 #   sudo cloud-init status --wait   # Expected: "status: done"
 ls /opt/botforge/bin              # Expected: bootstrap.sh install-runner.sh add-env.sh
 docker --version && docker compose version
-docker run hello-world            # Expected: "Hello from Docker!"
+sudo docker run hello-world      # Expected: "Hello from Docker!" (socket = root/docker group only; as the image user use sudo, e.g. sudo -u botforge docker ps)
 id botforge                       # Expected: groups=…(docker)
 sudo ufw status verbose           # Expected: Status: active, OpenSSH ALLOW
 ```
@@ -235,9 +235,11 @@ sudo ufw status verbose           # Expected: Status: active, OpenSSH ALLOW
 
 cloud-init ran the block you pasted at creation: it installed the packages, Docker, the `botforge` user (in the `docker` group, no password/sudo), enabled the firewall (SSH only — the stack exposes no public port), created `/opt/botforge/{bin,backups,runners,envs}`, downloaded the pinned runner tarball, and wrote the `kc`/`kcl` aliases (`/etc/profile.d/botforge.sh`, active at the **next** login).
 
+Note: the Docker socket answers only to root and the `docker` group — as the image user (`debian`…) prefix docker commands with `sudo`, or switch user: `sudo -iu botforge`.
+
 </details>
 
-**What the boot installs** (same content as the one-liner): What the boot installs: the base libraries, Docker Engine + Compose,
+**What the boot installs** (the one-liner runs the same content): the base libraries, Docker Engine + Compose,
 `ufw` (SSH only), the `botforge` service user (no password, no sudo,
 docker group), the `/opt/botforge/{bin,backups,runners,envs}` layout,
 the pinned runner tarball (shared by all environments), the helper
