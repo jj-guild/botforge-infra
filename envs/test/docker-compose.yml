@@ -115,6 +115,10 @@ services:
       # localized faction/map data over the docker network; without the
       # URI the core refresh falls back to the vendored dataset in-process.
       EXT_AOE2TECHTREE_URI: ${EXT_AOE2TECHTREE_URI:-botforge-ext-aoe2techtree:50063}
+      # The enrollments push (UpdateEnrollments) targets the game service
+      # (botforge-services#355): without the URI the core never pushes the
+      # bound profiles and the dashboard's roster stays empty.
+      GAME_AOE2_URI: ${GAME_AOE2_URI:-botforge-game-aoe2:50071}
     expose:
       - "50051"
     healthcheck:
