@@ -242,7 +242,7 @@ sudo ufw status verbose           # Expected: Status: active, OpenSSH ALLOW
 
 <details><summary>First time? what just happened</summary>
 
-cloud-init ran the block you pasted at creation: it installed the packages, Docker, the `botforge` user (in the `docker` group, no password/sudo), enabled the firewall (SSH only — the stack exposes no public port), created `/opt/botforge/{bin,installer,backup,runners,volumes}`, downloaded the pinned runner tarball, and wrote the `kc`/`kcl` aliases (`/etc/profile.d/botforge.sh`, active at the **next** login).
+cloud-init ran the block you pasted at creation: it installed the packages, Docker, the `botforge` user (in the `docker` group, no password/sudo), enabled the firewall (SSH only — the stack exposes no public port), created `/opt/botforge/{bin,backup,data,runners} + the runner tarball at the root`, downloaded the pinned runner tarball, and wrote the `kc`/`kcl` aliases (`/etc/profile.d/botforge.sh`, active at the **next** login).
 
 Note: the Docker socket answers only to root and the `docker` group — as the image user (`debian`…) prefix docker commands with `sudo`, or switch user: `sudo -iu botforge`.
 
@@ -250,7 +250,7 @@ Note: the Docker socket answers only to root and the `docker` group — as the i
 
 **What the boot installs** (the one-liner runs the same content): the base libraries, Docker Engine + Compose,
 `ufw` (SSH only), the `botforge` service user (no password, no sudo,
-docker group), the `/opt/botforge/{bin,installer,backup,runners,volumes}` layout,
+docker group), the `/opt/botforge/{bin,backup,data,runners} + the runner tarball at the root` layout,
 the pinned runner tarball (shared by all environments), the helper
 scripts `/opt/botforge/bin/{bootstrap,install-runner,add-env}.sh`, and
 the `kc` / `kcl` shell aliases via `/etc/profile.d/botforge.sh`.
