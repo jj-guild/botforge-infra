@@ -253,9 +253,12 @@ the `kc` / `kcl` shell aliases via `/etc/profile.d/botforge.sh`.
 **Token** (shown once, valid **1 h**) — get it here:
 <https://github.com/jj-guild/botforge-infra/settings/actions/runners/new>
 (GitHub → repo `jj-guild/botforge-infra` → Settings → Actions → Runners →
-New self-hosted runner, Linux/x64). Or via API:
+New self-hosted runner, Linux/x64). Or via API — **run this on your own
+computer, not on the hosting** (needs gh installed + authenticated:
+`gh auth login`; you only copy the token value to the server):
 
 ```bash
+# on YOUR machine:
 REG='repos/jj-guild/botforge-infra/actions/runners/registration-token'
 gh api -X POST "$REG" --jq '.token'
 ```
