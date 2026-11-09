@@ -1,20 +1,20 @@
 # Desired state of botforge-bot on the merlin environment (ADR-0018).
 # Written by the deploy pipelines only (kingdoms-deployer GitHub App);
 # a push to this branch deploys this exact image.
-image: ghcr.io/jj-guild/botforge-services:pr-357-20261109140403-99c673d
-version_label: pr-357-20261109140403-99c673d
-deploy_url: https://github.com/jj-guild/botforge-services/pull/357#issuecomment-6741979764
+image: ghcr.io/jj-guild/botforge-services:pr-359-20261109162332-49db160
+version_label: pr-359-20261109162332-49db160
+deploy_url: https://github.com/jj-guild/botforge-services/pull/359#issuecomment-6745227385
 deploy_kind: pr
-deploy_ref: 357
-deploy_tree_url: https://github.com/jj-guild/botforge-services/tree/99c673db01c6d7adfead097ca1d9b2adb07756e9
-deploy_ts: 1794235730
-deploy_commit_ts: 1794233009
-deploy_commit: 99c673db01c6d7adfead097ca1d9b2adb07756e9
-deploy_ci_run_id: 
-deploy_ci_run_number: 
-deploy_ci_run_ts: 
-deployed_by: config-change-deploy (run 42638237964)
-deployed_at: "2026-11-09T14:48:50Z"
-source: merlin-config change on main (commit 94af1b0) — image unchanged
-deploy_branch: vibe/docs-hosting-01fb7e
-deploy_pr_title: vibe[Merlin] docs: VPS → hosting everywhere, hosting install quickstart, no JS/octokit, present-tense naming
+deploy_ref: 359
+deploy_tree_url: https://github.com/jj-guild/botforge-services/tree/49db160c234c2f9c711bcbeb6739468851db240c
+deploy_ts: 1794241460
+deploy_commit_ts: 1794240193
+deploy_commit: 49db160c234c2f9c711bcbeb6739468851db240c
+deploy_ci_run_id: 42654205026
+deploy_ci_run_number: 1484
+deploy_ci_run_ts: 1794241385
+deployed_by: merlin-pinpin (/deploy)
+deployed_at: "2026-11-09T16:24:20Z"
+source: 
+deploy_branch: vibe/fix-enrollments-355
+deploy_pr_title: fix(core): surface the enrollments sync when GAME_AOE2_URI is unset (#355)
