@@ -294,9 +294,35 @@ write_files:
           docker compose "$@"   # botforge: already in the docker group, env already set
         fi
       }
-      kcl() {  # kcl <env> [service...] — docker compose logs -f (placeholders are fine)
-        local env="${1:?usage: kcl <env> [service...]}"; shift
-        kc "$env" logs -f "$@"
+      kcl() {  # kcl <env> [--services|--db|--all] [service...] — docker compose logs -f (placeholders are fine)
+        local env="${1:?usage: kcl <env> [--services|--db|--all] [service...]}"; shift
+        local mode=""
+        case "${1:-}" in
+          --services|--db|--all) mode="${1#--}"; shift ;;
+        esac
+        local svcs
+        svcs="$(kc "$env" config --services 2>/dev/null)" || return 1
+        if [[ -z "$mode" && $# -gt 0 ]]; then  # explicit services: short names OK (bot -> botforge-bot)
+          local expanded=() s m n cand base
+          for s in "$@"; do
+            n=0; m=""
+            for cand in $svcs; do
+              base="${cand#botforge-}"
+              if [[ "$cand" == "$s" || "$base" == "$s"* ]]; then m="$cand"; n=$((n+1)); fi
+            done
+            if [[ $n -eq 1 ]]; then expanded+=("$m")
+            else echo "kcl: '$s' matches $n services in env '$env' — use the full name" >&2; return 1; fi
+          done
+          kc "$env" logs -f "${expanded[@]}"
+          return
+        fi
+        [[ -n "$mode" ]] || mode="services"
+        case "$mode" in
+          db)       svcs="$(printf '%s\n' "$svcs" | grep -E 'mongo|redis')" ;;
+          services) svcs="$(printf '%s\n' "$svcs" | grep -Ev 'mongo|redis')" ;;
+          all)      : ;;
+        esac
+        kc "$env" logs -f $svcs
       }
 
       alias ll='ls -al'
@@ -471,6 +497,10 @@ Run `kc`/`kcl` as your **SSH user** (`debian`, or root) — never as `botforge` 
 ```bash
 kc <env> ps             # what's running in that env
 kcl <env> botforge-bot  # follow the bot's logs
+kcl <env>               # default: every service EXCEPT the db (bot, core, ext-*, game-*)
+kcl <env> bot core      # explicit services — short names OK (bot -> botforge-bot)
+kcl <env> --db          # only botforge-mongo + botforge-redis
+kcl <env> --all        # everything, db included
 ```
 
 (`kc` sets `BOTFORGE_IMAGE` from the pinned `envs/<env>/state/botforge-bot.yml` automatically.)
@@ -496,7 +526,7 @@ On any fresh ssh login, `/etc/profile.d/botforge.sh` provides:
 | ------- | ------------ |
 | `kc <env> ps` | `docker compose ps` **in the env's `_work` directory**, with the env vars set |
 | `kc <env> up -d` / `down` / `restart` / `config --services` … | any compose args, same wrapping |
-| `kcl <env> [service...]` | `docker compose logs -f [service...]` |
+| `kcl <env> [--services\|--db\|--all] [service...]` | `docker compose logs -f` — default: all but mongo/redis; `--db`: mongo/redis only; `--all`: everything; explicit names (short OK: `bot`, `core`, `ext-liquipedia`) pass through |
 | `sudo /opt/botforge/bin/add-env.sh <env> --token <T>` | add an environment |
 | `cd /opt/botforge/runners/<env> && sudo ./svc.sh status` | runner service status |
 | `make doctor` (from a clone) | deploy-chain diagnosis, FLAG lines |
