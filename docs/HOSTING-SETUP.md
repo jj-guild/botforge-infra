@@ -1,6 +1,9 @@
 # Hosting setup guide — cloud-init bootstrap
 
-> **Short on time?** [HOSTING-INSTALL-QUICKSTART.md](HOSTING-INSTALL-QUICKSTART.md) is the copy-paste version (OVH Public Cloud included).
+> **Two audiences, one page:** [HOSTING-INSTALL-QUICKSTART.md](HOSTING-INSTALL-QUICKSTART.md)
+  has a **fast path** (commands only) for people who know what they're
+> doing, and expandable explanations for first-timers. This guide is the
+> full reference (details, glossary, troubleshooting).
 
 This guide turns a fresh hosting into a fully automated GitOps deployment
 target **at first boot**, via one cloud-init user-data block. Every step
