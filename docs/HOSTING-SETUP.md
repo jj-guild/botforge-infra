@@ -483,10 +483,21 @@ interactive shell on the hosting.
   `ll` = `ls -al` is defined in the same file.
 
 - **Re-running the bootstrap is safe (idempotent)**: user creation is
-  guarded, `mkdir -p`, `apt install`, `ufw allow` and the `curl` download
-  are all re-runnable. To start completely fresh instead: delete
-  `/opt/botforge` entirely (`sudo rm -rf /opt/botforge`) and re-run the
-  one-liner — on a fresh hosting both are equivalent.
+  guarded, `mkdir -p`, `apt install`, `ufw allow` and the download are all
+  re-runnable. To start completely fresh instead (e.g. after a layout
+  change, leaving both `backup/` and `data/` around): no need to reset the
+  instance —
+  ```bash
+  # stop + uninstall the runner services, then wipe the tree and re-run the one-liner:
+  for e in test merlin; do (cd "/opt/botforge/runners/$e" 2>/dev/null && sudo ./svc.sh stop && sudo ./svc.sh uninstall) || true; done
+  sudo rm -rf /opt/botforge
+  curl -fsSL https://raw.githubusercontent.com/jj-guild/botforge-infra/vibe/docs-hosting-01fb7e/scripts/vps/bootstrap-flat.sh | sudo bash
+  ```
+  then on the GitHub Runners page remove the stale (Offline) runners, and
+  re-register each env with a fresh token:
+  `sudo /opt/botforge/bin/add-env.sh <env> --token <TOKEN>` (this also
+  records the env in `envs.json`). Finally re-run the deploy (Actions →
+  Deploy environment on `deploy/<env>`).
 
 - **cloud-init failed or is slow**: `sudo cloud-init status --long`,
   `sudo tail -n 50 /var/log/cloud-init-output.log`.
