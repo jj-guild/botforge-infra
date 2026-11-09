@@ -157,6 +157,40 @@ echo "env '$ENV_NAME' recorded in $ENVS_JSON"
 EOF__opt_botforge_bin_add-env.sh
 chmod 0755 "/opt/botforge/bin/add-env.sh"
 
+install -m 0755 -d "$(dirname "/opt/botforge/bin/remove-all-envs.sh")"
+cat > "/opt/botforge/bin/remove-all-envs.sh" <<'EOF__opt_botforge_bin_remove-all-envs.sh'
+#!/usr/bin/env bash
+# Remove ALL runners and envs from this hosting. Keeps data + dumps.
+# Run as root:  remove-all-envs.sh
+set -Eeuo pipefail
+ENVS_JSON=/opt/botforge/envs.json
+[[ -f "$ENVS_JSON" ]] || { echo "no $ENVS_JSON — nothing to do"; exit 0; }
+ENVS="$(jq -r 'keys[]' "$ENVS_JSON")"
+[[ -n "$ENVS" ]] || { echo "no envs registered — nothing to do"; exit 0; }
+for e in $ENVS; do
+  echo "== removing env '$e'"
+  # stop the stack FIRST — otherwise the bot stays up as a ghost once the runner is gone
+  docker rm -f $(docker ps -aq --filter "label=com.docker.compose.project=$e") 2>/dev/null || true
+  d="/opt/botforge/runners/$e"
+  if [[ -d "$d" ]]; then (cd "$d" && ./svc.sh stop && ./svc.sh uninstall) 2>/dev/null || true; fi
+  rm -rf "$d"
+  jq --arg e "$e" 'del(.[$e])' "$ENVS_JSON" > "$ENVS_JSON.tmp" && mv "$ENVS_JSON.tmp" "$ENVS_JSON"
+done
+echo
+echo "Kept (data + dumps):"
+for e in $ENVS; do
+  [[ -d "/opt/botforge/data/$e" ]] && echo "  data:  /opt/botforge/data/$e    (mongo/redis volumes = the env's live DB)"
+  [[ -d "/opt/botforge/backup/$e" ]] && echo "  dumps: /opt/botforge/backup/$e  ($(ls /opt/botforge/backup/$e 2>/dev/null | wc -l) file(s))"
+done
+echo
+echo "Relaunch a kept env: fresh token (" + TOKEN_URL + "), then"
+echo "  sudo /opt/botforge/bin/add-env.sh <env> --token <TOKEN>    # runner re-registered, envs.json re-filled"
+echo "  Actions → Deploy environment on deploy/<env>              # compose up on the EXISTING data/<env> volumes"
+echo "Restore a dump instead: scripts/restore_db.sh from a clone, dump in /opt/botforge/backup/<env>/"
+echo "On GitHub, remove the stale runners on the Runners page (Remove → removal token)."
+EOF__opt_botforge_bin_remove-all-envs.sh
+chmod 0755 "/opt/botforge/bin/remove-all-envs.sh"
+
 install -m 0755 -d "$(dirname "/etc/profile.d/botforge.sh")"
 cat > "/etc/profile.d/botforge.sh" <<'EOF__etc_profile.d_botforge.sh'
 # BotForge compose helpers (installed by cloud-init — docs/HOSTING-SETUP.md).
@@ -175,10 +209,16 @@ kc() {  # kc <env> <compose args...> — compose in the right dir, with the righ
   fi
   local dir; dir="$(_kwork "$env")" || return 1
   cd "$dir" || return 1
-  export BOTFORGE_IMAGE="$(sudo grep -E '^image:' state/botforge-bot.yml 2>/dev/null | head -1 | cut -d' ' -f2-)"
+  export BOTFORGE_IMAGE="$(grep -E '^image:' state/botforge-bot.yml 2>/dev/null | head -1 | cut -d' ' -f2-)"
+  [[ -n "$BOTFORGE_IMAGE" ]] || export BOTFORGE_IMAGE="$(sudo grep -E '^image:' state/botforge-bot.yml 2>/dev/null | head -1 | cut -d' ' -f2-)"
   [[ -n "$BOTFORGE_IMAGE" ]] || { echo "no pin in state/botforge-bot.yml under $dir — did a deploy run on env '$env' yet?" >&2; return 1; }
   export DISCORD_TOKEN="${DISCORD_TOKEN:-placeholder}"
-  sudo docker compose "$@"
+  # sudo strips the environment — forward the two vars explicitly through it
+  if sudo -n true 2>/dev/null; then
+    sudo BOTFORGE_IMAGE="$BOTFORGE_IMAGE" DISCORD_TOKEN="$DISCORD_TOKEN" docker compose "$@"
+  else
+    docker compose "$@"   # botforge: already in the docker group, env already set
+  fi
 }
 kcl() {  # kcl <env> [service...] — docker compose logs -f (placeholders are fine)
   local env="${1:?usage: kcl <env> [service...]}"; shift
