@@ -287,8 +287,12 @@ write_files:
         [[ -n "$BOTFORGE_IMAGE" ]] || export BOTFORGE_IMAGE="$(sudo grep -E '^image:' state/botforge-bot.yml 2>/dev/null | head -1 | cut -d' ' -f2-)"
         [[ -n "$BOTFORGE_IMAGE" ]] || { echo "no pin in state/botforge-bot.yml under $dir — did a deploy run on env '$env' yet?" >&2; return 1; }
         export DISCORD_TOKEN="${DISCORD_TOKEN:-placeholder}"
-        if sudo -n true 2>/dev/null; then DOCKER="sudo docker"; else DOCKER="docker"; fi  # debian/root via sudo, botforge via docker group
-        $DOCKER compose "$@"
+        # sudo strips the environment — forward the two vars explicitly through it
+        if sudo -n true 2>/dev/null; then
+          sudo BOTFORGE_IMAGE="$BOTFORGE_IMAGE" DISCORD_TOKEN="$DISCORD_TOKEN" docker compose "$@"
+        else
+          docker compose "$@"   # botforge: already in the docker group, env already set
+        fi
       }
       kcl() {  # kcl <env> [service...] — docker compose logs -f (placeholders are fine)
         local env="${1:?usage: kcl <env> [service...]}"; shift
