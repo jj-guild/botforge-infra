@@ -215,6 +215,14 @@ Create the instance and paste the following block in the provider's
 **user data / cloud-init** field, then boot. Replace `2.337.0` with the
 runner version currently shown on the Runners page.
 
+> **Provider UI without a user-data field?** (e.g. the OVH Public Cloud
+> Control Panel): create the instance via the OpenStack CLI instead —
+> `openstack server create --flavor <f> --image "Debian 13" --key-name
+> <key> --network Ext-Net --user-data cloud-init.yaml <name>` (RC file:
+> Manager → Public Cloud → project → *OpenStack* → download RC; OVH
+> guide KB0050912). user-data is creation-time only: a reset/rebuild
+> does **not** re-inject it.
+
 ```yaml
 #cloud-config
 # BotForge hosting bootstrap — libs, users, multi-env filesystem, pinned
