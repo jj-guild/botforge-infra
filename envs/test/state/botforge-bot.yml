@@ -1,20 +1,20 @@
 # Desired state of botforge-bot on the test environment (ADR-0018).
 # Written by the deploy pipelines only (kingdoms-deployer GitHub App);
 # a push to this branch deploys this exact image.
-image: ghcr.io/jj-guild/botforge-services:pr-264-20261109185752-0b2d3c5
-version_label: pr-264-20261109185752-0b2d3c5
-deploy_url: https://github.com/jj-guild/botforge-services/pull/264#issuecomment-6748668412
+image: ghcr.io/jj-guild/botforge-services:pr-264-20261109224219-0b2d3c5
+version_label: pr-264-20261109224219-0b2d3c5
+deploy_url: https://github.com/jj-guild/botforge-services/pull/264#issuecomment-6753436997
 deploy_kind: pr
 deploy_ref: 264
 deploy_tree_url: https://github.com/jj-guild/botforge-services/tree/0b2d3c5a248f31bbc0f89e82c78eea11cb095fda
-deploy_ts: 1794250725
+deploy_ts: 1794264187
 deploy_commit_ts: 1794250389
 deploy_commit: 0b2d3c5a248f31bbc0f89e82c78eea11cb095fda
-deploy_ci_run_id: 42678698892
-deploy_ci_run_number: 1491
-deploy_ci_run_ts: 1794250644
+deploy_ci_run_id: 42714176265
+deploy_ci_run_number: 1493
+deploy_ci_run_ts: 1794264114
 deployed_by: merlin-pinpin (/deploy)
-deployed_at: "2026-11-09T18:58:45Z"
+deployed_at: "2026-11-09T22:43:07Z"
 source: 
 deploy_branch: vibe/mods-init
 deploy_pr_title: feat(mods): modular layout (modules/mods/) + 'kingdoms mod init' scaffold — ladder & kingdoms as reference examples
