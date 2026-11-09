@@ -121,7 +121,11 @@ jobs:
           # The env's test guild (compose: CICD_GUILD_ID) — the ladder mod
           # scopes its ladders to this guild; without it the mod's register
           # hook fails and the mod stays inactive.
-          TEST_GUILD_ID: ${{ vars.TEST_GUILD_ID }}
+          # The env's test guild(s) — the variable is TEST_GUILD_IDS
+          # (plural, comma-separated: the dev console's allowlist accepts
+          # a list; CICD_GUILD_ID takes the first). Old envs that still
+          # declare the singular TEST_GUILD_ID keep working (fallback).
+          TEST_GUILD_ID: ${{ vars.TEST_GUILD_IDS || vars.TEST_GUILD_ID }}
           # The deploy run links itself in /status (Infra field) so the
           # running bot can point at the exact job that deployed it.
           BOTFORGE_DEPLOY_RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
