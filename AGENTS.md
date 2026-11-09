@@ -22,7 +22,7 @@ for the BotForge Discord bot platform.
 ## Local rules
 
 - Deployment is **GitOps-driven**: state branches are applied by CI/CD,
-  never by hand on the VPS; deploy scripts stay idempotent with rollback.
+  never by hand on the hosting; deploy scripts stay idempotent with rollback.
 - Ops manage environments and secrets in the GitHub web UI only; the agent
   never handles secret values.
 - Verify scripts with `bash -n` and shellcheck (if available) before

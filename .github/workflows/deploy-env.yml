@@ -9,7 +9,7 @@
 # The GitHub environment `environment: <env>` (same name as the env)
 # carries the per-env gating: required reviewers (prod-like), secrets
 # and variables. The runner is selected by the `env-<name>` label —
-# one runner per environment VPS.
+# one runner per environment hosting.
 name: Deploy environment
 
 on:
@@ -39,7 +39,7 @@ permissions:
   contents: read
   # Pull the bot image from ghcr.io/jj-guild/botforge-services:
   # the package is owned by the botforge-services repository, so the
-  # anonymous pull from the VPS is unauthorized (the package grants
+  # anonymous pull from the hosting is unauthorized (the package grants
   # Actions access to this repository — see docs/DEPLOY-TEST-APP.md).
   packages: read
 
@@ -47,7 +47,7 @@ jobs:
   deploy:
     name: Deploy ${{ inputs.environment }}
     # The env-<name> label routes the job to the environment's runner
-    # (one runner per environment VPS). The label list must be a JSON array —
+    # (one runner per environment hosting). The label list must be a JSON array —
     # a comma-joined string, or the raw format() string, would be one literal
     # label no runner carries, and the job would queue forever.
     runs-on: ${{ fromJSON(format('["self-hosted", "botforge", "env-{0}"]', inputs.environment)) }}
@@ -76,7 +76,7 @@ jobs:
         uses: docker/login-action@v3
         env:
           # Isolated credential store per run: concurrent deployments on the
-          # same VPS share ~/.docker/config.json — one job's post-deploy
+          # same hosting share ~/.docker/config.json — one job's post-deploy
           # logout raced another job's pull into 'error from registry:
           # unauthorized' (merlin+test 2026-11-04). Each run gets its own.
           DOCKER_CONFIG: ${{ runner.temp }}/docker-${{ github.run_id }}-${{ github.run_attempt }}
@@ -99,7 +99,7 @@ jobs:
           # Same isolated credential store as the login step: the pull
           # reads the credentials from here, never the shared ~/.docker.
           DOCKER_CONFIG: ${{ runner.temp }}/docker-${{ github.run_id }}-${{ github.run_attempt }}
-          BACKUP_DIR: /opt/botforge/backups/${{ inputs.environment }}
+          BACKUP_DIR: /opt/botforge/backup/${{ inputs.environment }}
           # The failed-health-gate recovery path (rollback.sh --auto) pushes
           # the state revert to deploy/<env> with this token — the same
           # single-writer App as the pin (ADR-0018). On prod the push is
@@ -167,7 +167,7 @@ jobs:
     # SimCord journeys of botforge-services, run at the pinned commit on
     # an ephemeral GitHub-hosted runner. No environment: (no secrets, no
     # second approval), no concurrency coupling with the deploy group,
-    # and zero test tooling on the env VPS. Does not gate the deploy:
+    # and zero test tooling on the env hosting. Does not gate the deploy:
     # a behavioral regression is a report problem (P1), not a state
     # problem — the deployment verdict stays with the in-deploy checks.
     name: SimCord journeys (pinned commit)

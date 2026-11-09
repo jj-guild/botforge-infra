@@ -13,7 +13,7 @@ the deployed state converges to them through automation.
 3. **Pulled automatically**: the deploy chain
    (`deploy.yml` routing → `deploy-env.yml` per-environment deploy) applies
    the pinned state after the state-branch push, executed by a
-   self-hosted runner on the VPS (see [VPS-SETUP.md](VPS-SETUP.md)) —
+   self-hosted runner on the hosting (see [HOSTING-SETUP.md](HOSTING-SETUP.md)) —
    nobody applies changes by hand.
 4. **Continuously reconciled**: `scripts/deploy.sh` is idempotent; re-running
    it converges the environment to the manifest state.
@@ -21,7 +21,7 @@ the deployed state converges to them through automation.
    reads the pinned state from the state file and confirms the running
    deployment matches it — a confirmed mismatch rolls back
    automatically, an inconclusive check reports only, and the
-   behavioral journeys run off-VPS at the pinned commit.
+   behavioral journeys run off-hosting at the pinned commit.
 
 ## Workflow
 
@@ -46,7 +46,7 @@ flowchart LR
 2. After merge to `main`, `CD` applies the new state.
 3. Secrets are injected at deploy time by the self-hosted runner from the
    GitHub environment secrets; they never live in the repository or on
-   the VPS.
+   the hosting.
 
 ## Rollback
 

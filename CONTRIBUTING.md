@@ -2,7 +2,7 @@
 
 This repository holds the infrastructure: Docker Compose environments,
 CI/CD workflows, GitOps state branches and the deployment scripts run on
-the VPS. You do not need an AI agent to contribute: everything below runs
+the hosting. You do not need an AI agent to contribute: everything below runs
 with a public clone and no credentials.
 
 ## Prerequisites
@@ -40,7 +40,7 @@ missing, never a green-ish skip.
 
 3. **Make your change** ([docs/DEVELOPER.md](docs/DEVELOPER.md):
    environments are data, one directory under `envs/` each; deployment is
-   GitOps-driven, never applied by hand on the VPS).
+   GitOps-driven, never applied by hand on the hosting).
 4. **Run the local checks before pushing** — the same ones CI runs, via
    the Makefile:
 
@@ -76,7 +76,7 @@ missing, never a green-ish skip.
 | `deploy/<env>` | Protected state branches (GitOps source of truth, ADR-0018) — not regular files on `main` |
 | `.github/workflows/` | CI checks + the deploy chain: `deploy.yml` (routing), `deploy-env.yml` (per-env deploy), `pin-state.yml` (image pins), `sync-state.yml` (main → state branches) |
 | `scripts/` | `deploy.sh` (idempotent, health-gated), `rollback.sh`, `backup_db.sh`, `restore_db.sh` |
-| `docs/` | ENVIRONMENTS.md, GITOPS.md, DEPLOYMENT.md, VPS-SETUP.md |
+| `docs/` | ENVIRONMENTS.md, GITOPS.md, DEPLOYMENT.md, HOSTING-SETUP.md |
 
 ## Rules
 

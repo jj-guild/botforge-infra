@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
-# Clean the Docker resources of an environment's runner VPS (env cleanup).
+# Clean the Docker resources of an environment's runner hosting (env cleanup).
 #
-# The test-env VPS accumulate Docker residue: dangling images from
+# The test-env hosting accumulate Docker residue: dangling images from
 # interrupted builds, stopped containers of old deploys, orphaned
 # networks/volumes, build cache. Eventually the disk fills and the
 # runner itself fails ("No space left on device" on its own _diag log).
