@@ -62,7 +62,10 @@ ssh-keygen -t ed25519 -C "you@example.com"     # then: cat ~/.ssh/id_ed25519.pub
 
 #### 1. Create the instance
 
-Provider console → new instance: **Debian 13** (Ubuntu 26.04 LTS ok), **≥ 2 GB RAM / 20 GB disk**, paste your **public** SSH key, and paste the **`#cloud-config` block from §1 below** into the **user data / cloud-init** field (first line must be `#cloud-config`; set the runner version to the one shown on the Runners page). Boot.
+Provider console → new instance: **Debian 13** (Ubuntu 26.04 LTS ok), **≥ 2 GB RAM / 20 GB disk**, paste your **public** SSH key. Boot.
+
+- If the creation form has a **user data / cloud-init** field → paste the **`#cloud-config` block from §1 below** there (first line `#cloud-config`; set the runner version to the one shown on the Runners page).
+- **No such field (OVH Public Cloud has none)** → skip it; the one-liner in step 2 does the exact same thing over SSH.
 
 <details><summary>First time? where exactly</summary>
 
@@ -75,7 +78,12 @@ Provider console → new instance: **Debian 13** (Ubuntu 26.04 LTS ok), **≥ 2 
 
 ```bash
 ssh debian@<instance-ip>
-sudo cloud-init status --wait     # Expected, at the end: "status: done"
+# No user-data field at creation (e.g. OVH Public Cloud)? This one-liner
+# runs the same bootstrap as the cloud-init block:
+curl -fsSL https://raw.githubusercontent.com/jj-guild/botforge-infra/main/scripts/vps/bootstrap-flat.sh | sudo bash
+# (runner version differs from 2.337.0 -> insert: | sed 's/2\.337\.0/NEW/' before 'sudo bash')
+# If you DID paste the cloud-init block: instead check it ran:
+#   sudo cloud-init status --wait   # Expected: "status: done"
 ls /opt/botforge/bin              # Expected: bootstrap.sh install-runner.sh add-env.sh
 docker --version && docker compose version
 docker run hello-world            # Expected: "Hello from Docker!"
@@ -215,13 +223,6 @@ Create the instance and paste the following block in the provider's
 **user data / cloud-init** field, then boot. Replace `2.337.0` with the
 runner version currently shown on the Runners page.
 
-> **Provider UI without a user-data field?** (e.g. the OVH Public Cloud
-> Control Panel): create the instance via the OpenStack CLI instead —
-> `openstack server create --flavor <f> --image "Debian 13" --key-name
-> <key> --network Ext-Net --user-data cloud-init.yaml <name>` (RC file:
-> Manager → Public Cloud → project → *OpenStack* → download RC; OVH
-> guide KB0050912). user-data is creation-time only: a reset/rebuild
-> does **not** re-inject it.
 
 ```yaml
 #cloud-config
