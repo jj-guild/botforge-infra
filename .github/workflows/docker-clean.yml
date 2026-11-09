@@ -1,4 +1,4 @@
-# Clean the Docker resources of a test environment's runner VPS
+# Clean the Docker resources of a test environment's runner hosting
 # (workflow_dispatch): prune (safe — dangling/unused only) or deep
 # (everything unused, volumes included). Runs ON the environment's own
 # runner, next to its containers; never deploys, never pulls, never
@@ -78,7 +78,7 @@ jobs:
           set -euo pipefail
           # The roster lives in botforge/CONTRIBUTORS.md — the source of
           # truth for who may operate an environment. The gate resolves
-          # the requestor's login against it. Checked out above: the VPS
+          # the requestor's login against it. Checked out above: the hosting
           # runners carry no gh CLI, and this keeps the gate offline-safe.
           ROSTER="${GITHUB_WORKSPACE}/roster/CONTRIBUTORS.md"
           [[ -s "${ROSTER}" ]] || { echo "::error::roster not found at ${ROSTER}"; exit 1; }

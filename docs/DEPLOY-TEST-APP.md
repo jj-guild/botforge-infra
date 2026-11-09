@@ -66,7 +66,7 @@ Once the app is installed with Contents: write and the secrets set,
 [Pin state](../.github/workflows/pin-state.yml) workflow of this repository
 (`repository_dispatch`, `pin-state`): it pins the PR image in the
 `deploy/<env>` state branch — merging `main` in the same commit — and the
-state push deploys it to the test VPS. All writers to a state branch share
+state push deploys it to the test hosting. All writers to a state branch share
 the `deploy-state-<env>` concurrency group (single-writer design, see
 docs/ENVIRONMENTS.md § "Keeping the state branches current").
 
@@ -145,7 +145,7 @@ The bot image package `ghcr.io/jj-guild/botforge-services` is
 owned by the **botforge-services** repository (its Docker workflow
 publishes it). It is not public, and after the organization transfer a
 package's access no longer extends to the other repositories: the
-deploy job pulling it from the test VPS fails with
+deploy job pulling it from the test hosting fails with
 `error from registry: unauthorized`.
 
 Two halves, both required:
@@ -158,7 +158,7 @@ Two halves, both required:
   pull the image.
 - **Workflow side (in this repository):** `deploy.yml` logs in to ghcr.io with the job's `GITHUB_TOKEN`
   (`permissions: packages: read`) before running `scripts/deploy.sh`,
-  so the pull from the VPS is authenticated as this repository.
+  so the pull from the hosting is authenticated as this repository.
 
 Without the package-side grant the token is not enough: GHCR checks
 repository access on the package. Without the login step the pull is
@@ -170,5 +170,5 @@ anonymous and fails closed.
 2. The PR gets a 🚀 comment, then a ✅ one.
 3. A **Pin state** run followed by a **Deploy environment** run appear in
    this repository's Actions (triggered by `jj-guild-deployer[bot]`),
-   run on the self-hosted runner, and the bot on the test VPS restarts
+   run on the self-hosted runner, and the bot on the test hosting restarts
    with the PR image.

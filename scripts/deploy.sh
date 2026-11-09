@@ -26,7 +26,7 @@ die() { echo "[deploy:${ENVIRONMENT}] ERROR: $*" >&2; exit 1; }
 [[ -f "${COMPOSE_FILE}" ]] || die "missing compose file: ${COMPOSE_FILE}"
 
 # Secrets come from the CD pipeline environment (GitHub environment
-# secrets); nothing secret is stored on the VPS. Compose substitution
+# secrets); nothing secret is stored on the hosting. Compose substitution
 # fails closed on a missing DISCORD_TOKEN.
 [[ -n "${DISCORD_TOKEN:-}" ]] \
     || die "DISCORD_TOKEN is not set (provide it via the GitHub environment secrets)"
@@ -89,7 +89,7 @@ if [[ -n "${BOTFORGE_IMAGE:-}" ]]; then
 fi
 
 # Mandatory backup before any deployment — except the very first one:
-# on a fresh VPS the stack does not exist yet, so there is nothing to
+# on a fresh hosting the stack does not exist yet, so there is nothing to
 # back up (backup_db.sh fails closed on a non-running MongoDB).
 #
 # A mongo that compose still lists as running but does NOT answer
@@ -123,13 +123,13 @@ else
 fi
 
 # One-shot data migration (externalized volumes): the stores ride bind
-# mounts on the VPS filesystem (/opt/botforge/envs/<env>/{mongo,redis})
+# mounts on the hosting filesystem (/opt/botforge/data/<env>/{mongo,redis})
 # — the data survives reset-env, volume prunes and compose down -v.
 # The FIRST deploy after the switch must carry the legacy named volumes'
 # content over: with the stack stopped (a stopped mongod flushes its
 # files — a live file copy would corrupt WiredTiger), the copy is safe.
 # Runs only when the legacy volume exists AND the target dir is empty.
-DATA_ROOT="/opt/botforge/envs/${ENVIRONMENT}"
+DATA_ROOT="/opt/botforge/data/${ENVIRONMENT}"
 _migrate_store() {
     local name="$1" dir="$2"
     mkdir -p "${dir}"

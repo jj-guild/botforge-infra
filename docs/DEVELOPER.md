@@ -2,7 +2,7 @@
 
 `botforge-infra` holds the infrastructure of the BotForge Discord bot
 platform: Docker environments, CI/CD workflows, GitOps manifests and the
-deployment scripts executed on the VPS runners.
+deployment scripts executed on the hosting runners.
 
 Read the shared
 [conventions](https://github.com/jj-guild/botforge/blob/main/docs/CONVENTIONS.md)
@@ -21,7 +21,7 @@ this repo*.
 | `.github/workflows/` | CI checks + the deploy chain (`deploy.yml` routing + re-pin job, `deploy-env.yml` reusable per-env deploy, `pin-state.yml`, `sync-state.yml`) |
 | `scripts/` | `deploy.sh` (idempotent, health-gated), `restore_db.sh`, backup scripts, `diagnose_deploy.sh` (stuck-deploy diagnosis) |
 | `Makefile` | `make check` (script syntax + compose config), `make doctor` (deploy health per env), `make diagnose-deploy-<env>` |
-| `docs/` | [ENVIRONMENTS.md](ENVIRONMENTS.md), [GITOPS.md](GITOPS.md), [DEPLOYMENT.md](DEPLOYMENT.md), [VPS-SETUP.md](VPS-SETUP.md) |
+| `docs/` | [ENVIRONMENTS.md](ENVIRONMENTS.md), [GITOPS.md](GITOPS.md), [DEPLOYMENT.md](DEPLOYMENT.md), [HOSTING-SETUP.md](HOSTING-SETUP.md) |
 
 ## Environments are data
 
@@ -78,7 +78,7 @@ the CI workflows instead.
    manifests move (`prod` is never touched by this path).
 
 Deployment is **GitOps-driven**: changes to the state branches are applied
-by CI/CD, never by hand on the VPS. Deploy scripts must stay idempotent and
+by CI/CD, never by hand on the hosting. Deploy scripts must stay idempotent and
 support rollback (`deploy.sh`, database restore via `restore_db.sh`).
 
 ## Workflow pitfalls (learned the hard way)
@@ -131,8 +131,8 @@ Symptoms, in order of probability:
 3. The deploy job is queued and `labels` shows one comma-joined string
    (`self-hosted,botforge,env-prod`) → pre-`fromJSON` bug: no runner will
    ever match; cancel the run.
-4. Everything green on GitHub but nothing on the VPS → runner offline
-   (`sudo ./svc.sh status`, VPS-SETUP troubleshooting).
+4. Everything green on GitHub but nothing on the hosting → runner offline
+   (`sudo ./svc.sh status`, HOSTING-SETUP troubleshooting).
 
 Run `make doctor` or `make diagnose-deploy-<env>`
 (`scripts/diagnose_deploy.sh <env>`, `--json` for agents) — it walks these
