@@ -1,20 +1,20 @@
 # Desired state of botforge-bot on the test environment (ADR-0018).
 # Written by the deploy pipelines only (kingdoms-deployer GitHub App);
 # a push to this branch deploys this exact image.
-image: ghcr.io/merlin-pinpin-org/kingdoms-services:v0.4.0
-version_label: v0.4.0
-deploy_url: https://github.com/merlin-pinpin-org/kingdoms-services/releases/tag/v0.4.0
-deploy_kind: release
-deploy_ref: v0.4.0
-deploy_tree_url: https://github.com/merlin-pinpin-org/kingdoms-services/tree/v0.4.0
-deploy_ts: 1794235724
-deploy_commit_ts: 1794158129
-deploy_commit: 324e5f3b6a43ffef4a24f69e954ad83d0e9a4b77
-deploy_ci_run_id: 
-deploy_ci_run_number: 
-deploy_ci_run_ts: 
-deployed_by: config-change-deploy (run 42638237964)
-deployed_at: "2026-11-09T14:48:44Z"
-source: test-config change on main (commit 94af1b0) — image unchanged
-deploy_branch: main
-deploy_pr_title: 
+image: ghcr.io/jj-guild/botforge-services:pr-264-20261109161616-0152a0f
+version_label: pr-264-20261109161616-0152a0f
+deploy_url: https://github.com/jj-guild/botforge-services/pull/264#issuecomment-6745056038
+deploy_kind: pr
+deploy_ref: 264
+deploy_tree_url: https://github.com/jj-guild/botforge-services/tree/0152a0f8c7e3da45b193de169484498f71a20006
+deploy_ts: 1794241026
+deploy_commit_ts: 1794240062
+deploy_commit: 0152a0f8c7e3da45b193de169484498f71a20006
+deploy_ci_run_id: 42652964540
+deploy_ci_run_number: 1483
+deploy_ci_run_ts: 1794240947
+deployed_by: merlin-pinpin (/deploy)
+deployed_at: "2026-11-09T16:17:06Z"
+source: 
+deploy_branch: vibe/mods-init
+deploy_pr_title: feat(mods): modular layout (modules/mods/) + 'kingdoms mod init' scaffold — ladder & kingdoms as reference examples
