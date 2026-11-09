@@ -231,6 +231,39 @@ write_files:
       fi
       jq --arg e "$ENV_NAME" --arg labels "botforge,env-$ENV_NAME" --arg dir "$RDIR" '.[$e] = {labels: $labels, runner_dir: $dir}' "$ENVS_JSON" > "$ENVS_JSON.tmp" && mv "$ENVS_JSON.tmp" "$ENVS_JSON"
       echo "env '$ENV_NAME' recorded in $ENVS_JSON"
+  - path: /opt/botforge/bin/remove-all-envs.sh
+    permissions: "0755"
+    content: |
+      #!/usr/bin/env bash
+      # Remove ALL runners and envs from this hosting. Keeps data + dumps.
+      # Run as root:  remove-all-envs.sh
+      set -Eeuo pipefail
+      ENVS_JSON=/opt/botforge/envs.json
+      [[ -f "$ENVS_JSON" ]] || { echo "no $ENVS_JSON — nothing to do"; exit 0; }
+      ENVS="$(jq -r 'keys[]' "$ENVS_JSON")"
+      [[ -n "$ENVS" ]] || { echo "no envs registered — nothing to do"; exit 0; }
+      for e in $ENVS; do
+        echo "== removing env '$e'"
+        # stop the stack FIRST — otherwise the bot stays up as a ghost once the runner is gone
+        docker rm -f $(docker ps -aq --filter "label=com.docker.compose.project=$e") 2>/dev/null || true
+        d="/opt/botforge/runners/$e"
+        if [[ -d "$d" ]]; then (cd "$d" && ./svc.sh stop && ./svc.sh uninstall) 2>/dev/null || true; fi
+        rm -rf "$d"
+        jq --arg e "$e" 'del(.[$e])' "$ENVS_JSON" > "$ENVS_JSON.tmp" && mv "$ENVS_JSON.tmp" "$ENVS_JSON"
+      done
+      echo
+      echo "Kept (data + dumps):"
+      for e in $ENVS; do
+        [[ -d "/opt/botforge/data/$e" ]] && echo "  data:  /opt/botforge/data/$e    (mongo/redis volumes = the env's live DB)"
+        [[ -d "/opt/botforge/backup/$e" ]] && echo "  dumps: /opt/botforge/backup/$e  ($(ls /opt/botforge/backup/$e 2>/dev/null | wc -l) file(s))"
+      done
+      echo
+      echo "Relaunch a kept env: fresh token (" + TOKEN_URL + "), then"
+      echo "  sudo /opt/botforge/bin/add-env.sh <env> --token <TOKEN>    # runner re-registered, envs.json re-filled"
+      echo "  Actions → Deploy environment on deploy/<env>              # compose up on the EXISTING data/<env> volumes"
+      echo "Restore a dump instead: scripts/restore_db.sh from a clone, dump in /opt/botforge/backup/<env>/"
+      echo "On GitHub, remove the stale runners on the Runners page (Remove → removal token)."
+
   - path: /etc/profile.d/botforge.sh
     permissions: "0644"
     content: |
@@ -417,6 +450,11 @@ sudo /opt/botforge/bin/add-env.sh <env> --token <TOKEN>
 ```
 Nothing else to redo. Remove an env: on the server
 `sudo /opt/botforge/bin/add-env.sh <env> --remove` (stops the runner service, deletes `runners/<env>`, `backup/<env>`, `data/<env>`, and its `envs.json` entry); on GitHub, Runners page → that runner → **Remove** (use the removal token shown there with `./config.sh remove --token <REMOVAL_TOKEN>` inside `/opt/botforge/runners/<env>` first if the service is still installed).
+
+Remove **all** envs at once (keeps `data/<env>/` and `backup/<env>/`, prints their paths and how to relaunch):
+```bash
+sudo /opt/botforge/bin/remove-all-envs.sh
+```
 
 Validate each env before the next (`scripts/diagnose_env.sh` + `/status` in Discord). Order: **merlin → test → prod** (prod only at a release promotion).
 
