@@ -116,7 +116,7 @@ write_files:
 
       # --- multi-env filesystem layout ---
       mkdir -p /opt/botforge/bin /opt/botforge/backup /opt/botforge/data /opt/botforge/runners
-      [[ -f /opt/botforge/envs.json ]] || echo '[]' > /opt/botforge/envs.json
+      [[ -f /opt/botforge/envs.json ]] || echo '{}' > /opt/botforge/envs.json
       chown -R botforge:botforge /opt/botforge
 
       # --- pinned runner binary, downloaded ONCE, shared by every env ---
@@ -165,27 +165,53 @@ write_files:
     permissions: "0755"
     content: |
       #!/usr/bin/env bash
-      # Add one environment to a provisioned hosting: per-env dirs + runner
-      # (labels botforge,env-<env>) + systemd service. Same command at
-      # first boot and later — one command per environment.
-      # Run as root:  add-env.sh <env> --token <REGISTRATION_TOKEN>
+      # Manage one environment on a provisioned hosting. Reads/writes
+      # /opt/botforge/envs.json (object: env -> metadata) to decide what to do.
+      #   add-env.sh <env> --token <REGISTRATION_TOKEN>   create, or re-register if it already exists
+      #   add-env.sh <env> --remove                       remove runner + dirs + envs.json entry
+      # Run as root.
       set -Eeuo pipefail
-      ENV_NAME="${1:?usage: add-env.sh <env> --token <REGISTRATION_TOKEN>}"
+      ENV_NAME="${1:?usage: add-env.sh <env> --token <TOKEN> | add-env.sh <env> --remove}"
       shift
+      MODE="add"
       TOKEN=""
       while [[ $# -gt 0 ]]; do
         case "$1" in
           --token) TOKEN="${2:?}"; shift 2 ;;
+          --remove) MODE="remove"; shift ;;
           *) echo "unknown option: $1" >&2; exit 1 ;;
         esac
       done
-      [[ -n "$TOKEN" ]] || { echo "ERROR: --token required (Runners page, valid 1h)" >&2; exit 1; }
       [[ "$ENV_NAME" =~ ^[a-z0-9][a-z0-9-]*$ ]] || { echo "ERROR: invalid env name '$ENV_NAME'" >&2; exit 1; }
-      [[ ! -d "/opt/botforge/runners/$ENV_NAME" ]] || { echo "ERROR: env '$ENV_NAME' already has a runner dir" >&2; exit 1; }
-      mkdir -p "/opt/botforge/backup/$ENV_NAME" "/opt/botforge/data/$ENV_NAME/mongo" "/opt/botforge/data/$ENV_NAME/redis"
-      chown -R botforge:botforge "/opt/botforge/backup/$ENV_NAME" "/opt/botforge/data/$ENV_NAME"
-      jq --arg e "$ENV_NAME" 'if index($e) then . else . + [$e] end' /opt/botforge/envs.json > /opt/botforge/envs.json.tmp && mv /opt/botforge/envs.json.tmp /opt/botforge/envs.json
-      /opt/botforge/bin/install-runner.sh "$ENV_NAME" --token "$TOKEN"
+      ENVS_JSON=/opt/botforge/envs.json
+      [[ -f "$ENVS_JSON" ]] || echo '{}' > "$ENVS_JSON"
+      RDIR="/opt/botforge/runners/$ENV_NAME"
+
+      if [[ "$MODE" == "remove" ]]; then
+        if ! jq -e --arg e "$ENV_NAME" 'has($e)' "$ENVS_JSON" >/dev/null; then
+          echo "env '$ENV_NAME' not in $ENVS_JSON — nothing to do"
+          exit 0
+        fi
+        if [[ -d "$RDIR" ]]; then (cd "$RDIR" && ./svc.sh stop && ./svc.sh uninstall) 2>/dev/null || true; fi
+        rm -rf "$RDIR" "/opt/botforge/backup/$ENV_NAME" "/opt/botforge/data/$ENV_NAME"
+        jq --arg e "$ENV_NAME" 'del(.[$e])' "$ENVS_JSON" > "$ENVS_JSON.tmp" && mv "$ENVS_JSON.tmp" "$ENVS_JSON"
+        echo "env '$ENV_NAME' removed (runner, backup/, data/ dirs, envs.json entry)"
+        exit 0
+      fi
+
+      [[ -n "$TOKEN" ]] || { echo "ERROR: --token required (Runners page, valid 1h)" >&2; exit 1; }
+      if jq -e --arg e "$ENV_NAME" 'has($e)' "$ENVS_JSON" >/dev/null && [[ -d "$RDIR" ]]; then
+        echo "env '$ENV_NAME' already exists — re-registering runner with the new token (no reinstall)"
+        (cd "$RDIR" && sudo -u botforge ./config.sh --url https://github.com/jj-guild/botforge-infra --token "$TOKEN" --labels "botforge,env-$ENV_NAME" --replace)
+        (cd "$RDIR" && ./svc.sh start) || true
+      else
+        echo "env '$ENV_NAME' not present — creating it"
+        mkdir -p "/opt/botforge/backup/$ENV_NAME" "/opt/botforge/data/$ENV_NAME/mongo" "/opt/botforge/data/$ENV_NAME/redis"
+        chown -R botforge:botforge "/opt/botforge/backup/$ENV_NAME" "/opt/botforge/data/$ENV_NAME"
+        /opt/botforge/bin/install-runner.sh "$ENV_NAME" --token "$TOKEN"
+      fi
+      jq --arg e "$ENV_NAME" --arg labels "botforge,env-$ENV_NAME" --arg dir "$RDIR" '.[$e] = {labels: $labels, runner_dir: $dir}' "$ENVS_JSON" > "$ENVS_JSON.tmp" && mv "$ENVS_JSON.tmp" "$ENVS_JSON"
+      echo "env '$ENV_NAME' recorded in $ENVS_JSON"
   - path: /etc/profile.d/botforge.sh
     permissions: "0644"
     content: |
@@ -200,7 +226,7 @@ write_files:
       }
       kc() {  # kc <env> <compose args...> — compose in the right dir, with the right vars
         local env="${1:?usage: kc <env> <compose args...>}"; shift
-        jq -e --arg e "$env" 'index($e) != null' /opt/botforge/envs.json >/dev/null || { echo "unknown env '$env' — see /opt/botforge/envs.json" >&2; return 1; }
+        jq -e --arg e "$env" 'has($e)' /opt/botforge/envs.json >/dev/null || { echo "unknown env '$env' — see /opt/botforge/envs.json" >&2; return 1; }
         local dir; dir="$(_kwork "$env")" || return 1
         cd "$dir" || return 1
         export BOTFORGE_IMAGE="$(grep -E '^image:' state/botforge-bot.yml 2>/dev/null | head -1 | cut -d' ' -f2-)"
@@ -282,7 +308,7 @@ gh api -X POST "$REG" --jq '.token'
 ├── data/                             # docker volumes, per env: data/<env>/{mongo,redis}
 ├── runners/                          # one installed runner per env: runners/<env>/
 ├── actions-runner-linux-x64-2.338.2.tar.gz   # the installer, downloaded ONCE at the root
-└── envs.json                         # the env list on this machine (drives the kc/kcl CLI)
+└── envs.json                         # registry of envs on this machine: env → {labels, runner_dir}
 ```
 
 ```bash
@@ -316,9 +342,11 @@ sudo ./svc.sh status
 
 **Verify on GitHub:** Runners page → the runner is **Idle** (green), labels
 `self-hosted, botforge, env-<env>`. Repeat per env (`ENV=dev-merlin`…) with a
-fresh token each time. (One-command wrapper doing all of the above —
-including the `envs.json` entry: `sudo /opt/botforge/bin/add-env.sh <env>
---token <TOKEN>`.)
+fresh token each time. (One-command wrapper, driven by `envs.json`:
+`sudo /opt/botforge/bin/add-env.sh <env> --token <TOKEN>` creates the env
+if absent, **re-registers** it if it already exists (nothing reinstalled);
+`sudo /opt/botforge/bin/add-env.sh <env> --remove` deletes it — runner
+service, dirs, `envs.json` entry.)
 
 <details><summary>First time? why a token, why labels, why that layout</summary>
 
