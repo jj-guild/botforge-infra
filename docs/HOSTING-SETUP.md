@@ -64,165 +64,10 @@ ssh-keygen -t ed25519 -C "you@example.com"     # then: cat ~/.ssh/id_ed25519.pub
 
 Provider console → new instance: **Debian 13** (Ubuntu 26.04 LTS ok), **≥ 2 GB RAM / 20 GB disk**, paste your **public** SSH key. Boot.
 
-- If the creation form has a **user data / cloud-init** field → paste the **`#cloud-config` block from §1 below** there (first line `#cloud-config`; set the runner version to the one shown on the Runners page).
+- If the creation form has a **user data / cloud-init** field → paste the **`#cloud-config` block from this step** there (first line `#cloud-config`; set the runner version to the one shown on the Runners page).
 - **No such field (OVH Public Cloud has none)** → skip it; the one-liner in step 2 does the exact same thing over SSH.
 
-<details><summary>First time? where exactly</summary>
-
-- OVH Public Cloud: project → Compute → Create an instance → OS "Debian 13", flavor ≥ 2 GB, paste the public key under "SSH key". The user-data field is the "Configuration"/advanced section of the creation form.
-- The instance gets a public IP — you'll ssh into it in the next step. Login user = image name (usually `debian`).
-
-</details>
-
-#### 2. First SSH login — verify the bootstrap
-
-```bash
-ssh debian@<instance-ip>
-# No user-data field at creation (e.g. OVH Public Cloud)? This one-liner
-# runs the same bootstrap as the cloud-init block:
-curl -fsSL https://raw.githubusercontent.com/jj-guild/botforge-infra/main/scripts/vps/bootstrap-flat.sh | sudo bash
-# (runner version differs from 2.337.0 -> insert: | sed 's/2\.337\.0/NEW/' before 'sudo bash')
-# If you DID paste the cloud-init block: instead check it ran:
-#   sudo cloud-init status --wait   # Expected: "status: done"
-ls /opt/botforge/bin              # Expected: bootstrap.sh install-runner.sh add-env.sh
-docker --version && docker compose version
-docker run hello-world            # Expected: "Hello from Docker!"
-id botforge                       # Expected: groups=…(docker)
-sudo ufw status verbose           # Expected: Status: active, OpenSSH ALLOW
-```
-
-<details><summary>First time? what just happened</summary>
-
-cloud-init ran the block you pasted at creation: it installed the packages, Docker, the `botforge` user (in the `docker` group, no password/sudo), enabled the firewall (SSH only — the stack exposes no public port), created `/opt/botforge/{bin,backups,runners,envs}`, downloaded the pinned runner tarball, and wrote the `kc`/`kcl` aliases (`/etc/profile.d/botforge.sh`, active at the **next** login).
-
-</details>
-
-#### 3. Register one runner per env — line by line
-
-Token (shown **once**, valid **1 h**) — UI: <https://github.com/jj-guild/botforge-infra/settings/actions/runners/new> (Settings → Actions → Runners → New self-hosted runner, Linux/x64), or API (scriptable with any HTTP client):
-
-```bash
-REG='repos/jj-guild/botforge-infra/actions/runners/registration-token'
-gh api -X POST "$REG" --jq '.token'
-```
-
-Then, **on the server**, exactly the commands GitHub prints on that page:
-
-```bash
-# Download
-# Create a folder
-$ mkdir actions-runner && cd actions-runner
-# Download the latest runner package
-$ curl -o actions-runner-linux-x64-2.338.2.tar.gz -L https://github.com/actions/runner/releases/download/v2.338.2/actions-runner-linux-x64-2.338.2.tar.gz
-# Optional: Validate the hash
-$ echo "baebf204307bac6193480852732f0aba2ae97b6c5597c244f4d5558390147c40  actions-runner-linux-x64-2.338.2.tar.gz" | shasum -a 256 -c
-# Extract the installer
-$ tar xzf ./actions-runner-linux-x64-2.338.2.tar.gz
-Configure
-# Create the runner and start the configuration experience
-$ ./config.sh --url https://github.com/jj-guild/botforge-infra --token <TOKEN>
-# Last step, run it!
-$ ./run.sh
-```
-
-(Use the runner version currently shown on the Runners page and your fresh `<TOKEN>`.)
-
-After GitHub's block, our per-env settings (labels the deploy workflows route on; service so it survives reboots):
-
-```bash
-$ ./config.sh --url https://github.com/jj-guild/botforge-infra --token <TOKEN> --labels botforge,env-test
-$ sudo ./svc.sh install && sudo ./svc.sh start
-# equivalently: sudo /opt/botforge/bin/add-env.sh test --token <TOKEN>
-```
-
-Repeat per env (`test`, `dev-merlin`, `dev-drasah`…) with a **fresh token each time**.
-
-**Verify:** Runners page → each env runner **Idle** (green), labels `self-hosted, botforge, env-<env>`; on the server `cd /opt/botforge/runners/<env> && sudo ./svc.sh status` → active (running).
-
-<details><summary>First time? why a token, why labels</summary>
-
-- The token is a one-time, 1-hour password that attaches a runner to the repo — GitHub shows it once, so copy it immediately and use it within the hour.
-- Labels are how workflows pick the right runner: our deploy workflows require `self-hosted, botforge, env-<env>`.
-- `svc.sh install` makes it a systemd service, so it restarts on reboot; `run.sh` is only for a quick manual test.
-
-</details>
-
-#### 4. GitHub environment secrets (per env)
-
-Repo `jj-guild/botforge-infra` → **Settings → Environments → `<env>`**:
-
-- **Secret** `DISCORD_TOKEN` = that env's bot token
-- **Variable** `BOT_ADMINS` = comma-separated operator Discord user IDs
-
-Nothing secret is ever stored on the server.
-
-#### 5. First deployment
-
-Repo → **Actions** → **Deploy environment** → **Run workflow** → environment `test`. Expected: green in a few minutes. On the server:
-
-```bash
-docker ps --filter name=botforge   # Expected: botforge-bot, botforge-mongo, botforge-redis — Up/healthy
-```
-
-And in Discord: the test bot answers `/status`.
-
-#### 6. More envs + order after a reinstall
-
-Add an env later on the same server: `sudo /opt/botforge/bin/add-env.sh <env> --token <TOKEN>` (fresh token) + step 4. Nothing else to redo.
-
-Validate each env before the next (`scripts/diagnose_env.sh` + `/status` in Discord). Order: **merlin → test → prod** (prod only at a release promotion).
-
-#### 7. Daily ops
-
-```bash
-kc <env> ps             # what's running in that env
-kcl <env> botforge-bot  # follow the bot's logs
-```
-
-(`kc` sets `BOTFORGE_IMAGE` from the pinned `envs/<env>/state/botforge-bot.yml` automatically.)
-
-#### If something goes wrong
-
-| Symptom | Fix |
-| --- | --- |
-| Token rejected/expired | fetch a new one (1 h validity), rerun `./config.sh …` |
-| `cloud-init status` not `done` | wait; `sudo tail -n 50 /var/log/cloud-init-output.log` |
-| Runner Offline on the Runners page | on the server: `cd /opt/botforge/runners/<env> && sudo ./svc.sh status` |
-| Deploy workflow stays pending | label mismatch — check `self-hosted, botforge, env-<env>` on the runner |
-
-More: §8 Troubleshooting below.
-
----
-
-## 0. Prerequisites
-
-- A cloud provider account (any: OVH Public Cloud, Scaleway, Hetzner,
-  DigitalOcean…) and a hosting instance (VM) with **Debian 13 (trixie)**
-  (Ubuntu 26.04 LTS also works — the cloud-init block auto-detects the
-  distro for the Docker apt repo via `/etc/os-release`), at least
-  **2 GB RAM / 20 GB disk**.
-- An **SSH key pair** on your computer. If you don't have one yet:
-  `ssh-keygen -t ed25519 -C "you@example.com"` (Enter to accept the
-  defaults), then copy the public key with `cat ~/.ssh/id_ed25519.pub`.
-  You paste the **public** key at instance creation; the private key
-  stays on your computer and is what lets you `ssh` in.
-- Per environment, the env's **Discord bot token** (Discord developer
-  portal → your application → Bot → Reset Token → copy) and the
-  **Discord user IDs** of its operators (Discord → Settings → Advanced →
-  Developer Mode → right-click a user → Copy ID).
-- On GitHub (`jj-guild/botforge-infra`), per environment you
-  will host:
-  - a **GitHub environment** named `<env>` — created in step 3 with its
-    secrets;
-  - a **runner registration token**: Settings → Actions → Runners → New
-    self-hosted runner → Linux/x64 (the token is valid **1 hour**).
-
-## 1. Provision the hosting with cloud-init
-
-Create the instance and paste the following block in the provider's
-**user data / cloud-init** field, then boot. Replace `2.337.0` with the
-runner version currently shown on the Runners page.
-
+If the field exists, paste this block there:
 
 ```yaml
 #cloud-config
@@ -361,40 +206,54 @@ runcmd:
   - bash /opt/botforge/bin/bootstrap.sh
 ```
 
-What the boot installs: the base libraries, Docker Engine + Compose,
+
+<details><summary>First time? where exactly</summary>
+
+- OVH Public Cloud: project → Compute → Create an instance → OS "Debian 13", flavor ≥ 2 GB, paste the public key under "SSH key". The user-data field is the "Configuration"/advanced section of the creation form.
+- The instance gets a public IP — you'll ssh into it in the next step. Login user = image name (usually `debian`).
+
+</details>
+
+#### 2. First SSH login — verify the bootstrap
+
+```bash
+ssh debian@<instance-ip>
+# No user-data field at creation (e.g. OVH Public Cloud)? This one-liner
+# runs the same bootstrap as the cloud-init block:
+curl -fsSL https://raw.githubusercontent.com/jj-guild/botforge-infra/main/scripts/vps/bootstrap-flat.sh | sudo bash
+# (runner version differs from 2.337.0 -> insert: | sed 's/2\.337\.0/NEW/' before 'sudo bash')
+# If you DID paste the cloud-init block: instead check it ran:
+#   sudo cloud-init status --wait   # Expected: "status: done"
+ls /opt/botforge/bin              # Expected: bootstrap.sh install-runner.sh add-env.sh
+docker --version && docker compose version
+docker run hello-world            # Expected: "Hello from Docker!"
+id botforge                       # Expected: groups=…(docker)
+sudo ufw status verbose           # Expected: Status: active, OpenSSH ALLOW
+```
+
+<details><summary>First time? what just happened</summary>
+
+cloud-init ran the block you pasted at creation: it installed the packages, Docker, the `botforge` user (in the `docker` group, no password/sudo), enabled the firewall (SSH only — the stack exposes no public port), created `/opt/botforge/{bin,backups,runners,envs}`, downloaded the pinned runner tarball, and wrote the `kc`/`kcl` aliases (`/etc/profile.d/botforge.sh`, active at the **next** login).
+
+</details>
+
+**What the boot installs** (same content as the one-liner): What the boot installs: the base libraries, Docker Engine + Compose,
 `ufw` (SSH only), the `botforge` service user (no password, no sudo,
 docker group), the `/opt/botforge/{bin,backups,runners,envs}` layout,
 the pinned runner tarball (shared by all environments), the helper
 scripts `/opt/botforge/bin/{bootstrap,install-runner,add-env}.sh`, and
 the `kc` / `kcl` shell aliases via `/etc/profile.d/botforge.sh`.
 
-**Verify** (first ssh login):
+#### 3. Register one runner per env — line by line
 
-```bash
-ssh <host>                           # e.g. ssh debian@203.0.113.10 (user = image name)
-sudo cloud-init status --wait        # Expected at the end: "status: done"
-docker run hello-world               # Expected: "Hello from Docker!"
-docker compose version               # Expected: Docker Compose version v2…
-ls /opt/botforge/bin                 # Expected: bootstrap.sh install-runner.sh add-env.sh
-sudo -u botforge docker ps           # Expected: empty list, no permission error
-```
-
-The aliases load on the **next** login (profile.d): `exit`, reconnect,
-then `type kc kcl`.
-
-## 2. Register the runner(s) — line by line, one per environment
-
-Before the commands: fetch a registration token. Either on the Runners
-page (*Settings → Actions → Runners → New self-hosted runner*, Linux/x64
-— <https://github.com/jj-guild/botforge-infra/settings/actions/runners/new>),
-or via API (the token is shown once and is valid **1 hour**):
+Token (shown **once**, valid **1 h**) — UI: <https://github.com/jj-guild/botforge-infra/settings/actions/runners/new> (Settings → Actions → Runners → New self-hosted runner, Linux/x64), or API (scriptable with any HTTP client):
 
 ```bash
 REG='repos/jj-guild/botforge-infra/actions/runners/registration-token'
 gh api -X POST "$REG" --jq '.token'
 ```
 
-Then, on the hosting, exactly the commands GitHub prints on that page:
+Then, **on the server**, exactly the commands GitHub prints on that page:
 
 ```bash
 # Download
@@ -413,74 +272,76 @@ $ ./config.sh --url https://github.com/jj-guild/botforge-infra --token <TOKEN>
 $ ./run.sh
 ```
 
-(Use the runner version currently shown on the Runners page, and the
-fresh token from above.)
+(Use the runner version currently shown on the Runners page and your fresh `<TOKEN>`.)
 
-After GitHub's block, our per-environment specifics — labels
-`botforge,env-<env>`, install as a systemd service, per-env directory
-under `/opt/botforge/runners/<env>/` (all of this is also wrapped by
-`/opt/botforge/bin/add-env.sh <env> --token <TOKEN>`):
+After GitHub's block, our per-env settings (labels the deploy workflows route on; service so it survives reboots):
 
 ```bash
 $ ./config.sh --url https://github.com/jj-guild/botforge-infra --token <TOKEN> --labels botforge,env-test
 $ sudo ./svc.sh install && sudo ./svc.sh start
-# or equivalently: sudo /opt/botforge/bin/add-env.sh test --token <TOKEN>
+# equivalently: sudo /opt/botforge/bin/add-env.sh test --token <TOKEN>
 ```
 
-**Verify** — every env runner must be online/Idle with the right labels:
+Repeat per env (`test`, `dev-merlin`, `dev-drasah`…) with a **fresh token each time**.
+
+**Verify:** Runners page → each env runner **Idle** (green), labels `self-hosted, botforge, env-<env>`; on the server `cd /opt/botforge/runners/<env> && sudo ./svc.sh status` → active (running).
+
+<details><summary>First time? why a token, why labels</summary>
+
+- The token is a one-time, 1-hour password that attaches a runner to the repo — GitHub shows it once, so copy it immediately and use it within the hour.
+- Labels are how workflows pick the right runner: our deploy workflows require `self-hosted, botforge, env-<env>`.
+- `svc.sh install` makes it a systemd service, so it restarts on reboot; `run.sh` is only for a quick manual test.
+
+</details>
+
+#### 4. GitHub environment secrets (per env)
+
+Repo `jj-guild/botforge-infra` → **Settings → Environments → `<env>`**:
+
+- **Secret** `DISCORD_TOKEN` = that env's bot token
+- **Variable** `BOT_ADMINS` = comma-separated operator Discord user IDs
+
+Nothing secret is ever stored on the server.
+
+#### 5. First deployment
+
+Repo → **Actions** → **Deploy environment** → **Run workflow** → environment `test`. Expected: green in a few minutes. On the server:
 
 ```bash
-gh api /repos/jj-guild/botforge-infra/actions/runners \
-  --jq '.runners[] | {name, status, labels: [.labels[].name]}'
-# or the Runners page: each env runner Idle (green),
-# labels self-hosted, botforge, env-<env>
-cd /opt/botforge/runners/<env> && sudo ./svc.sh status
+docker ps --filter name=botforge   # Expected: botforge-bot, botforge-mongo, botforge-redis — Up/healthy
 ```
 
+And in Discord: the test bot answers `/status`.
 
-## 3. GitHub environments and secrets (per environment)
+#### 6. More envs + order after a reinstall
 
-On `jj-guild/botforge-infra`: **Settings → Environments →
-`<env>`** — add the environment **secret** `DISCORD_TOKEN` (that
-environment's bot token, from the Discord developer portal) and the
-environment **variable** `BOT_ADMINS` (comma-separated Discord user IDs
-of that bot's operators). Repeat per environment (`test`, `dev-merlin`,
-…). Nothing secret is ever written to the hosting — the runner picks the
-secrets up at deploy time.
+Add an env later on the same server: `sudo /opt/botforge/bin/add-env.sh <env> --token <TOKEN>` (fresh token) + step 4. Nothing else to redo.
 
-## 4. First deployment
+Validate each env before the next (`scripts/diagnose_env.sh` + `/status` in Discord). Order: **merlin → test → prod** (prod only at a release promotion).
 
-1. Actions tab → **Deploy environment** workflow → **Run workflow**,
-   environment `test`.
-2. The job checks out the `deploy/<env>` state branch into the
-   runner's `_work` directory and runs `scripts/deploy.sh` (backup →
-   apply → health gate → rollback on failure; the backup step is
-   skipped on the very first deployment).
-
-**Verify:**
+#### 7. Daily ops
 
 ```bash
-docker ps --filter name=botforge
-# botforge-bot, botforge-mongo, botforge-redis must all show (healthy)
+kc <env> ps             # what's running in that env
+kcl <env> botforge-bot  # follow the bot's logs
 ```
 
-## 5. Adding an environment later
+(`kc` sets `BOTFORGE_IMAGE` from the pinned `envs/<env>/state/botforge-bot.yml` automatically.)
 
-Environments are data (see [ENVIRONMENTS.md](ENVIRONMENTS.md)): one
-`envs/<name>/` manifest + state, one `deploy/<name>` state branch, one
-GitHub environment, one runner label. On a hosting provisioned with this
-guide, the hosting part is a single command:
+#### If something goes wrong
 
-```bash
-sudo /opt/botforge/bin/add-env.sh <env> --token <TOKEN>
-```
+| Symptom | Fix |
+| --- | --- |
+| Token rejected/expired | fetch a new one (1 h validity), rerun `./config.sh …` |
+| `cloud-init status` not `done` | wait; `sudo tail -n 50 /var/log/cloud-init-output.log` |
+| Runner Offline on the Runners page | on the server: `cd /opt/botforge/runners/<env> && sudo ./svc.sh status` |
+| Deploy workflow stays pending | label mismatch — check `self-hosted, botforge, env-<env>` on the runner |
 
-…then create the GitHub environment with its secrets (step 3) and the
-repo data (manifest + `deploy/<env>` branch) per the
-[ENVIRONMENTS.md](ENVIRONMENTS.md) checklist. Existing environments on
-the same hosting are untouched — same scripts, same paths, shared tarball.
+More: Troubleshooting at the end of this page.
 
-## 6. Daily operation — the aliases
+---
+
+## Daily operation — the aliases
 
 On any fresh ssh login, `/etc/profile.d/botforge.sh` provides:
 
@@ -504,7 +365,7 @@ secrets are injected only by the runner at deploy time (GitHub
 environment secrets). Never type a real `DISCORD_TOKEN` in an
 interactive shell on the hosting.
 
-## 7. Naming reference (current state)
+## Naming reference (current state)
 
 - Org: `jj-guild`. Repos: `botforge` (docs), `botforge-services` (code),
   `botforge-infra` (this repo), `visual-generator`.
@@ -516,7 +377,7 @@ interactive shell on the hosting.
   `BOTFORGE_IMAGE` (read from `envs/<env>/state/botforge-bot.yml`).
 
 
-## 8. Troubleshooting
+## Troubleshooting
 
 - **cloud-init failed or is slow**: `sudo cloud-init status --long`,
   `sudo tail -n 50 /var/log/cloud-init-output.log`.
