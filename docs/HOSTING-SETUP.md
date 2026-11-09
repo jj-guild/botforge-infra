@@ -118,6 +118,16 @@ write_files:
       # --- multi-env filesystem layout ---
       mkdir -p /opt/botforge/bin /opt/botforge/backup /opt/botforge/data /opt/botforge/runners
       [[ -f /opt/botforge/envs.json ]] || echo '{}' > /opt/botforge/envs.json
+      # adopt runner dirs that predate envs.json (registered by hand):
+      for d in /opt/botforge/runners/*/; do
+        e="$(basename "$d")"
+        [[ "$e" == .* ]] && continue
+        if ! jq -e --arg e "$e" 'has($e)' /opt/botforge/envs.json >/dev/null 2>&1; then
+          jq --arg e "$e" --arg labels "botforge,env-$e" --arg dir "/opt/botforge/runners/$e" \
+            '.[$e] = {labels: $labels, runner_dir: $dir}' /opt/botforge/envs.json > /opt/botforge/envs.json.tmp \
+            && mv /opt/botforge/envs.json.tmp /opt/botforge/envs.json
+        fi
+      done
       chown -R botforge:botforge /opt/botforge
 
       # load kc/kcl/ll for every interactive user — login shells via
@@ -235,7 +245,9 @@ write_files:
       }
       kc() {  # kc <env> <compose args...> — compose in the right dir, with the right vars
         local env="${1:?usage: kc <env> <compose args...>}"; shift
-        jq -e --arg e "$env" 'has($e)' /opt/botforge/envs.json >/dev/null || { echo "unknown env '$env' — see /opt/botforge/envs.json" >&2; return 1; }
+        if ! jq -e --arg e "$env" 'has($e)' /opt/botforge/envs.json >/dev/null 2>&1 && [[ ! -d "/opt/botforge/runners/$env" ]]; then
+          echo "unknown env '$env' — see /opt/botforge/envs.json" >&2; return 1
+        fi
         local dir; dir="$(_kwork "$env")" || return 1
         cd "$dir" || return 1
         export BOTFORGE_IMAGE="$(grep -E '^image:' state/botforge-bot.yml 2>/dev/null | head -1 | cut -d' ' -f2-)"
