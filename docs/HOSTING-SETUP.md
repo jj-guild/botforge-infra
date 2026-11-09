@@ -87,6 +87,7 @@ packages:
   - curl
   - jq
   - ufw
+  - libicu-dev   # the GitHub runner (.NET 6) needs libicu on Debian
 write_files:
   - path: /opt/botforge/bin/bootstrap.sh
     permissions: "0755"
@@ -332,6 +333,7 @@ sudo install -d -o botforge -g botforge \
 # extract the SHARED installer (root-level tarball) into this env's runner dir, configure as botforge:
 sudo -u botforge bash -c "cd /opt/botforge/runners/$ENV && \
   tar xzf /opt/botforge/actions-runner-linux-x64-2.338.2.tar.gz && \
+  ./bin/installdependencies.sh 2>/dev/null || true   # no-op if libicu already present (it is, via the bootstrap packages) && \
   ./config.sh --url https://github.com/jj-guild/botforge-infra --token $TOKEN --labels botforge,env-$ENV"
 
 # as root: install + start the systemd service (runs as botforge):

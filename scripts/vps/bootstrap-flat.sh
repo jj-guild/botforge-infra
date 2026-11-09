@@ -7,7 +7,7 @@ export DEBIAN_FRONTEND=noninteractive
 
 apt-get update
 apt-get upgrade -y
-apt-get install -y ca-certificates curl jq ufw
+apt-get install -y ca-certificates curl jq ufw libicu-dev
 
 install -m 0755 -d "$(dirname "/opt/botforge/bin/bootstrap.sh")"
 cat > "/opt/botforge/bin/bootstrap.sh" <<'EOF__opt_botforge_bin_bootstrap.sh'
