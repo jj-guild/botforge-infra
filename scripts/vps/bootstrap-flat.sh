@@ -175,7 +175,8 @@ kc() {  # kc <env> <compose args...> — compose in the right dir, with the righ
   fi
   local dir; dir="$(_kwork "$env")" || return 1
   cd "$dir" || return 1
-  export BOTFORGE_IMAGE="$(grep -E '^image:' state/botforge-bot.yml 2>/dev/null | head -1 | cut -d' ' -f2-)"
+  export BOTFORGE_IMAGE="$(sudo grep -E '^image:' state/botforge-bot.yml 2>/dev/null | head -1 | cut -d' ' -f2-)"
+  [[ -n "$BOTFORGE_IMAGE" ]] || { echo "no pin in state/botforge-bot.yml under $dir — did a deploy run on env '$env' yet?" >&2; return 1; }
   export DISCORD_TOKEN="${DISCORD_TOKEN:-placeholder}"
   sudo docker compose "$@"
 }
