@@ -7,14 +7,14 @@ deploy_url: https://github.com/jj-guild/botforge-services/pull/357#issuecomment-
 deploy_kind: pr
 deploy_ref: 357
 deploy_tree_url: https://github.com/jj-guild/botforge-services/tree/99c673db01c6d7adfead097ca1d9b2adb07756e9
-deploy_ts: 1794233085
+deploy_ts: 1794235730
 deploy_commit_ts: 1794233009
 deploy_commit: 99c673db01c6d7adfead097ca1d9b2adb07756e9
-deploy_ci_run_id: 42630979157
-deploy_ci_run_number: 1480
-deploy_ci_run_ts: 1794233018
-deployed_by: merlin-pinpin (/deploy)
-deployed_at: "2026-11-09T14:04:45Z"
-source: 
+deploy_ci_run_id: 
+deploy_ci_run_number: 
+deploy_ci_run_ts: 
+deployed_by: config-change-deploy (run 42638237964)
+deployed_at: "2026-11-09T14:48:50Z"
+source: merlin-config change on main (commit 94af1b0) — image unchanged
 deploy_branch: vibe/docs-hosting-01fb7e
 deploy_pr_title: vibe[Merlin] docs: VPS → hosting everywhere, hosting install quickstart, no JS/octokit, present-tense naming
