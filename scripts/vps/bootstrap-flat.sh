@@ -220,9 +220,35 @@ kc() {  # kc <env> <compose args...> — compose in the right dir, with the righ
     docker compose "$@"   # botforge: already in the docker group, env already set
   fi
 }
-kcl() {  # kcl <env> [service...] — docker compose logs -f (placeholders are fine)
-  local env="${1:?usage: kcl <env> [service...]}"; shift
-  kc "$env" logs -f "$@"
+kcl() {  # kcl <env> [--services|--db|--all] [service...] — docker compose logs -f (placeholders are fine)
+  local env="${1:?usage: kcl <env> [--services|--db|--all] [service...]}"; shift
+  local mode=""
+  case "${1:-}" in
+    --services|--db|--all) mode="${1#--}"; shift ;;
+  esac
+  local svcs
+  svcs="$(kc "$env" config --services 2>/dev/null)" || return 1
+  if [[ -z "$mode" && $# -gt 0 ]]; then  # explicit services: short names OK (bot -> botforge-bot)
+    local expanded=() s m n cand base
+    for s in "$@"; do
+      n=0; m=""
+      for cand in $svcs; do
+        base="${cand#botforge-}"
+        if [[ "$cand" == "$s" || "$base" == "$s"* ]]; then m="$cand"; n=$((n+1)); fi
+      done
+      if [[ $n -eq 1 ]]; then expanded+=("$m")
+      else echo "kcl: '$s' matches $n services in env '$env' — use the full name" >&2; return 1; fi
+    done
+    kc "$env" logs -f "${expanded[@]}"
+    return
+  fi
+  [[ -n "$mode" ]] || mode="services"
+  case "$mode" in
+    db)       svcs="$(printf '%s\n' "$svcs" | grep -E 'mongo|redis')" ;;
+    services) svcs="$(printf '%s\n' "$svcs" | grep -Ev 'mongo|redis')" ;;
+    all)      : ;;
+  esac
+  kc "$env" logs -f $svcs
 }
 
 alias ll='ls -al'
