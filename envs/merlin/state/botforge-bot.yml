@@ -1,20 +1,20 @@
 # Desired state of botforge-bot on the merlin environment (ADR-0018).
 # Written by the deploy pipelines only (kingdoms-deployer GitHub App);
 # a push to this branch deploys this exact image.
-image: ghcr.io/jj-guild/botforge-services:pr-357-20261109135502-dcf8bbb
-version_label: pr-357-20261109135502-dcf8bbb
-deploy_url: https://github.com/jj-guild/botforge-services/pull/357#issuecomment-6741787774
+image: ghcr.io/jj-guild/botforge-services:pr-357-20261109140403-99c673d
+version_label: pr-357-20261109140403-99c673d
+deploy_url: https://github.com/jj-guild/botforge-services/pull/357#issuecomment-6741979764
 deploy_kind: pr
 deploy_ref: 357
-deploy_tree_url: https://github.com/jj-guild/botforge-services/tree/dcf8bbbc7b621ae12ddec102551d1cfca159129f
-deploy_ts: 1794232532
-deploy_commit_ts: 1794231978
-deploy_commit: dcf8bbbc7b621ae12ddec102551d1cfca159129f
-deploy_ci_run_id: 42628451371
-deploy_ci_run_number: 1479
-deploy_ci_run_ts: 1794232002
+deploy_tree_url: https://github.com/jj-guild/botforge-services/tree/99c673db01c6d7adfead097ca1d9b2adb07756e9
+deploy_ts: 1794233085
+deploy_commit_ts: 1794233009
+deploy_commit: 99c673db01c6d7adfead097ca1d9b2adb07756e9
+deploy_ci_run_id: 42630979157
+deploy_ci_run_number: 1480
+deploy_ci_run_ts: 1794233018
 deployed_by: merlin-pinpin (/deploy)
-deployed_at: "2026-11-09T13:55:32Z"
+deployed_at: "2026-11-09T14:04:45Z"
 source: 
 deploy_branch: vibe/docs-hosting-01fb7e
 deploy_pr_title: vibe[Merlin] docs: VPS → hosting everywhere, hosting install quickstart, no JS/octokit, present-tense naming
