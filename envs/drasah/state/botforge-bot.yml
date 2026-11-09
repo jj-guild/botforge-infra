@@ -1,4 +1,4 @@
-# Desired state of kingdoms-bot on the drasah environment (ADR-0018).
+# Desired state of botforge-bot on the drasah environment (ADR-0018).
 # Written by the deploy pipelines only (kingdoms-deployer GitHub App);
 # a push to this branch deploys this exact image.
 image: ghcr.io/merlin-pinpin-org/kingdoms-services:pr-244-20261107053301-c57f09a
@@ -7,14 +7,14 @@ deploy_url: https://github.com/merlin-pinpin-org/kingdoms-services/tree/c57f09a3
 deploy_kind: integration
 deploy_ref: c57f09a
 deploy_tree_url: https://github.com/merlin-pinpin-org/kingdoms-services/tree/c57f09a31209acc9eb252f2b8d29e54ff537ab0d
-deploy_ts: 1794029615
+deploy_ts: 1794235729
 deploy_commit_ts: 1794029532
 deploy_commit: c57f09a31209acc9eb252f2b8d29e54ff537ab0d
-deploy_ci_run_id: 42343145201
-deploy_ci_run_number: 2490
-deploy_ci_run_ts: 1794029535
-deployed_by: Drasahaoe (autopin vibe/drasah/main)
-deployed_at: "2026-11-07T05:33:35Z"
-source: 
+deploy_ci_run_id: 
+deploy_ci_run_number: 
+deploy_ci_run_ts: 
+deployed_by: config-change-deploy (run 42638237964)
+deployed_at: "2026-11-09T14:48:49Z"
+source: drasah-config change on main (commit 94af1b0) — image unchanged
 deploy_branch: vibe/drasah/main
 deploy_pr_title: 
