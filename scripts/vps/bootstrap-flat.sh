@@ -40,10 +40,10 @@ chown -R botforge:botforge /opt/botforge
 
 # --- pinned runner binary, downloaded ONCE, shared by every env ---
 RUNNER_VERSION="2.338.2"  # <- version shown on the Runners page
-echo "$RUNNER_VERSION" > /opt/botforge/runners/.runner-version
-curl -fsSLo "/opt/botforge/runners/actions-runner-linux-x64-${RUNNER_VERSION}.tar.gz" \
+echo "$RUNNER_VERSION" > /opt/botforge/installer/.runner-version
+curl -fsSLo "/opt/botforge/installer/actions-runner-linux-x64-${RUNNER_VERSION}.tar.gz" \
   "https://github.com/actions/runner/releases/download/v${RUNNER_VERSION}/actions-runner-linux-x64-${RUNNER_VERSION}.tar.gz"
-chown -R botforge:botforge /opt/botforge/runners
+chown -R botforge:botforge /opt/botforge
 EOF__opt_botforge_bin_bootstrap.sh
 chmod 0755 "/opt/botforge/bin/bootstrap.sh"
 
@@ -69,8 +69,8 @@ done
 RDIR="/opt/botforge/runners/$ENV_NAME"
 [[ ! -d "$RDIR" ]] || { echo "ERROR: $RDIR already exists (env '$ENV_NAME' already installed)" >&2; exit 1; }
 
-RUNNER_VERSION="$(cat /opt/botforge/runners/.runner-version)"
-TARBALL="/opt/botforge/runners/actions-runner-linux-x64-${RUNNER_VERSION}.tar.gz"
+RUNNER_VERSION="$(cat /opt/botforge/installer/.runner-version)"
+TARBALL="/opt/botforge/installer/actions-runner-linux-x64-${RUNNER_VERSION}.tar.gz"
 [[ -f "$TARBALL" ]] || curl -fsSLo "$TARBALL" \
   "https://github.com/actions/runner/releases/download/v${RUNNER_VERSION}/actions-runner-linux-x64-${RUNNER_VERSION}.tar.gz"
 
