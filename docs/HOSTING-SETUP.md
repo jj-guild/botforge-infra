@@ -369,7 +369,7 @@ sudo ./svc.sh status
 
 **Verify on GitHub:** Runners page → the runner is **Idle** (green), labels
 `self-hosted, botforge, env-<env>`. Repeat per env (`ENV=dev-merlin`…) with a
-fresh token each time. (One-command wrapper, driven by `envs.json`:
+fresh token each time — token page: <https://github.com/jj-guild/botforge-infra/settings/actions/runners/new>. (One-command wrapper, driven by `envs.json`: Token page each time: <https://github.com/jj-guild/botforge-infra/settings/actions/runners/new>
 `sudo /opt/botforge/bin/add-env.sh <env> --token <TOKEN>` creates the env
 if absent, **re-registers** it if it already exists (nothing reinstalled);
 `sudo /opt/botforge/bin/add-env.sh <env> --remove` deletes it — runner
@@ -411,11 +411,18 @@ And in Discord: the test bot answers `/status`.
 
 #### 6. More envs + order after a reinstall
 
-Add an env later on the same server: `sudo /opt/botforge/bin/add-env.sh <env> --token <TOKEN>` (fresh token) + step 4. Nothing else to redo.
+Add an env later on the same server — get a **fresh token at** <https://github.com/jj-guild/botforge-infra/settings/actions/runners/new> (shown once, 1 h), then:
+```bash
+sudo /opt/botforge/bin/add-env.sh <env> --token <TOKEN>
+```
+Nothing else to redo. Remove an env: on the server
+`sudo /opt/botforge/bin/add-env.sh <env> --remove` (stops the runner service, deletes `runners/<env>`, `backup/<env>`, `data/<env>`, and its `envs.json` entry); on GitHub, Runners page → that runner → **Remove** (use the removal token shown there with `./config.sh remove --token <REMOVAL_TOKEN>` inside `/opt/botforge/runners/<env>` first if the service is still installed).
 
 Validate each env before the next (`scripts/diagnose_env.sh` + `/status` in Discord). Order: **merlin → test → prod** (prod only at a release promotion).
 
 #### 7. Daily ops
+
+Run `kc`/`kcl` as your **SSH user** (`debian`, or root) — never as `botforge` (the `botforge` user has no sudo by design; `kc` calls `sudo` internally for the pin read and docker):
 
 ```bash
 kc <env> ps             # what's running in that env
