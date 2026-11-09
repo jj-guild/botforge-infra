@@ -123,13 +123,13 @@ else
 fi
 
 # One-shot data migration (externalized volumes): the stores ride bind
-# mounts on the hosting filesystem (/opt/botforge/envs/<env>/{mongo,redis})
+# mounts on the hosting filesystem (/opt/botforge/volumes/<env>/{mongo,redis})
 # — the data survives reset-env, volume prunes and compose down -v.
 # The FIRST deploy after the switch must carry the legacy named volumes'
 # content over: with the stack stopped (a stopped mongod flushes its
 # files — a live file copy would corrupt WiredTiger), the copy is safe.
 # Runs only when the legacy volume exists AND the target dir is empty.
-DATA_ROOT="/opt/botforge/envs/${ENVIRONMENT}"
+DATA_ROOT="/opt/botforge/volumes/${ENVIRONMENT}"
 _migrate_store() {
     local name="$1" dir="$2"
     mkdir -p "${dir}"

@@ -291,7 +291,7 @@ services:
     ports:
       - "127.0.0.1:27018:27017"
     volumes:
-      - /opt/botforge/envs/merlin/mongo:/data/db
+      - /opt/botforge/volumes/merlin/mongo:/data/db
     healthcheck:
       # mongosh cold-start on a busy shared hosting can exceed 5s; without
       # margin the probe is killed mid-handshake and mongo flaps
@@ -310,7 +310,7 @@ services:
     ports:
       - "127.0.0.1:6380:6379"
     volumes:
-      - /opt/botforge/envs/merlin/redis:/data
+      - /opt/botforge/volumes/merlin/redis:/data
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 10s

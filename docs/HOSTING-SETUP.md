@@ -25,7 +25,7 @@ Tracked by jj-guild/botforge-services#331 (lot 2).
   that label.
 - Persistent data outside the runner's work directory:
   `/opt/botforge/backup/<env>/` (deployment backups) and
-  `/opt/botforge/envs/<env>/{mongo,redis}` (bind-mount targets — they
+  `/opt/botforge/volumes/<env>/{mongo,redis}` (bind-mount targets — they
   survive a `docker compose down --volumes` reset).
 - `/opt/botforge/installer/` holds the runner tarball **once**, shared by
   every environment (no 218 MB download per env).
@@ -112,7 +112,7 @@ write_files:
       ufw --force enable
 
       # --- multi-env filesystem layout ---
-      mkdir -p /opt/botforge/bin /opt/botforge/installer /opt/botforge/backup /opt/botforge/runners /opt/botforge/envs
+      mkdir -p /opt/botforge/bin /opt/botforge/installer /opt/botforge/backup /opt/botforge/runners /opt/botforge/volumes
       chown -R botforge:botforge /opt/botforge
 
       # --- pinned runner binary, downloaded ONCE, shared by every env ---
@@ -177,8 +177,8 @@ write_files:
       [[ -n "$TOKEN" ]] || { echo "ERROR: --token required (Runners page, valid 1h)" >&2; exit 1; }
       [[ "$ENV_NAME" =~ ^[a-z0-9][a-z0-9-]*$ ]] || { echo "ERROR: invalid env name '$ENV_NAME'" >&2; exit 1; }
       [[ ! -d "/opt/botforge/runners/$ENV_NAME" ]] || { echo "ERROR: env '$ENV_NAME' already has a runner dir" >&2; exit 1; }
-      mkdir -p "/opt/botforge/backup/$ENV_NAME" "/opt/botforge/envs/$ENV_NAME/mongo" "/opt/botforge/envs/$ENV_NAME/redis"
-      chown -R botforge:botforge "/opt/botforge/backup/$ENV_NAME" "/opt/botforge/envs/$ENV_NAME"
+      mkdir -p "/opt/botforge/backup/$ENV_NAME" "/opt/botforge/volumes/$ENV_NAME/mongo" "/opt/botforge/volumes/$ENV_NAME/redis"
+      chown -R botforge:botforge "/opt/botforge/backup/$ENV_NAME" "/opt/botforge/volumes/$ENV_NAME"
       /opt/botforge/bin/install-runner.sh "$ENV_NAME" --token "$TOKEN"
   - path: /etc/profile.d/botforge.sh
     permissions: "0644"
@@ -235,7 +235,7 @@ sudo ufw status verbose           # Expected: Status: active, OpenSSH ALLOW
 
 <details><summary>First time? what just happened</summary>
 
-cloud-init ran the block you pasted at creation: it installed the packages, Docker, the `botforge` user (in the `docker` group, no password/sudo), enabled the firewall (SSH only — the stack exposes no public port), created `/opt/botforge/{bin,installer,backup,runners,envs}`, downloaded the pinned runner tarball, and wrote the `kc`/`kcl` aliases (`/etc/profile.d/botforge.sh`, active at the **next** login).
+cloud-init ran the block you pasted at creation: it installed the packages, Docker, the `botforge` user (in the `docker` group, no password/sudo), enabled the firewall (SSH only — the stack exposes no public port), created `/opt/botforge/{bin,installer,backup,runners,volumes}`, downloaded the pinned runner tarball, and wrote the `kc`/`kcl` aliases (`/etc/profile.d/botforge.sh`, active at the **next** login).
 
 Note: the Docker socket answers only to root and the `docker` group — as the image user (`debian`…) prefix docker commands with `sudo`, or switch user: `sudo -iu botforge`.
 
@@ -243,7 +243,7 @@ Note: the Docker socket answers only to root and the `docker` group — as the i
 
 **What the boot installs** (the one-liner runs the same content): the base libraries, Docker Engine + Compose,
 `ufw` (SSH only), the `botforge` service user (no password, no sudo,
-docker group), the `/opt/botforge/{bin,installer,backup,runners,envs}` layout,
+docker group), the `/opt/botforge/{bin,installer,backup,runners,volumes}` layout,
 the pinned runner tarball (shared by all environments), the helper
 scripts `/opt/botforge/bin/{bootstrap,install-runner,add-env}.sh`, and
 the `kc` / `kcl` shell aliases via `/etc/profile.d/botforge.sh`.
@@ -266,7 +266,7 @@ gh api -X POST "$REG" --jq '.token'
 **Layout under `/opt/botforge/`:** `bin/` (scripts) · `installer/` (runner
 tarball, downloaded **once**, shared) · `backup/<env>/` (per-env deploy
 backups) · `runners/<env>/` (one extracted runner per env, user
-`botforge`) · `envs/<env>/{mongo,redis}` (per-env data bind mounts).
+`botforge`) · `volumes/<env>/{mongo,redis}` (per-env data bind mounts).
 
 ```bash
 # one-time, shared: download the runner installer into /opt/botforge/installer
@@ -285,7 +285,7 @@ TOKEN=<TOKEN>
 # per-env dirs (runner dir + backup dir + data bind mounts):
 sudo install -d -o botforge -g botforge \
   "/opt/botforge/runners/$ENV" "/opt/botforge/backup/$ENV" \
-  "/opt/botforge/envs/$ENV/mongo" "/opt/botforge/envs/$ENV/redis"
+  "/opt/botforge/volumes/$ENV/mongo" "/opt/botforge/volumes/$ENV/redis"
 
 # extract the SHARED installer into this env's runner dir, configure as botforge:
 sudo -u botforge bash -c "cd /opt/botforge/runners/$ENV && \
@@ -425,7 +425,7 @@ interactive shell on the hosting.
   but your shell predates it — switch again with `sudo -iu botforge`.
 - **Known pitfalls from past sessions**: Discord throttling ~2 h after
   intensive provisioning; `systemd-resolved` DNS quirks; the
-  `/opt/botforge/envs/<env>` bind mounts survive a hosting reset **by
+  `/opt/botforge/volumes/<env>` bind mounts survive a hosting reset **by
   design** (that is the data).
 
 ## Glossary (first-timer)
