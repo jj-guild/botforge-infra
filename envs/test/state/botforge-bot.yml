@@ -1,20 +1,20 @@
 # Desired state of botforge-bot on the test environment (ADR-0018).
 # Written by the deploy pipelines only (kingdoms-deployer GitHub App);
 # a push to this branch deploys this exact image.
-image: ghcr.io/jj-guild/botforge-services:pr-264-20261109165807-77a9c0f
-version_label: pr-264-20261109165807-77a9c0f
-deploy_url: https://github.com/jj-guild/botforge-services/pull/264#issuecomment-6746085821
+image: ghcr.io/jj-guild/botforge-services:pr-264-20261109184129-77a9c0f
+version_label: pr-264-20261109184129-77a9c0f
+deploy_url: https://github.com/jj-guild/botforge-services/pull/264#issuecomment-6748327964
 deploy_kind: pr
 deploy_ref: 264
 deploy_tree_url: https://github.com/jj-guild/botforge-services/tree/77a9c0f5e983c24050f79c2947614b64e4a2564d
-deploy_ts: 1794244419
+deploy_ts: 1794249739
 deploy_commit_ts: 1794243454
 deploy_commit: 77a9c0f5e983c24050f79c2947614b64e4a2564d
-deploy_ci_run_id: 
-deploy_ci_run_number: 
-deploy_ci_run_ts: 
-deployed_by: config-change-deploy (run 42662440206)
-deployed_at: "2026-11-09T17:13:39Z"
-source: test-config change on main (commit 203be78) — image unchanged
+deploy_ci_run_id: 42676163028
+deploy_ci_run_number: 1489
+deploy_ci_run_ts: 1794249660
+deployed_by: merlin-pinpin (/deploy)
+deployed_at: "2026-11-09T18:42:19Z"
+source: 
 deploy_branch: vibe/mods-init
 deploy_pr_title: feat(mods): modular layout (modules/mods/) + 'kingdoms mod init' scaffold — ladder & kingdoms as reference examples
