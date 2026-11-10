@@ -1,20 +1,20 @@
 # Desired state of botforge-bot on the merlin environment (ADR-0018).
 # Written by the deploy pipelines only (kingdoms-deployer GitHub App);
 # a push to this branch deploys this exact image.
-image: ghcr.io/jj-guild/botforge-services:pr-372-20261110164247-08a45b4
-version_label: pr-372-20261110164247-08a45b4
-deploy_url: https://github.com/jj-guild/botforge-services/pull/372#issuecomment-6773255820
+image: ghcr.io/jj-guild/botforge-services:pr-370-20261110184940-5f66cb6
+version_label: pr-370-20261110184940-5f66cb6
+deploy_url: https://github.com/jj-guild/botforge-services/pull/370#issuecomment-6776210365
 deploy_kind: pr
-deploy_ref: 372
-deploy_tree_url: https://github.com/jj-guild/botforge-services/tree/08a45b461c7ccd41bc853df18b6f1a2b3621ed7d
-deploy_ts: 1794329042
-deploy_commit_ts: 1794328309
-deploy_commit: 08a45b461c7ccd41bc853df18b6f1a2b3621ed7d
-deploy_ci_run_id: 42857234486
-deploy_ci_run_number: 1507
-deploy_ci_run_ts: 1794328940
+deploy_ref: 370
+deploy_tree_url: https://github.com/jj-guild/botforge-services/tree/5f66cb6ece208c778b6667a57b08a4bb96ceb254
+deploy_ts: 1794336632
+deploy_commit_ts: 1794336528
+deploy_commit: 5f66cb6ece208c778b6667a57b08a4bb96ceb254
+deploy_ci_run_id: 42879000899
+deploy_ci_run_number: 1512
+deploy_ci_run_ts: 1794336540
 deployed_by: merlin-pinpin (/deploy)
-deployed_at: "2026-11-10T16:44:02Z"
+deployed_at: "2026-11-10T18:50:32Z"
 source: 
-deploy_branch: vibe/maps-forum-card-limits-5cbe08
-deploy_pr_title: fix(bot): map posts never created — the card crossed Discord's component caps (50035)
+deploy_branch: vibe/console-standalone
+deploy_pr_title: feat(console): the dev console, standalone — shippable without the mods work
