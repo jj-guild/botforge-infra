@@ -7,14 +7,14 @@ deploy_url: https://github.com/jj-guild/botforge-services/pull/359#issuecomment-
 deploy_kind: pr
 deploy_ref: 359
 deploy_tree_url: https://github.com/jj-guild/botforge-services/tree/49db160c234c2f9c711bcbeb6739468851db240c
-deploy_ts: 1794241460
+deploy_ts: 1794273977
 deploy_commit_ts: 1794240193
 deploy_commit: 49db160c234c2f9c711bcbeb6739468851db240c
-deploy_ci_run_id: 42654205026
-deploy_ci_run_number: 1484
-deploy_ci_run_ts: 1794241385
-deployed_by: merlin-pinpin (/deploy)
-deployed_at: "2026-11-09T16:24:20Z"
-source: 
+deploy_ci_run_id: 
+deploy_ci_run_number: 
+deploy_ci_run_ts: 
+deployed_by: config-change-deploy (run 42735720578)
+deployed_at: "2026-11-10T01:26:17Z"
+source: merlin-config change on main (commit 1c6de24) — image unchanged
 deploy_branch: vibe/fix-enrollments-355
 deploy_pr_title: fix(core): surface the enrollments sync when GAME_AOE2_URI is unset (#355)
