@@ -32,6 +32,10 @@ services:
       # its ladders to this guild (ladder:aoe2:<guild_id>); the matches seed
       # fail-closes without it. Test envs only: prod never declares one.
       CICD_GUILD_ID: ${TEST_GUILD_ID:-}
+      # The dev console's allowlist (same GitHub environment variable as
+      # CICD_GUILD_ID — the console is test-env-only and fails closed when
+      # unset: an env that forgets it gets no console, never an open one).
+      BOTFORGE_TEST_GUILD_IDS: ${TEST_GUILD_ID:-}
       BOTFORGE_DEPLOY_URL: ${BOTFORGE_DEPLOY_URL:-}
       BOTFORGE_DEPLOY_LABEL: ${BOTFORGE_DEPLOY_LABEL:-}
       BOTFORGE_DEPLOY_RUN_URL: ${BOTFORGE_DEPLOY_RUN_URL:-}
