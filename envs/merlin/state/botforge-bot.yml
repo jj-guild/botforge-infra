@@ -1,20 +1,20 @@
 # Desired state of botforge-bot on the merlin environment (ADR-0018).
 # Written by the deploy pipelines only (kingdoms-deployer GitHub App);
 # a push to this branch deploys this exact image.
-image: ghcr.io/jj-guild/botforge-services:pr-370-20261110191307-9338a89
-version_label: pr-370-20261110191307-9338a89
-deploy_url: https://github.com/jj-guild/botforge-services/pull/370#issuecomment-6776754714
+image: ghcr.io/jj-guild/botforge-services:pr-370-20261110192215-40547f8
+version_label: pr-370-20261110192215-40547f8
+deploy_url: https://github.com/jj-guild/botforge-services/pull/370#issuecomment-6776973895
 deploy_kind: pr
 deploy_ref: 370
-deploy_tree_url: https://github.com/jj-guild/botforge-services/tree/9338a8971d03e9ed4609197b92799fcd837f955d
-deploy_ts: 1794338035
-deploy_commit_ts: 1794337919
-deploy_commit: 9338a8971d03e9ed4609197b92799fcd837f955d
-deploy_ci_run_id: 42882959580
-deploy_ci_run_number: 1513
-deploy_ci_run_ts: 1794337957
+deploy_tree_url: https://github.com/jj-guild/botforge-services/tree/40547f860a34321c0ea3d16a3832fc4b5409f1d1
+deploy_ts: 1794338589
+deploy_commit_ts: 1794338499
+deploy_commit: 40547f860a34321c0ea3d16a3832fc4b5409f1d1
+deploy_ci_run_id: 42884499392
+deploy_ci_run_number: 1514
+deploy_ci_run_ts: 1794338508
 deployed_by: merlin-pinpin (/deploy)
-deployed_at: "2026-11-10T19:13:55Z"
+deployed_at: "2026-11-10T19:23:09Z"
 source: 
 deploy_branch: vibe/console-standalone
 deploy_pr_title: feat(console): the dev console, standalone — shippable without the mods work
