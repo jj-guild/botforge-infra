@@ -1,0 +1,108 @@
+# Run a dev-console action headless on a live environment (workflow_dispatch):
+# clean-managed | nuke | reset-data | install — the same actions and the
+# same gates as the Discord /console, executed in the environment's
+# botforge-bot container (botforge.cli.console_ops). Called by
+# botforge-services ops-commands.yml on a `/console <env> <action>
+# <guild|all>` PR comment (capability console-ops), and usable from the
+# Actions UI by an operator.
+#
+# Gates (the Discord console's own, mirrored here):
+#   1. the console-ops roster capability decided the dispatch;
+#   2. nuke additionally requires the explicit `confirm: NUKE` input —
+#      the Actions-side triple-click;
+#   3. never prod — the caller refuses before the dispatch, this file
+#      refuses again (defense in depth);
+#   4. the CLI itself fails closed on the env's BOTFORGE_TEST_GUILD_IDS
+#      allowlist (a guild outside the list is refused; `all` iterates
+#      the list only).
+name: Environment console
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: "Environment to run the console action on (a directory under envs/)"
+        required: true
+        type: string
+      action:
+        description: "Console action (clean-managed | nuke | reset-data | install)"
+        required: true
+        type: string
+      guild:
+        description: "Target guild id, or 'all' (the env's allowlist)"
+        required: true
+        type: string
+      confirm:
+        description: "nuke only: must equal 'NUKE' or the run aborts"
+        required: false
+        type: string
+        default: ""
+
+permissions:
+  contents: read
+
+concurrency:
+  group: env-console-${{ inputs.environment }}
+  cancel-in-progress: false
+
+jobs:
+  console:
+    name: ${{ inputs.action }} (${{ inputs.environment }})
+    runs-on: ${{ fromJSON(format('["self-hosted", "botforge", "env-{0}"]', inputs.environment)) }}
+    environment: ${{ inputs.environment }}
+    steps:
+      - name: Resolve and validate the request (untrusted input, validated as data)
+        id: env
+        env:
+          INPUT_ENV: ${{ inputs.environment }}
+          INPUT_ACTION: ${{ inputs.action }}
+          INPUT_GUILD: ${{ inputs.guild }}
+          INPUT_CONFIRM: ${{ inputs.confirm }}
+        run: |
+          [[ "${INPUT_ENV}" =~ ^[a-z0-9-]+$ ]] || { echo "::error::invalid environment name"; exit 1; }
+          case "${INPUT_ACTION}" in
+            clean-managed|nuke|reset-data|install) ;;
+            *) echo "::error::unknown console action '${INPUT_ACTION}'"; exit 1 ;;
+          esac
+          if [[ "${INPUT_ENV}" == prod ]]; then
+            echo "::error::the dev console is never allowed on prod"
+            exit 1
+          fi
+          if [[ "${INPUT_ACTION}" == nuke && "${INPUT_CONFIRM}" != NUKE ]]; then
+            echo "::error::nuke requires the explicit confirm=NUKE (the triple-click)"
+            exit 1
+          fi
+          if [[ "${INPUT_GUILD}" != all && ! "${INPUT_GUILD}" =~ ^[0-9]+$ ]]; then
+            echo "::error::guild must be a numeric id or 'all'"
+            exit 1
+          fi
+          {
+            echo "name=${INPUT_ENV}"
+            echo "action=${INPUT_ACTION}"
+            echo "guild=${INPUT_GUILD}"
+          } >> "$GITHUB_OUTPUT"
+      - name: Check out the environment configuration
+        uses: actions/checkout@v4
+        with:
+          ref: deploy/${{ steps.env.outputs.name }}
+      - name: Run the console action in the bot container
+        env:
+          ENVIRONMENT: ${{ steps.env.outputs.name }}
+          ACTION: ${{ steps.env.outputs.action }}
+          GUILD: ${{ steps.env.outputs.guild }}
+        run: |
+          cd "envs/${ENVIRONMENT}"
+          docker compose exec -T botforge-bot python -m botforge.cli.console_ops \
+            "${ACTION}" --guild "${GUILD}"
+      - name: Console report
+        if: always()
+        run: |
+          {
+            echo "## Dev console — ${ENVIRONMENT} ${ACTION}"
+            echo ""
+            echo "Target guild: ${GUILD} (validated against the env's BOTFORGE_TEST_GUILD_IDS allowlist by the CLI itself)."
+          } >> "$GITHUB_STEP_SUMMARY"
+        env:
+          ENVIRONMENT: ${{ steps.env.outputs.name }}
+          ACTION: ${{ steps.env.outputs.action }}
+          GUILD: ${{ steps.env.outputs.guild }}
