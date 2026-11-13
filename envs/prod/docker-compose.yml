@@ -43,6 +43,9 @@ services:
       REDIS_URI: redis://botforge-redis:6379
       MONGO_DB: ${MONGO_DB:-botforge}
       LOG_LEVEL: ${LOG_LEVEL:-INFO}
+      # The game service (svc-aoe2): the live dashboard + the activity
+      # feed read it (GAME_<KEY>_URI convention).
+      GAME_AOE2_URI: ${GAME_AOE2_URI:-botforge-game-aoe2:50071}
       # ADR-0020 process split: the bot talks to svc-core over gRPC.
       CORE_URI: ${CORE_URI:-botforge-core:50051}
     healthcheck:
@@ -86,6 +89,8 @@ services:
       REDIS_URI: redis://botforge-redis:6379
       CORE_GRPC_PORT: "50051"
       LOG_LEVEL: ${LOG_LEVEL:-INFO}
+      # The enrollments push (UpdateEnrollments) targets the game service.
+      GAME_AOE2_URI: ${GAME_AOE2_URI:-botforge-game-aoe2:50071}
       # Liquipedia MediaWiki API compliance (botforge-services#247): the
       # map sync's User-Agent must identify the project and carry a
       # contact; non-secret GitHub environment variable (deploy-env.yml).
@@ -220,6 +225,46 @@ services:
       timeout: 5s
       retries: 5
       start_period: 15s
+    restart: unless-stopped
+
+  botforge-game-aoe2:
+    # svc-aoe2: the game domain process (botforge.v1.GameData) — folds the
+    # providers' match events into the enriched per-player dashboards and
+    # serves them (WatchDashboard / WatchPlayerEvents) to the bot. The bot's
+    # live surfaces (the ephemeral dashboard, the activity feed's match
+    # cards) read this service; without it the live chain is severed.
+    image: ${BOTFORGE_IMAGE:?BOTFORGE_IMAGE must be pinned by deploy/prod/state/botforge-bot.yml}
+    pull_policy: always
+    environment:
+      BOTFORGE_PROCESS: game-aoe2
+      BOTFORGE_VERSION: ${BOTFORGE_VERSION:-}
+      GAME_GRPC_PORT: "50071"
+      # the per-player realtime state persists to Mongo (the
+      # player_state collection) — the panels read a snapshot, the
+      # requests never query the providers.
+      MONGO_URI: mongodb://botforge-mongo:27017
+      # the content docs' cache-aside (the sync's write-through lands
+      # here — the reads and the stores share ONE Redis)
+      REDIS_URI: redis://botforge-redis:6379
+      MONGO_DB: ${MONGO_DB:-botforge}
+      EXT_AOE2LOBBY_URI: ${EXT_AOE2LOBBY_URI:-botforge-ext-aoe2lobby:50062}
+      EXT_LIBREMATCH_URI: ${EXT_LIBREMATCH_URI:-botforge-ext-librematch:50061}
+      EXT_AOE2TECHTREE_URI: ${EXT_AOE2TECHTREE_URI:-botforge-ext-aoe2techtree:50063}
+      EXT_LIQUIPEDIA_URI: ${EXT_LIQUIPEDIA_URI:-botforge-ext-liquipedia:50064}
+      LOG_LEVEL: ${LOG_LEVEL:-INFO}
+    expose:
+      - "50071"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import socket; socket.create_connection(('127.0.0.1', 50071), timeout=3).close()"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+    depends_on:
+      botforge-ext-aoe2lobby:
+        condition: service_healthy
+      botforge-ext-librematch:
+        condition: service_healthy
     restart: unless-stopped
 
   botforge-mongo:
