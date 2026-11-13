@@ -56,7 +56,7 @@ services:
       BOTFORGE_DEPLOY_IMAGE: ${BOTFORGE_DEPLOY_IMAGE:-}
       BOTFORGE_DEPLOY_BRANCH: ${BOTFORGE_DEPLOY_BRANCH:-}
       BOTFORGE_DEPLOY_PR_TITLE: ${BOTFORGE_DEPLOY_PR_TITLE:-}
-      BOTFORGE_DEPLOY_ENV: ${BOTFORGE_DEPLOY_ENV:-}
+      BOTFORGE_DEPLOY_ENV: test
       MONGO_URI: mongodb://botforge-mongo:27017
       REDIS_URI: redis://botforge-redis:6379
       MONGO_DB: ${MONGO_DB:-botforge}
@@ -180,6 +180,9 @@ services:
       # player_state collection) — the panels read a snapshot, the
       # requests never query the providers.
       MONGO_URI: mongodb://botforge-mongo:27017
+      # the content docs' cache-aside (the sync's write-through lands
+      # here — the reads and the stores share ONE Redis)
+      REDIS_URI: redis://botforge-redis:6379
       MONGO_DB: ${MONGO_DB:-botforge}
       EXT_AOE2LOBBY_URI: ${EXT_AOE2LOBBY_URI:-botforge-ext-aoe2lobby:50062}
       EXT_LIBREMATCH_URI: ${EXT_LIBREMATCH_URI:-botforge-ext-librematch:50061}
