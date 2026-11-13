@@ -1,15 +1,20 @@
 # Desired state of botforge-bot on the prod environment (ADR-0018).
 # Written by the deploy pipelines only (jj-guild-deployer GitHub App);
 # a push to this branch deploys this exact image.
-image: ghcr.io/jj-guild/botforge-services:v0.1.2
-version_label: v0.1.2
-deploy_url: https://github.com/jj-guild/botforge-services/releases/tag/v0.1.2
+image: ghcr.io/jj-guild/botforge-services:v0.3.1
+version_label: v0.3.1
+deploy_url: https://github.com/jj-guild/botforge-services/releases/tag/v0.3.1
 deploy_kind: release
-deploy_ref: v0.1.2
-deploy_tree_url: https://github.com/jj-guild/botforge-services/tree/v0.1.2
-deploy_ts: 1790286371
-deployed_by: merlin-pinpin (release v0.1.2)
-deployed_at: "2026-09-24T21:46:11Z"
-source:
+deploy_ref: v0.3.1
+deploy_tree_url: https://github.com/jj-guild/botforge-services/tree/v0.3.1
+deploy_ts: 1790589427
+deploy_commit_ts: 1790589088
+deploy_commit: dca9e61fed62901587d0ee0faab2a517d43d719c
+deploy_ci_run_id: 36406317832
+deploy_ci_run_number: 267
+deploy_ci_run_ts: 1790589199
+deployed_by: game-designer (promote v0.3.1)
+deployed_at: "2026-09-28T09:57:07Z"
+source: 
 deploy_branch: main
-deploy_pr_title:
+deploy_pr_title: 
