@@ -7,14 +7,14 @@ deploy_url: https://github.com/merlin-pinpin-org/kingdoms-services/tree/c57f09a3
 deploy_kind: integration
 deploy_ref: c57f09a
 deploy_tree_url: https://github.com/merlin-pinpin-org/kingdoms-services/tree/c57f09a31209acc9eb252f2b8d29e54ff537ab0d
-deploy_ts: 1794235729
+deploy_ts: 1794573425
 deploy_commit_ts: 1794029532
 deploy_commit: c57f09a31209acc9eb252f2b8d29e54ff537ab0d
 deploy_ci_run_id: 
 deploy_ci_run_number: 
 deploy_ci_run_ts: 
-deployed_by: config-change-deploy (run 42638237964)
-deployed_at: "2026-11-09T14:48:49Z"
-source: drasah-config change on main (commit 94af1b0) — image unchanged
+deployed_by: config-change-deploy (run 43426630355)
+deployed_at: "2026-11-13T12:37:05Z"
+source: drasah-config change on main (commit 67323ed) — image unchanged
 deploy_branch: vibe/drasah/main
 deploy_pr_title: 
