@@ -1,20 +1,20 @@
 # Desired state of botforge-bot on the merlin environment (ADR-0018).
 # Written by the deploy pipelines only (kingdoms-deployer GitHub App);
 # a push to this branch deploys this exact image.
-image: ghcr.io/jj-guild/botforge-services:pr-394-20261113150801-fd1eef4
-version_label: pr-394-20261113150801-fd1eef4
-deploy_url: https://github.com/jj-guild/botforge-services/pull/394#issuecomment-6856912170
+image: ghcr.io/jj-guild/botforge-services:pr-394-20261113161614-888d01b
+version_label: pr-394-20261113161614-888d01b
+deploy_url: https://github.com/jj-guild/botforge-services/pull/394#issuecomment-6858510335
 deploy_kind: pr
 deploy_ref: 394
-deploy_tree_url: https://github.com/jj-guild/botforge-services/tree/fd1eef4385d2a06cdcbe44b29e3c7a294ea9085d
-deploy_ts: 1794582527
-deploy_commit_ts: 1794582181
-deploy_commit: fd1eef4385d2a06cdcbe44b29e3c7a294ea9085d
-deploy_ci_run_id: 43449380939
-deploy_ci_run_number: 1580
-deploy_ci_run_ts: 1794582443
+deploy_tree_url: https://github.com/jj-guild/botforge-services/tree/888d01b8846908dbec32b81b93f9680554da8721
+deploy_ts: 1794586645
+deploy_commit_ts: 1794586237
+deploy_commit: 888d01b8846908dbec32b81b93f9680554da8721
+deploy_ci_run_id: 43460928153
+deploy_ci_run_number: 1584
+deploy_ci_run_ts: 1794586544
 deployed_by: merlin-pinpin (/deploy)
-deployed_at: "2026-11-13T15:08:47Z"
+deployed_at: "2026-11-13T16:17:25Z"
 source: 
 deploy_branch: vibe/fix-ux-321
 deploy_pr_title: feat(ux): one uniform pseudo-embed card layout — the id in the subtitle on every card (#321)
