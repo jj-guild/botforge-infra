@@ -1,20 +1,20 @@
 # Desired state of botforge-bot on the merlin environment (ADR-0018).
 # Written by the deploy pipelines only (kingdoms-deployer GitHub App);
 # a push to this branch deploys this exact image.
-image: ghcr.io/jj-guild/botforge-services:pr-386-20261116123714-e845d1d
-version_label: pr-386-20261116123714-e845d1d
-deploy_url: https://github.com/jj-guild/botforge-services/pull/386#issuecomment-6916605358
+image: ghcr.io/jj-guild/botforge-services:pr-386-20261116124848-b132c21
+version_label: pr-386-20261116124848-b132c21
+deploy_url: https://github.com/jj-guild/botforge-services/pull/386#issuecomment-6916857190
 deploy_kind: pr
 deploy_ref: 386
-deploy_tree_url: https://github.com/jj-guild/botforge-services/tree/e845d1da9cc19a2eb931d50656153d9b8d503e9c
-deploy_ts: 1794832684
-deploy_commit_ts: 1794832294
-deploy_commit: e845d1da9cc19a2eb931d50656153d9b8d503e9c
-deploy_ci_run_id: 43868149758
-deploy_ci_run_number: 1652
-deploy_ci_run_ts: 1794832605
+deploy_tree_url: https://github.com/jj-guild/botforge-services/tree/b132c21eb44a0d191008a8d26bea50ac6293d70e
+deploy_ts: 1794833375
+deploy_commit_ts: 1794832965
+deploy_commit: b132c21eb44a0d191008a8d26bea50ac6293d70e
+deploy_ci_run_id: 43869895737
+deploy_ci_run_number: 1653
+deploy_ci_run_ts: 1794833303
 deployed_by: merlin-pinpin (/deploy)
-deployed_at: "2026-11-16T12:38:04Z"
+deployed_at: "2026-11-16T12:49:35Z"
 source: 
 deploy_branch: vibe/mod-sdk-r375
 deploy_pr_title: feat(mods): the core prep stack for the kingdoms mod — SDK guards R6-R8, the §7 loader, storage facade, install/uninstall forum, navigation, home/admin standards, templates, the frame (#374-#381, #363, #364)
