@@ -1,20 +1,20 @@
 # Desired state of botforge-bot on the merlin environment (ADR-0018).
 # Written by the deploy pipelines only (kingdoms-deployer GitHub App);
 # a push to this branch deploys this exact image.
-image: ghcr.io/jj-guild/botforge-services:pr-386-20261117120613-2c73043
-version_label: pr-386-20261117120613-2c73043
-deploy_url: https://github.com/jj-guild/botforge-services/pull/386#issuecomment-6947542579
+image: ghcr.io/jj-guild/botforge-services:pr-406-20261117153947-c837775
+version_label: pr-406-20261117153947-c837775
+deploy_url: https://github.com/jj-guild/botforge-services/pull/406#issuecomment-6952821584
 deploy_kind: pr
-deploy_ref: 386
-deploy_tree_url: https://github.com/jj-guild/botforge-services/tree/2c73043fc6bb87be37445cf53365e4d14c9818cd
-deploy_ts: 1794917208
-deploy_commit_ts: 1794915291
-deploy_commit: 2c73043fc6bb87be37445cf53365e4d14c9818cd
-deploy_ci_run_id: 44079913912
-deploy_ci_run_number: 1680
-deploy_ci_run_ts: 1794917138
+deploy_ref: 406
+deploy_tree_url: https://github.com/jj-guild/botforge-services/tree/c837775a027ea2a3148e399c8f6d0b87288c7d61
+deploy_ts: 1794930037
+deploy_commit_ts: 1794929183
+deploy_commit: c837775a027ea2a3148e399c8f6d0b87288c7d61
+deploy_ci_run_id: 44116818324
+deploy_ci_run_number: 1683
+deploy_ci_run_ts: 1794929963
 deployed_by: merlin-pinpin (/deploy)
-deployed_at: "2026-11-17T12:06:48Z"
+deployed_at: "2026-11-17T15:40:37Z"
 source: 
-deploy_branch: vibe/mod-sdk-r375
-deploy_pr_title: feat(mods): the core prep stack for the kingdoms mod — SDK guards R6-R8, the §7 loader, storage facade, install/uninstall forum, navigation, home/admin standards, templates, the frame (#374-#381, #363, #364)
+deploy_branch: vibe/fix-liquipedia-397
+deploy_pr_title: vibe[Merlin] fix(battery): the liquipedia 429 verdict is fast and honest — no blind retry, a clear rate-limit message (#397)
