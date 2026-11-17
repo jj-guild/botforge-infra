@@ -1,20 +1,20 @@
 # Desired state of botforge-bot on the merlin environment (ADR-0018).
 # Written by the deploy pipelines only (kingdoms-deployer GitHub App);
 # a push to this branch deploys this exact image.
-image: ghcr.io/jj-guild/botforge-services:pr-406-20261117153947-c837775
-version_label: pr-406-20261117153947-c837775
-deploy_url: https://github.com/jj-guild/botforge-services/pull/406#issuecomment-6952821584
+image: ghcr.io/jj-guild/botforge-services:pr-405-20261117164027-ab33230
+version_label: pr-405-20261117164027-ab33230
+deploy_url: https://github.com/jj-guild/botforge-services/pull/405#issuecomment-6954432088
 deploy_kind: pr
-deploy_ref: 406
-deploy_tree_url: https://github.com/jj-guild/botforge-services/tree/c837775a027ea2a3148e399c8f6d0b87288c7d61
-deploy_ts: 1794930037
-deploy_commit_ts: 1794929183
-deploy_commit: c837775a027ea2a3148e399c8f6d0b87288c7d61
-deploy_ci_run_id: 44116818324
-deploy_ci_run_number: 1683
-deploy_ci_run_ts: 1794929963
+deploy_ref: 405
+deploy_tree_url: https://github.com/jj-guild/botforge-services/tree/ab33230fc4a46c9c96e260e36e6474075ea33a11
+deploy_ts: 1794933688
+deploy_commit_ts: 1794931132
+deploy_commit: ab33230fc4a46c9c96e260e36e6474075ea33a11
+deploy_ci_run_id: 44128320957
+deploy_ci_run_number: 1688
+deploy_ci_run_ts: 1794933592
 deployed_by: merlin-pinpin (/deploy)
-deployed_at: "2026-11-17T15:40:37Z"
+deployed_at: "2026-11-17T16:41:28Z"
 source: 
-deploy_branch: vibe/fix-liquipedia-397
-deploy_pr_title: vibe[Merlin] fix(battery): the liquipedia 429 verdict is fast and honest — no blind retry, a clear rate-limit message (#397)
+deploy_branch: vibe/providers-stats
+deploy_pr_title: feat(providers): the stats layer — libre:match & aoe2lobby, the source of truth for match history and elo
