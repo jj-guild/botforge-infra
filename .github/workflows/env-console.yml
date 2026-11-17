@@ -92,6 +92,10 @@ jobs:
           GUILD: ${{ steps.env.outputs.guild }}
         run: |
           cd "envs/${ENVIRONMENT}"
+          state="state/botforge-bot.yml"
+          pinned="$(grep -E '^image:' "$state" | head -1 | cut -d' ' -f2-)"
+          [[ -n "$pinned" ]] || { echo "ERROR: $state has no pinned image" >&2; exit 1; }
+          export BOTFORGE_IMAGE="$pinned"
           docker compose exec -T botforge-bot python -m botforge.cli.console_ops \
             "${ACTION}" --guild "${GUILD}"
       - name: Console report
