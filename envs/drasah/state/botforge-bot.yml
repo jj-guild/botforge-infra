@@ -1,20 +1,20 @@
 # Desired state of botforge-bot on the drasah environment (ADR-0018).
 # Written by the deploy pipelines only (kingdoms-deployer GitHub App);
 # a push to this branch deploys this exact image.
-image: ghcr.io/merlin-pinpin-org/kingdoms-services:pr-244-20261107053301-c57f09a
-version_label: drasah@c57f09a
-deploy_url: https://github.com/merlin-pinpin-org/kingdoms-services/tree/c57f09a31209acc9eb252f2b8d29e54ff537ab0d
-deploy_kind: integration
-deploy_ref: c57f09a
-deploy_tree_url: https://github.com/merlin-pinpin-org/kingdoms-services/tree/c57f09a31209acc9eb252f2b8d29e54ff537ab0d
-deploy_ts: 1794573425
-deploy_commit_ts: 1794029532
-deploy_commit: c57f09a31209acc9eb252f2b8d29e54ff537ab0d
-deploy_ci_run_id: 
-deploy_ci_run_number: 
-deploy_ci_run_ts: 
-deployed_by: config-change-deploy (run 43426630355)
-deployed_at: "2026-11-13T12:37:05Z"
-source: drasah-config change on main (commit 67323ed) — image unchanged
-deploy_branch: vibe/drasah/main
-deploy_pr_title: 
+image: ghcr.io/jj-guild/botforge-services:pr-403-20261117220148-af43352
+version_label: pr-403-20261117220148-af43352
+deploy_url: https://github.com/jj-guild/botforge-services/pull/403#issuecomment-6962244033
+deploy_kind: pr
+deploy_ref: 403
+deploy_tree_url: https://github.com/jj-guild/botforge-services/tree/af4335276e3f98d7765adc135640f9f4dd55ef77
+deploy_ts: 1794953077
+deploy_commit_ts: 1794952009
+deploy_commit: af4335276e3f98d7765adc135640f9f4dd55ef77
+deploy_ci_run_id: 44185811947
+deploy_ci_run_number: 1717
+deploy_ci_run_ts: 1794952875
+deployed_by: Drasahaoe (/deploy)
+deployed_at: "2026-11-17T22:04:37Z"
+source: 
+deploy_branch: vibe/mod-kingdom
+deploy_pr_title: feat(kingdom): P4.1a — moteur d'attaques (#368)
