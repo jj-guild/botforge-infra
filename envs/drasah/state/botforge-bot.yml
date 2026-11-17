@@ -1,20 +1,20 @@
 # Desired state of botforge-bot on the drasah environment (ADR-0018).
 # Written by the deploy pipelines only (kingdoms-deployer GitHub App);
 # a push to this branch deploys this exact image.
-image: ghcr.io/jj-guild/botforge-services:pr-403-20261117225853-af43352
-version_label: pr-403-20261117225853-af43352
-deploy_url: https://github.com/jj-guild/botforge-services/pull/403#issuecomment-6963464987
+image: ghcr.io/jj-guild/botforge-services:pr-403-20261117231331-af43352
+version_label: pr-403-20261117231331-af43352
+deploy_url: https://github.com/jj-guild/botforge-services/pull/403#issuecomment-6963763209
 deploy_kind: pr
 deploy_ref: 403
 deploy_tree_url: https://github.com/jj-guild/botforge-services/tree/af4335276e3f98d7765adc135640f9f4dd55ef77
-deploy_ts: 1794956383
+deploy_ts: 1794957269
 deploy_commit_ts: 1794952009
 deploy_commit: af4335276e3f98d7765adc135640f9f4dd55ef77
-deploy_ci_run_id: 44195128945
-deploy_ci_run_number: 1718
-deploy_ci_run_ts: 1794956307
+deploy_ci_run_id: 44197378704
+deploy_ci_run_number: 1721
+deploy_ci_run_ts: 1794957177
 deployed_by: Drasahaoe (/deploy)
-deployed_at: "2026-11-17T22:59:43Z"
+deployed_at: "2026-11-17T23:14:29Z"
 source: 
 deploy_branch: vibe/mod-kingdom
 deploy_pr_title: feat(kingdom): P4.1a — moteur d'attaques (#368)
