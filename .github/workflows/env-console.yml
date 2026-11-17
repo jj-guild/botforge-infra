@@ -48,6 +48,9 @@ concurrency:
 jobs:
   console:
     name: ${{ inputs.action }} (${{ inputs.environment }})
+  # Defense in depth: the CLI carries its own ready timeout, and the job
+  # still can never wedge the env runner for the default 360 minutes.
+  timeout-minutes: 10
     runs-on: ${{ fromJSON(format('["self-hosted", "botforge", "env-{0}"]', inputs.environment)) }}
     environment: ${{ inputs.environment }}
     steps:
@@ -99,7 +102,7 @@ jobs:
           pinned="$(grep -E '^image:' "$state" | head -1 | cut -d' ' -f2-)"
           [[ -n "$pinned" ]] || { echo "ERROR: $state has no pinned image" >&2; exit 1; }
           export BOTFORGE_IMAGE="$pinned"
-          docker compose exec -T botforge-bot python -m botforge.cli.console_ops \
+          timeout 300 docker compose exec -T botforge-bot python -m botforge.cli.console_ops \
             "${ACTION}" --guild "${GUILD}"
       - name: Console report
         if: always()
