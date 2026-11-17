@@ -90,6 +90,9 @@ jobs:
           ENVIRONMENT: ${{ steps.env.outputs.name }}
           ACTION: ${{ steps.env.outputs.action }}
           GUILD: ${{ steps.env.outputs.guild }}
+          # compose interpolation requires the token (it has no default);
+          # exec only talks to the already-running container.
+          DISCORD_TOKEN: ${{ secrets.DISCORD_TOKEN }}
         run: |
           cd "envs/${ENVIRONMENT}"
           state="state/botforge-bot.yml"
