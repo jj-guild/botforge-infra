@@ -1,5 +1,5 @@
 # Run a dev-console action headless on a live environment (workflow_dispatch):
-# clean-managed | nuke | reset-data | install — the same actions and the
+# clean-managed | nuke | reset-data | install | ensure-tree — the same actions and the
 # same gates as the Discord /console, executed in the environment's
 # botforge-bot container (botforge.cli.console_ops). Called by
 # botforge-services ops-commands.yml on a `/console <env> <action>
@@ -25,7 +25,7 @@ on:
         required: true
         type: string
       action:
-        description: "Console action (clean-managed | nuke | reset-data | install)"
+        description: "Console action (clean-managed | nuke | reset-data | install | ensure-tree)"
         required: true
         type: string
       guild:
@@ -74,7 +74,7 @@ jobs:
         run: |
           [[ "${INPUT_ENV}" =~ ^[a-z0-9-]+$ ]] || { echo "::error::invalid environment name"; exit 1; }
           case "${INPUT_ACTION}" in
-            clean-managed|nuke|reset-data|install) ;;
+            clean-managed|nuke|reset-data|install|ensure-tree) ;;
             *) echo "::error::unknown console action '${INPUT_ACTION}'"; exit 1 ;;
           esac
           if [[ "${INPUT_ENV}" == prod ]]; then
