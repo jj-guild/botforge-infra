@@ -37,6 +37,16 @@ on:
         required: false
         type: string
         default: ""
+      mods:
+        description: "install only: comma-separated mod ids to install"
+        required: false
+        type: string
+        default: ""
+      games:
+        description: "install only: comma-separated game keys to install"
+        required: false
+        type: string
+        default: ""
 
 permissions:
   contents: read
@@ -93,6 +103,8 @@ jobs:
           ENVIRONMENT: ${{ steps.env.outputs.name }}
           ACTION: ${{ steps.env.outputs.action }}
           GUILD: ${{ steps.env.outputs.guild }}
+          MODS: ${{ inputs.mods }}
+          GAMES: ${{ inputs.games }}
           # compose interpolation requires the token (it has no default);
           # exec only talks to the already-running container.
           DISCORD_TOKEN: ${{ secrets.DISCORD_TOKEN }}
@@ -103,7 +115,7 @@ jobs:
           [[ -n "$pinned" ]] || { echo "ERROR: $state has no pinned image" >&2; exit 1; }
           export BOTFORGE_IMAGE="$pinned"
           timeout 300 docker compose exec -T botforge-bot python -m botforge.cli.console_ops \
-            "${ACTION}" --guild "${GUILD}"
+            "${ACTION}" --guild "${GUILD}" --mods "${MODS}" --games "${GAMES}"
       - name: Console report
         if: always()
         run: |
