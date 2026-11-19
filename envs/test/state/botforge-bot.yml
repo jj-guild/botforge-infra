@@ -1,20 +1,20 @@
 # Desired state of botforge-bot on the test environment (ADR-0018).
 # Written by the deploy pipelines only (kingdoms-deployer GitHub App);
 # a push to this branch deploys this exact image.
-image: ghcr.io/jj-guild/botforge-services:pr-403-20261119153735-a55ed21
-version_label: pr-403-20261119153735-a55ed21
-deploy_url: https://github.com/jj-guild/botforge-services/pull/403#issuecomment-7013840792
+image: ghcr.io/jj-guild/botforge-services:pr-403-20261119155449-fbf41c5
+version_label: pr-403-20261119155449-fbf41c5
+deploy_url: https://github.com/jj-guild/botforge-services/pull/403#issuecomment-7014321958
 deploy_kind: pr
 deploy_ref: 403
-deploy_tree_url: https://github.com/jj-guild/botforge-services/tree/a55ed21be2fddf0e17875d4210f93f5b9936e042
-deploy_ts: 1795102713
-deploy_commit_ts: 1795102601
-deploy_commit: a55ed21be2fddf0e17875d4210f93f5b9936e042
-deploy_ci_run_id: 44556812386
-deploy_ci_run_number: 1779
-deploy_ci_run_ts: 1795102623
+deploy_tree_url: https://github.com/jj-guild/botforge-services/tree/fbf41c5f62a3ecc5359c0211957148d48b859db4
+deploy_ts: 1795103752
+deploy_commit_ts: 1795103618
+deploy_commit: fbf41c5f62a3ecc5359c0211957148d48b859db4
+deploy_ci_run_id: 44560025215
+deploy_ci_run_number: 1785
+deploy_ci_run_ts: 1795103654
 deployed_by: merlin-pinpin (/deploy)
-deployed_at: "2026-11-19T15:38:33Z"
+deployed_at: "2026-11-19T15:55:52Z"
 source: 
 deploy_branch: vibe/mod-kingdom
 deploy_pr_title: feat(kingdom): kingdoms mod port on the new main — admin console + private-category permissions (#368, #412)
