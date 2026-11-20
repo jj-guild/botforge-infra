@@ -67,13 +67,16 @@ case "${COMMAND}" in
     clear-db)
         # Generic collection wipe (owner direction 2026-11-06): drops ONLY
         # the named collections. The names ride the CLEAR_COLLECTIONS env
-        # var (validated ^[a-zA-Z0-9_]+$ each — no shell/Mongo injection);
-        # the roster's env-control capability gates who may call, and the
-        # collections are data, never code.
+        # var (validated ^[a-zA-Z0-9_:]+$ each — no shell/Mongo injection;
+        # the colon is legal in Mongo collection names and CARRIES the
+        # provider namespaces, every stats collection is
+        # "<provider>:<thing>" — the 2026-11-20 too-strict pattern
+        # rejected them); the roster's env-control capability gates who
+        # may call, and the collections are data, never code.
         [[ -n "${CLEAR_COLLECTIONS:-}" ]] || die "clear-db needs at least one collection name"
         mapfile -t COLLECTIONS <<< "$(echo "${CLEAR_COLLECTIONS}" | tr ' ' '\n')"
         for col in "${COLLECTIONS[@]}"; do
-            [[ "$col" =~ ^[a-zA-Z0-9_]+$ ]] || die "invalid collection name: $col"
+            [[ "$col" =~ ^[a-zA-Z0-9_:]+$ ]] || die "invalid collection name: $col"
         done
         log "CLEARING collections: ${COLLECTIONS[*]}"
         for col in "${COLLECTIONS[@]}"; do
