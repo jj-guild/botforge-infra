@@ -7,14 +7,14 @@ deploy_url: https://github.com/jj-guild/botforge-services/pull/403#issuecomment-
 deploy_kind: pr
 deploy_ref: 403
 deploy_tree_url: https://github.com/jj-guild/botforge-services/tree/8088f56c10d3d9cdd552cbc21e4811a549351054
-deploy_ts: 1795116527
+deploy_ts: 1795170449
 deploy_commit_ts: 1795111587
 deploy_commit: 8088f56c10d3d9cdd552cbc21e4811a549351054
-deploy_ci_run_id: 44598490903
-deploy_ci_run_number: 1803
-deploy_ci_run_ts: 1795116444
-deployed_by: Drasahaoe (/deploy)
-deployed_at: "2026-11-19T19:28:47Z"
-source: 
+deploy_ci_run_id: 
+deploy_ci_run_number: 
+deploy_ci_run_ts: 
+deployed_by: config-change-deploy (run 44719331713)
+deployed_at: "2026-11-20T10:27:29Z"
+source: drasah-config change on main (commit 26810be) — image unchanged
 deploy_branch: vibe/mod-kingdom
 deploy_pr_title: feat(kingdom): kingdoms mod port on the new main — admin console + private-category permissions (#368, #412)
