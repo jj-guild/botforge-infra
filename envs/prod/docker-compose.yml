@@ -126,6 +126,9 @@ services:
     image: ${BOTFORGE_IMAGE:?BOTFORGE_IMAGE must be set, e.g. ghcr.io/jj-guild/botforge-services:v0.1.0}
     pull_policy: always
     environment:
+      MONGO_URI: mongodb://botforge-mongo:27017
+      REDIS_URI: redis://botforge-redis:6379
+      MONGO_DB: ${MONGO_DB:-botforge}
       BOTFORGE_PROCESS: ext-librematch
       BOTFORGE_VERSION: ${BOTFORGE_VERSION:-}
       EXT_GRPC_PORT: "50061"
