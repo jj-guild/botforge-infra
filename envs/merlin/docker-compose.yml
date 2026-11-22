@@ -6,8 +6,17 @@
 # capability checks it in envctl.sh before wiping any data volume).
 x-botforge-env-resettable: true
 
+# Bounded container logs (the 2026-11-22 merlin disk incident: the
+# debug-heavy days grew docker's json logs unbounded until the VPS
+# filled). Every service rotates: 20 MB a file, 3 files max.
+x-logging: &bounded-logging
+  driver: json-file
+  options:
+    max-size: "20m"
+    max-file: "3"
 services:
   botforge-bot:
+    logging: *bounded-logging
     # Test images are tagged with the commit SHA (built by the botforge-services
     # Docker workflow: sha-<sha>, or pr-<n>-sha-<sha> for /deploy-test).
     # The image comes from the pinned state file on the deploy/test branch
@@ -95,6 +104,7 @@ services:
   # processes talk to each other, nobody outside the network does.
 
   botforge-core:
+    logging: *bounded-logging
     # svc-core: the domain process (MongoDB/Redis owner, gRPC server on
     # 50051). Same pinned image as the bot: all four processes deploy
     # atomically from a single pin, and version skew between core and
@@ -143,6 +153,7 @@ services:
     restart: unless-stopped
 
   botforge-ext-librematch:
+    logging: *bounded-logging
     # ext-librematch: AoE2 data provider (poll-only). Provider processes
     # own their external API secrets (#89 secret split); optional secrets —
     # the provider serves its declared capabilities either way.
@@ -168,6 +179,7 @@ services:
       start_period: 15s
     restart: unless-stopped
   botforge-game-aoe2:
+    logging: *bounded-logging
     # svc-aoe2: the game domain process (botforge.v1.GameData) — folds the
     # providers' match events into the enriched per-player dashboards and
     # serves them (WatchDashboard / WatchPlayerEvents) to the bot. The bot's
@@ -209,6 +221,7 @@ services:
         condition: service_healthy
     restart: unless-stopped
   botforge-ext-aoe2lobby:
+    logging: *bounded-logging
     # ext-aoe2lobby: AoE2 live lobby events (aoe2lobby.com WebSocket).
     image: ${BOTFORGE_IMAGE:?BOTFORGE_IMAGE must be pinned by deploy/merlin/state/botforge-bot.yml}
     pull_policy: always
@@ -234,6 +247,7 @@ services:
     restart: unless-stopped
 
   botforge-ext-aoe2techtree:
+    logging: *bounded-logging
     # ext-aoe2techtree: AoE2 game content provider (botforge.v1.Content).
     # Serves localized faction/map content from the vendored aoe2techtree
     # dataset (default) or a replacement HTTP API (AOE2TECHTREE_SOURCE=api +
@@ -259,6 +273,7 @@ services:
       start_period: 15s
     restart: unless-stopped
   botforge-ext-liquipedia:
+    logging: *bounded-logging
     # ext-liquipedia: the Liquipedia maps content provider (ADR-0020) —
     # it owns the MediaWiki access (identified User-Agent, shared
     # pacing clock, 429 backoff) and its tables. Without this service
@@ -290,6 +305,7 @@ services:
     restart: unless-stopped
 
   botforge-mongo:
+    logging: *bounded-logging
     image: mongo:7.0
     # Loopback binding only: the database listens on the docker network
     # for the bot; the host publish is for operator debugging (mongosh
@@ -314,6 +330,7 @@ services:
     restart: unless-stopped
 
   botforge-redis:
+    logging: *bounded-logging
     image: redis:7.2
     # Loopback binding only — same rationale as botforge-mongo above;
     # per-env host port 127.0.0.1:6380, container port 6379.
