@@ -5,11 +5,14 @@
 # touches the pinned state (scripts/docker_clean.sh).
 #
 # Roster-gated (CONTRIBUTORS.md is the source of truth — the doc drives
-# GitHub, never the other way around): the requestor's GitHub login must
-# carry a roster entry with the env-ops capability profile — `ops`
-# anywhere, `dev` on the shared test envs, a contributor on their own
-# personal env (their roster alias names their environments). Prod is
-# NEVER cleanable from here, whatever the role.
+# GitHub, never the other way around): the login that ACTUALLY dispatched
+# the run (github.triggering_actor) must carry a roster entry with the
+# env-ops capability profile — `ops` anywhere, `dev` on the shared test
+# envs, a contributor on their own personal env (their roster alias names
+# their environments). Prod is NEVER cleanable from here, whatever the
+# role. The gate NEVER asks who is asking — GitHub already knows (owner
+# direction 2026-11-22: a hand-typed requestor input was spoofable AND
+# absurd UX: "choose which user you want to impersonate" is not a gate).
 name: Docker clean
 
 on:
@@ -27,10 +30,6 @@ on:
         options:
           - prune
           - deep
-      requestor:
-        description: "The GitHub login of the human asking (roster-gated)"
-        required: true
-        type: string
 
 permissions:
   contents: read
@@ -72,13 +71,13 @@ jobs:
 
       - name: Roster gate (CONTRIBUTORS.md drives GitHub)
         env:
-          REQUESTOR: ${{ inputs.requestor }}
+          REQUESTOR: ${{ github.triggering_actor || github.actor }}  # who ACTUALLY clicked Run
           ENVIRONMENT: ${{ inputs.environment }}
         run: |
           set -euo pipefail
           # The roster lives in botforge/CONTRIBUTORS.md — the source of
           # truth for who may operate an environment. The gate resolves
-          # the requestor's login against it. Checked out above: the hosting
+          # the DISPATCHING login (github.triggering_actor) against it. Checked out above: the hosting
           # runners carry no gh CLI, and this keeps the gate offline-safe.
           ROSTER="${GITHUB_WORKSPACE}/roster/CONTRIBUTORS.md"
           [[ -s "${ROSTER}" ]] || { echo "::error::roster not found at ${ROSTER}"; exit 1; }
