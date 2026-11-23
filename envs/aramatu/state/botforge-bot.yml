@@ -1,0 +1,20 @@
+# Desired state of botforge-bot on the aramatu environment (ADR-0018).
+# Written by the deploy pipelines only (kingdoms-deployer GitHub App);
+# a push to this branch deploys this exact image.
+image: ghcr.io/jj-guild/botforge-services:sha-8fff11d809b555f8d59de9db86f5d37cf4048fa6
+version_label: aramatu@8fff11d
+deploy_url: https://github.com/jj-guild/botforge-services/tree/8fff11d809b555f8d59de9db86f5d37cf4048fa6
+deploy_kind: main
+deploy_ref: 8fff11d
+deploy_tree_url: https://github.com/jj-guild/botforge-services/tree/8fff11d809b555f8d59de9db86f5d37cf4048fa6
+deploy_ts: 1795450977
+deploy_commit_ts: 1795312885
+deploy_commit: 8fff11d809b555f8d59de9db86f5d37cf4048fa6
+deploy_ci_run_id:
+deploy_ci_run_number:
+deploy_ci_run_ts:
+deployed_by: env bootstrap (merlin-pinpin, 2026-11-23)
+deployed_at: "2026-11-23T16:22:57Z"
+source: aramatu env bootstrap — initial pin = main image (commit 8fff11d)
+deploy_branch: main
+deploy_pr_title:
