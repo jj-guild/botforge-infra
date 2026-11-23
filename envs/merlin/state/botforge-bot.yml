@@ -7,14 +7,14 @@ deploy_url: https://github.com/jj-guild/botforge-services/pull/405#issuecomment-
 deploy_kind: pr
 deploy_ref: 405
 deploy_tree_url: https://github.com/jj-guild/botforge-services/tree/4577d9fe610b9cc3bf18fea8ffee19e5fa609ebf
-deploy_ts: 1795445815
+deploy_ts: 1795457769
 deploy_commit_ts: 1795445257
 deploy_commit: 4577d9fe610b9cc3bf18fea8ffee19e5fa609ebf
-deploy_ci_run_id: 45199446600
-deploy_ci_run_number: 2039
-deploy_ci_run_ts: 1795445733
-deployed_by: merlin-pinpin (/deploy)
-deployed_at: "2026-11-23T14:56:55Z"
-source: 
+deploy_ci_run_id: 
+deploy_ci_run_number: 
+deploy_ci_run_ts: 
+deployed_by: config-change-deploy (run 45236447467)
+deployed_at: "2026-11-23T18:16:09Z"
+source: merlin-config change on main (commit 008c38e) — image unchanged
 deploy_branch: vibe/providers-stats
 deploy_pr_title: feat(providers): the stats layer — libre:match & aoe2lobby, the source of truth for match history and elo
