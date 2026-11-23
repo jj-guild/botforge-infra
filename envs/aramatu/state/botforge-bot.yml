@@ -7,14 +7,14 @@ deploy_url: https://github.com/jj-guild/botforge-services/pull/432#issuecomment-
 deploy_kind: pr
 deploy_ref: 432
 deploy_tree_url: https://github.com/jj-guild/botforge-services/tree/5d0d7378e80795ac2233e198fdc571dc51b46664
-deploy_ts: 1795474606
+deploy_ts: 1795476333
 deploy_commit_ts: 1795459546
 deploy_commit: 5d0d7378e80795ac2233e198fdc571dc51b46664
-deploy_ci_run_id: 45284208097
-deploy_ci_run_number: 2080
-deploy_ci_run_ts: 1795474528
-deployed_by: merlin-pinpin (/deploy)
-deployed_at: "2026-11-23T22:56:46Z"
-source: 
+deploy_ci_run_id: 
+deploy_ci_run_number: 
+deploy_ci_run_ts: 
+deployed_by: config-change-deploy (run 45288621946)
+deployed_at: "2026-11-23T23:25:33Z"
+source: aramatu-config change on main (commit f08fe54) — image unchanged
 deploy_branch: vibe/mod-pong-config-v2
 deploy_pr_title: vibe[Aramatu] pong: bootstrap mod declaration (conf/mod.yaml) + CODEOWNERS
