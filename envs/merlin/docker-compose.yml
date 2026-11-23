@@ -332,6 +332,14 @@ services:
   botforge-redis:
     logging: *bounded-logging
     image: redis:7.2
+    # Pure CACHE — never a source of truth: rate limits and the stats
+    # cache live here, every key carries a TTL. The RDB snapshot
+    # serves NOTHING (a restored cache is a cold cache either way)
+    # and its bgsave fork is the first casualty of a disk hiccup:
+    # MISCONF stop-writes-on-bgsave-error then refused EVERY write
+    # on the environment (merlin 2026-11-23, spinning the stats
+    # cache write warnings). Persistence is OFF entirely.
+    command: ["redis-server", "--save", "", "--appendonly", "no"]
     # Loopback binding only — same rationale as botforge-mongo above;
     # per-env host port 127.0.0.1:6380, container port 6379.
     ports:
