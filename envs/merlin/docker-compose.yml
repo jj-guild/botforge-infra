@@ -289,11 +289,12 @@ services:
       PROVIDER_CONTACT: ${PROVIDER_CONTACT:-}
       MONGO_URI: mongodb://botforge-mongo:27017
       MONGO_DB: ${MONGO_DB:-botforge}
-      # DEBUG until the Liquipedia 429s are diagnosed: the 429 handler
-      # logs the request URL + headers and the response rate-limit headers.
-      # HARDCODED: the deploy workflow exports LOG_LEVEL=INFO, which
-      # overrode the ${LOG_LEVEL:-DEBUG} default.
-      LOG_LEVEL: DEBUG
+      # The Liquipedia 429s are diagnosed and guarded (the circuit
+      # breaker, services#406 - the failure memory carries the post-
+      # mortem); the per-process DEBUG override is GONE: the noise
+      # (asyncio selectors, httpx chit-chat) drowned the useful lines.
+      # Flip to DEBUG for a targeted diagnostic window, then back.
+      LOG_LEVEL: ${LOG_LEVEL:-INFO}
     expose:
       - "50064"
     healthcheck:
