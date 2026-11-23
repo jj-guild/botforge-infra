@@ -1,20 +1,20 @@
 # Desired state of botforge-bot on the aramatu environment (ADR-0018).
 # Written by the deploy pipelines only (kingdoms-deployer GitHub App);
 # a push to this branch deploys this exact image.
-image: ghcr.io/jj-guild/botforge-services:pr-432-20261123190459-5d0d737
-version_label: pr-432-20261123190459-5d0d737
-deploy_url: https://github.com/jj-guild/botforge-services/pull/432#issuecomment-7111060135
+image: ghcr.io/jj-guild/botforge-services:pr-432-20261123225552-5d0d737
+version_label: pr-432-20261123225552-5d0d737
+deploy_url: https://github.com/jj-guild/botforge-services/pull/432#issuecomment-7116343415
 deploy_kind: pr
 deploy_ref: 432
 deploy_tree_url: https://github.com/jj-guild/botforge-services/tree/5d0d7378e80795ac2233e198fdc571dc51b46664
-deploy_ts: 1795460745
+deploy_ts: 1795474606
 deploy_commit_ts: 1795459546
 deploy_commit: 5d0d7378e80795ac2233e198fdc571dc51b46664
-deploy_ci_run_id: 45245061969
-deploy_ci_run_number: 2055
-deploy_ci_run_ts: 1795460671
+deploy_ci_run_id: 45284208097
+deploy_ci_run_number: 2080
+deploy_ci_run_ts: 1795474528
 deployed_by: merlin-pinpin (/deploy)
-deployed_at: "2026-11-23T19:05:45Z"
+deployed_at: "2026-11-23T22:56:46Z"
 source: 
 deploy_branch: vibe/mod-pong-config-v2
 deploy_pr_title: vibe[Aramatu] pong: bootstrap mod declaration (conf/mod.yaml) + CODEOWNERS
