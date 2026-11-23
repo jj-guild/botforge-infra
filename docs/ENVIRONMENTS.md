@@ -5,12 +5,14 @@ The BotForge platform runs the same stack in three kinds of environments:
 - **test** and **prod** — the shared validation and production
   environments, deployed from pinned state on their `deploy/<env>` state
   branch;
-- **personal environments** (`drasah`, `merlin`, …) — one per rostered
-  user, mapped to their integration branch `vibe/<alias>/main`: the env
-  runs whatever its user's integration branch head builds (**autopin**,
-  no command needed). It is the user's sandbox: their bot, their Discord,
-  their runner (see botforge `docs/CONVENTIONS.md` § *Integration
-  branches*).
+- **personal environments** (`drasah`, `merlin`, `dev-aramatu`, …) — one
+  per rostered user, named after the user (roster alias, or a `dev-<alias>`
+  name for dev-flavored envs). The env is the user's sandbox: their bot,
+  their Discord, their runner. It is fed by `/deploy` on a PR (the
+  personal env is the default target of a rostered user's `/deploy`):
+  the PR image is pinned on `deploy/<env>` and deployed — no autopin, no
+  per-user integration branch (see botforge `docs/CONVENTIONS.md` §
+  *Branch lifecycle*).
 
 This page is the environment matrix; the deployment procedure lives in
 [DEPLOYMENT.md](DEPLOYMENT.md).
@@ -99,20 +101,20 @@ automatically — adding one is the checklist below, nothing else:
    deletion; PR required for prod-like environments — approving a
    production deployment is merging that PR).
 
-For a **personal environment** (`<alias>`), steps 1–3 come as data
-(the manifest is the test one; the state branch is created by the first
-autopin) and the flow is simpler:
+For a **personal environment** (`<alias>` or `dev-<alias>`), steps 1–3
+come as data (the manifest is the test one; the state branch is created
+by the first `/deploy` pin) and the flow is simpler:
 
-- **GitHub environment** `<alias>`: branch policy on `deploy/<alias>`,
+- **GitHub environment** `<name>`: branch policy on `deploy/<name>`,
   no required reviewers (it is the user's sandbox), secrets
   `DISCORD_TOKEN` + `BOT_ADMINS` of the user's own bot.
-- **Runner**: label `env-<alias>` on the user's hosting (or the shared one
+- **Runner**: label `env-<name>` on the user's hosting (or the shared one
   for now).
-- **Autopin**: a push to `vibe/<alias>/main` on botforge-services builds
-  the image (`sha-<sha>`) and pins it on `deploy/<alias>`
-  (`deploy_kind: integration`) — the pin push deploys the env. Diagnose
-  the chain with `scripts/diagnose_env.sh <alias>` (human report) or
-  `--flags` (grep-able FLAG lines; exit 1 when a BLOCK flag is raised).
+- **Deploy**: `/deploy` on a feature-branch PR pins the PR image
+  (`pr-<id>-<timestamp>-<sha>`) on `deploy/<name>` — the pin push
+  deploys the env. Diagnose the chain with
+  `scripts/diagnose_env.sh <name>` (human report) or `--flags`
+  (grep-able FLAG lines; exit 1 when a BLOCK flag is raised).
 
 Prod-like environments (released `vX.Y.Z` images only, never re-pinned
 from a config change on main) are listed in `PROTECTED_ENVS` in
