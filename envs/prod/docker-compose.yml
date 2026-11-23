@@ -112,6 +112,12 @@ services:
         condition: service_healthy
       botforge-redis:
         condition: service_healthy
+      # The enrollments push (UpdateEnrollments) targets the game service
+      # from the first cycle: without the gate, every deploy opens with a
+      # refused-connection warning until game-aoe2 binds its port (merlin
+      # 2026-11-23, pr-405 boot window).
+      botforge-game-aoe2:
+        condition: service_healthy
     restart: unless-stopped
     deploy:
       resources:
@@ -143,6 +149,14 @@ services:
       timeout: 5s
       retries: 5
       start_period: 15s
+    # The store owns the sync windows: it talks to Mongo from the boot
+    # sync and caches on Redis — the boot waits for both to be healthy
+    # (merlin 2026-11-23, pr-405 boot window).
+    depends_on:
+      botforge-mongo:
+        condition: service_healthy
+      botforge-redis:
+        condition: service_healthy
     restart: unless-stopped
     deploy:
       resources:
@@ -228,6 +242,10 @@ services:
       timeout: 5s
       retries: 5
       start_period: 15s
+    # The maps tables live in Mongo: the provider owns them from boot.
+    depends_on:
+      botforge-mongo:
+        condition: service_healthy
     restart: unless-stopped
 
   botforge-game-aoe2:
@@ -267,6 +285,12 @@ services:
       botforge-ext-aoe2lobby:
         condition: service_healthy
       botforge-ext-librematch:
+        condition: service_healthy
+      # The per-player realtime state persists to Mongo from the first
+      # provider fold, the content docs cache-aside on Redis.
+      botforge-mongo:
+        condition: service_healthy
+      botforge-redis:
         condition: service_healthy
     restart: unless-stopped
 
