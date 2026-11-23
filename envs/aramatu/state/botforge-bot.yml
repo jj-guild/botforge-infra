@@ -1,20 +1,20 @@
 # Desired state of botforge-bot on the aramatu environment (ADR-0018).
 # Written by the deploy pipelines only (kingdoms-deployer GitHub App);
 # a push to this branch deploys this exact image.
-image: ghcr.io/jj-guild/botforge-services:sha-c8e7d9b4f27483c9265a6c5b13c8a35afbfc5a89
-version_label: aramatu@c8e7d9b
-deploy_url: https://github.com/jj-guild/botforge-services/tree/c8e7d9b4f27483c9265a6c5b13c8a35afbfc5a89
-deploy_kind: main
-deploy_ref: c8e7d9b
-deploy_tree_url: https://github.com/jj-guild/botforge-services/tree/c8e7d9b4f27483c9265a6c5b13c8a35afbfc5a89
-deploy_ts: 1795460441
-deploy_commit_ts: 1795094428
-deploy_commit: c8e7d9b4f27483c9265a6c5b13c8a35afbfc5a89
-deploy_ci_run_id: 
-deploy_ci_run_number: 
-deploy_ci_run_ts: 
-deployed_by: config-change-deploy (run 45244297033)
-deployed_at: "2026-11-23T19:00:41Z"
-source: aramatu-config change on main (commit 6637e9f) — image unchanged
-deploy_branch: main
-deploy_pr_title: 
+image: ghcr.io/jj-guild/botforge-services:pr-432-20261123190459-5d0d737
+version_label: pr-432-20261123190459-5d0d737
+deploy_url: https://github.com/jj-guild/botforge-services/pull/432#issuecomment-7111060135
+deploy_kind: pr
+deploy_ref: 432
+deploy_tree_url: https://github.com/jj-guild/botforge-services/tree/5d0d7378e80795ac2233e198fdc571dc51b46664
+deploy_ts: 1795460745
+deploy_commit_ts: 1795459546
+deploy_commit: 5d0d7378e80795ac2233e198fdc571dc51b46664
+deploy_ci_run_id: 45245061969
+deploy_ci_run_number: 2055
+deploy_ci_run_ts: 1795460671
+deployed_by: merlin-pinpin (/deploy)
+deployed_at: "2026-11-23T19:05:45Z"
+source: 
+deploy_branch: vibe/mod-pong-config-v2
+deploy_pr_title: vibe[Aramatu] pong: bootstrap mod declaration (conf/mod.yaml) + CODEOWNERS
