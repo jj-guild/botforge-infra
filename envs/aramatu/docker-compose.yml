@@ -1,0 +1,244 @@
+# Reset policy: this environment's data may be wiped by the /reset-env
+# keyword (botforge.env/resettable flag below). Environments without the
+# flag fail closed — prod never carries it.
+
+# botforge.env/resettable: opt-in to /reset-env (the env-reset roster
+# capability checks it in envctl.sh before wiping any data volume).
+x-botforge-env-resettable: true
+
+services:
+  botforge-bot:
+    # Test images are tagged with the commit SHA (built by the botforge-services
+    # Docker workflow: sha-<sha>, or pr-<n>-sha-<sha> for /deploy-test).
+    # The image comes from the pinned state file on the deploy/test branch
+    # (ADR-0018): deploy.sh exports BOTFORGE_IMAGE from it. No default:
+    # a deploy without pinned state is a bug.
+    image: ${BOTFORGE_IMAGE:?BOTFORGE_IMAGE must be pinned by deploy/aramatu/state/botforge-bot.yml}
+    # `always`: the deploy must run the exact pinned image, never a stale
+    # local copy of the same tag.
+    pull_policy: always
+    environment:
+      # Secrets are injected at deploy time by the CD pipeline from the
+      # GitHub environment secrets (nothing secret is stored on the hosting);
+      # non-secret values have overridable defaults.
+      DISCORD_TOKEN: ${DISCORD_TOKEN:?DISCORD_TOKEN is required}
+      BOTFORGE_VERSION: ${BOTFORGE_VERSION:-}
+      BOT_ADMINS: ${BOT_ADMINS:-}
+      # Liquipedia API contact (User-Agent) — the bot process runs the
+      # panel's map import (fetch_map_seed), not only the core sync.
+      LIQUIPEDIA_CONTACT: ${LIQUIPEDIA_CONTACT:-}
+      # Test guild of this environment (GitHub environment variable
+      # TEST_GUILD_ID — non-secret). The bot syncs its commands and scopes
+      # its ladders to this guild (ladder:aoe2:<guild_id>); the matches seed
+      # fail-closes without it. Test envs only: prod never declares one.
+      CICD_GUILD_ID: ${TEST_GUILD_ID:-}
+      BOTFORGE_DEPLOY_URL: ${BOTFORGE_DEPLOY_URL:-}
+      BOTFORGE_DEPLOY_LABEL: ${BOTFORGE_DEPLOY_LABEL:-}
+      BOTFORGE_DEPLOY_RUN_URL: ${BOTFORGE_DEPLOY_RUN_URL:-}
+      BOTFORGE_DEPLOY_INFRA_LABEL: ${BOTFORGE_DEPLOY_INFRA_LABEL:-}
+      BOTFORGE_DEPLOY_INFRA_URL: ${BOTFORGE_DEPLOY_INFRA_URL:-}
+      BOTFORGE_DEPLOY_INFRA_COMMIT_TS: ${BOTFORGE_DEPLOY_INFRA_COMMIT_TS:-}
+      BOTFORGE_DEPLOY_KIND: ${BOTFORGE_DEPLOY_KIND:-}
+      BOTFORGE_DEPLOY_REF: ${BOTFORGE_DEPLOY_REF:-}
+      BOTFORGE_DEPLOY_TREE_URL: ${BOTFORGE_DEPLOY_TREE_URL:-}
+      BOTFORGE_DEPLOY_TS: ${BOTFORGE_DEPLOY_TS:-}
+      BOTFORGE_DEPLOY_COMMIT_TS: ${BOTFORGE_DEPLOY_COMMIT_TS:-}
+      BOTFORGE_DEPLOY_COMMIT: ${BOTFORGE_DEPLOY_COMMIT:-}
+      BOTFORGE_DEPLOY_CI_RUN_ID: ${BOTFORGE_DEPLOY_CI_RUN_ID:-}
+      BOTFORGE_DEPLOY_CI_RUN_NUMBER: ${BOTFORGE_DEPLOY_CI_RUN_NUMBER:-}
+      BOTFORGE_DEPLOY_CI_RUN_TS: ${BOTFORGE_DEPLOY_CI_RUN_TS:-}
+      BOTFORGE_DEPLOY_RUN_NUMBER: ${BOTFORGE_DEPLOY_RUN_NUMBER:-}
+      BOTFORGE_DEPLOY_RUN_TS: ${BOTFORGE_DEPLOY_RUN_TS:-}
+      BOTFORGE_DEPLOY_IMAGE: ${BOTFORGE_DEPLOY_IMAGE:-}
+      BOTFORGE_DEPLOY_BRANCH: ${BOTFORGE_DEPLOY_BRANCH:-}
+      BOTFORGE_DEPLOY_PR_TITLE: ${BOTFORGE_DEPLOY_PR_TITLE:-}
+      BOTFORGE_DEPLOY_ENV: aramatu
+      MONGO_URI: mongodb://botforge-mongo:27017
+      REDIS_URI: redis://botforge-redis:6379
+      MONGO_DB: ${MONGO_DB:-botforge}
+      LOG_LEVEL: ${LOG_LEVEL:-INFO}
+      # ADR-0020 process split: the bot talks to svc-core over gRPC.
+      CORE_URI: ${CORE_URI:-botforge-core:50051}
+    healthcheck:
+      # The image HEALTHCHECK also probes /healthz; the explicit compose
+      # healthcheck makes the deployment health gate (scripts/deploy.sh)
+      # observable: a crash-looping bot is reported unhealthy here.
+      test: ["CMD", "curl", "-fsS", "http://localhost:8000/healthz"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    depends_on:
+      botforge-mongo:
+        condition: service_healthy
+      botforge-redis:
+        condition: service_healthy
+      botforge-core:
+        condition: service_healthy
+    restart: unless-stopped
+
+  # ── ADR-0020 process split (botforge-infra#89) ──────────────────────────
+  # One image (ghcr.io/jj-guild/botforge-services), four processes:
+  # the entrypoint dispatches on BOTFORGE_PROCESS. gRPC ports are exposed
+  # on the internal docker network only (no host publish, no ingress): the
+  # processes talk to each other, nobody outside the network does.
+
+  botforge-core:
+    # svc-core: the domain process (MongoDB/Redis owner, gRPC server on
+    # 50051). Same pinned image as the bot: all four processes deploy
+    # atomically from a single pin, and version skew between core and
+    # its clients cannot exceed one deploy.
+    image: ${BOTFORGE_IMAGE:?BOTFORGE_IMAGE must be pinned by deploy/aramatu/state/botforge-bot.yml}
+    pull_policy: always
+    environment:
+      BOTFORGE_PROCESS: core
+      BOTFORGE_VERSION: ${BOTFORGE_VERSION:-}
+      MONGO_URI: mongodb://botforge-mongo:27017
+      REDIS_URI: redis://botforge-redis:6379
+      CORE_GRPC_PORT: "50051"
+      LOG_LEVEL: ${LOG_LEVEL:-INFO}
+      # Liquipedia MediaWiki API compliance (botforge-services#247): the
+      # map sync's User-Agent must identify the project and carry a
+      # contact; non-secret GitHub environment variable (deploy-env.yml).
+      LIQUIPEDIA_CONTACT: ${LIQUIPEDIA_CONTACT:-}
+      # ADR-0020 providers: core aggregates ext-librematch and ext-aoe2lobby
+      # over the docker network; without URIs it degrades cleanly (marked
+      # offline in the live dashboard) — the ext processes still serve.
+      EXT_LIBREMATCH_URI: ${EXT_LIBREMATCH_URI:-botforge-ext-librematch:50061}
+      EXT_AOE2LOBBY_URI: ${EXT_AOE2LOBBY_URI:-botforge-ext-aoe2lobby:50062}
+      # Game content provider (ext-aoe2techtree, botforge.v1.Content):
+      # localized faction/map data over the docker network; without the
+      # URI the core refresh falls back to the vendored dataset in-process.
+      EXT_AOE2TECHTREE_URI: ${EXT_AOE2TECHTREE_URI:-botforge-ext-aoe2techtree:50063}
+    expose:
+      - "50051"
+    healthcheck:
+      # No grpc-health module in the image: a TCP connect probe on the
+      # gRPC port is the liveness signal (the gRPC server binds the port
+      # only when the servicers are up; a crash-looping process reports
+      # unhealthy, which the deploy health gate observes).
+      test: ["CMD", "python", "-c", "import socket; socket.create_connection(('127.0.0.1', 50051), timeout=3).close()"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+    depends_on:
+      botforge-mongo:
+        condition: service_healthy
+      botforge-redis:
+        condition: service_healthy
+    restart: unless-stopped
+
+  botforge-ext-librematch:
+    # ext-librematch: AoE2 data provider (poll-only). Provider processes
+    # own their external API secrets (#89 secret split); optional secrets —
+    # the provider serves its declared capabilities either way.
+    image: ${BOTFORGE_IMAGE:?BOTFORGE_IMAGE must be pinned by deploy/aramatu/state/botforge-bot.yml}
+    pull_policy: always
+    environment:
+      MONGO_URI: mongodb://botforge-mongo:27017
+      REDIS_URI: redis://botforge-redis:6379
+      MONGO_DB: ${MONGO_DB:-botforge}
+      BOTFORGE_PROCESS: ext-librematch
+      BOTFORGE_VERSION: ${BOTFORGE_VERSION:-}
+      EXT_GRPC_PORT: "50061"
+      LIBREMATCH_API_URL: ${LIBREMATCH_API_URL:-}
+      LIBREMATCH_API_KEY: ${LIBREMATCH_API_KEY:-}
+      LOG_LEVEL: ${LOG_LEVEL:-INFO}
+    expose:
+      - "50061"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import socket; socket.create_connection(('127.0.0.1', 50061), timeout=3).close()"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+    restart: unless-stopped
+  botforge-ext-aoe2lobby:
+    # ext-aoe2lobby: AoE2 live lobby events (aoe2lobby.com WebSocket).
+    image: ${BOTFORGE_IMAGE:?BOTFORGE_IMAGE must be pinned by deploy/aramatu/state/botforge-bot.yml}
+    pull_policy: always
+    environment:
+      BOTFORGE_PROCESS: ext-aoe2lobby
+      BOTFORGE_VERSION: ${BOTFORGE_VERSION:-}
+      EXT_GRPC_PORT: "50062"
+      AOE2LOBBY_WS_URL: ${AOE2LOBBY_WS_URL:-}
+      AOE2LOBBY_API_KEY: ${AOE2LOBBY_API_KEY:-}
+      LOG_LEVEL: ${LOG_LEVEL:-INFO}
+    expose:
+      - "50062"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import socket; socket.create_connection(('127.0.0.1', 50062), timeout=3).close()"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+    restart: unless-stopped
+
+  botforge-ext-aoe2techtree:
+    # ext-aoe2techtree: AoE2 game content provider (botforge.v1.Content).
+    # Serves localized faction/map content from the vendored aoe2techtree
+    # dataset (default) or a replacement HTTP API (AOE2TECHTREE_SOURCE=api +
+    # AOE2TECHTREE_API_URL) — the upstream is swappable without touching
+    # the contract or the core. No secrets in the default dataset mode.
+    image: ${BOTFORGE_IMAGE:?BOTFORGE_IMAGE must be pinned by deploy/state/aramatu/botforge-bot.yml}
+    pull_policy: always
+    environment:
+      BOTFORGE_PROCESS: ext-aoe2techtree
+      BOTFORGE_VERSION: ${BOTFORGE_VERSION:-}
+      EXT_GRPC_PORT: "50063"
+      AOE2TECHTREE_SOURCE: ${AOE2TECHTREE_SOURCE:-dataset}
+      AOE2TECHTREE_API_URL: ${AOE2TECHTREE_API_URL:-}
+      AOE2TECHTREE_API_KEY: ${AOE2TECHTREE_API_KEY:-}
+      LOG_LEVEL: ${LOG_LEVEL:-INFO}
+    expose:
+      - "50063"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import socket; socket.create_connection(('127.0.0.1', 50063), timeout=3).close()"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+    restart: unless-stopped
+  botforge-mongo:
+    image: mongo:7.0
+    # Loopback binding only: the database listens on the docker network
+    # for the bot; the host publish is for operator debugging (mongosh
+    # from the hosting), never for the network. The hosting firewall (ufw,
+    # HOSTING-SETUP.md) stays the outer barrier; this is defence in depth.
+    # Host port is per-environment (envs are data): co-located envs on the
+    # same hosting must not collide — this env debug-publishes on
+    # 127.0.0.1:27020, the container port stays 27017.
+    ports:
+      - "127.0.0.1:27020:27017"
+    volumes:
+      - mongo_data:/data/db
+    healthcheck:
+      # mongosh cold-start on a busy shared hosting can exceed 5s; without
+      # margin the probe is killed mid-handshake and mongo flaps
+      # unhealthy (deploy-time false negative, drasah 2026-10-07).
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 15s
+      retries: 5
+      start_period: 30s
+    restart: unless-stopped
+
+  botforge-redis:
+    image: redis:7.2
+    # Loopback binding only — same rationale as botforge-mongo above;
+    # per-env host port 127.0.0.1:6382, container port 6379.
+    ports:
+      - "127.0.0.1:6382:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+volumes:
+  mongo_data:
+  redis_data:
