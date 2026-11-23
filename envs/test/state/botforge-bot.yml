@@ -7,14 +7,14 @@ deploy_url: https://github.com/jj-guild/botforge-services/pull/428#issuecomment-
 deploy_kind: pr
 deploy_ref: 428
 deploy_tree_url: https://github.com/jj-guild/botforge-services/tree/58c154207228fe7e4ade43a46c24727b005d10f1
-deploy_ts: 1795471634
+deploy_ts: 1795472854
 deploy_commit_ts: 1795467839
 deploy_commit: 58c154207228fe7e4ade43a46c24727b005d10f1
-deploy_ci_run_id: 45276272482
-deploy_ci_run_number: 2069
-deploy_ci_run_ts: 1795471545
-deployed_by: Drasahaoe (/deploy)
-deployed_at: "2026-11-23T22:07:14Z"
-source: 
+deploy_ci_run_id: 
+deploy_ci_run_number: 
+deploy_ci_run_ts: 
+deployed_by: config-change-deploy (run 45279768811)
+deployed_at: "2026-11-23T22:27:34Z"
+source: test-config change on main (commit 37d9a04) — image unchanged
 deploy_branch: vibe/mod-kingdom-rework
 deploy_pr_title: feat(kingdom): finish the reference-branch migration — mod console debug ops + realms/market pins, settings salon renamed to console
