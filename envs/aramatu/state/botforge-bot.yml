@@ -7,14 +7,14 @@ deploy_url: https://github.com/jj-guild/botforge-services/tree/c8e7d9b4f27483c92
 deploy_kind: main
 deploy_ref: c8e7d9b
 deploy_tree_url: https://github.com/jj-guild/botforge-services/tree/c8e7d9b4f27483c9265a6c5b13c8a35afbfc5a89
-deploy_ts: 1795460306
+deploy_ts: 1795460441
 deploy_commit_ts: 1795094428
 deploy_commit: c8e7d9b4f27483c9265a6c5b13c8a35afbfc5a89
-deploy_ci_run_id:
-deploy_ci_run_number:
-deploy_ci_run_ts:
-deployed_by: env bootstrap (merlin-pinpin, 2026-11-23) — repointed to botforge-services main
-deployed_at: "2026-11-23T18:58:26Z"
-source: aramatu env bootstrap — initial pin = botforge-services main image (commit c8e7d9b)
+deploy_ci_run_id: 
+deploy_ci_run_number: 
+deploy_ci_run_ts: 
+deployed_by: config-change-deploy (run 45244297033)
+deployed_at: "2026-11-23T19:00:41Z"
+source: aramatu-config change on main (commit 6637e9f) — image unchanged
 deploy_branch: main
-deploy_pr_title:
+deploy_pr_title: 
