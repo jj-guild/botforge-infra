@@ -1,20 +1,20 @@
 # Desired state of botforge-bot on the aramatu environment (ADR-0018).
 # Written by the deploy pipelines only (kingdoms-deployer GitHub App);
 # a push to this branch deploys this exact image.
-image: ghcr.io/jj-guild/botforge-services:pr-432-20261124065000-5d0d737
-version_label: pr-432-20261124065000-5d0d737
-deploy_url: https://github.com/jj-guild/botforge-services/pull/432#issuecomment-7124331508
+image: ghcr.io/jj-guild/botforge-services:pr-440-20261124143811-21d3872
+version_label: pr-440-20261124143811-21d3872
+deploy_url: https://github.com/jj-guild/botforge-services/pull/440#issuecomment-7134687730
 deploy_kind: pr
-deploy_ref: 432
-deploy_tree_url: https://github.com/jj-guild/botforge-services/tree/5d0d7378e80795ac2233e198fdc571dc51b46664
-deploy_ts: 1795503064
-deploy_commit_ts: 1795459546
-deploy_commit: 5d0d7378e80795ac2233e198fdc571dc51b46664
-deploy_ci_run_id: 45343329436
-deploy_ci_run_number: 2125
-deploy_ci_run_ts: 1795502973
+deploy_ref: 440
+deploy_tree_url: https://github.com/jj-guild/botforge-services/tree/21d38725813bf2c640ed1cd94ef0e8671bbc7398
+deploy_ts: 1795531144
+deploy_commit_ts: 1795530769
+deploy_commit: 21d38725813bf2c640ed1cd94ef0e8671bbc7398
+deploy_ci_run_id: 45416203206
+deploy_ci_run_number: 2140
+deploy_ci_run_ts: 1795531059
 deployed_by: Ozymendias (/deploy)
-deployed_at: "2026-11-24T06:51:04Z"
+deployed_at: "2026-11-24T14:39:04Z"
 source: 
-deploy_branch: vibe/mod-pong-config-v2
-deploy_pr_title: vibe[Aramatu] pong: bootstrap mod declaration (conf/mod.yaml) + CODEOWNERS
+deploy_branch: vibe/pong-slice-v1
+deploy_pr_title: feat(pong): minimal vertical slice — domain, grpc service, cog, locales, tests, enabled
