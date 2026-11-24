@@ -57,4 +57,5 @@ for the BotForge Discord bot platform.
   [botforge/docs/CONVENTIONS.md](https://github.com/jj-guild/botforge/blob/main/docs/CONVENTIONS.md)
   — *Cowboy mode* (API-blocked merges, maintainer-only direct pushes
   with per-push confirmation, never force-push `main`) and
-  *Integration branches* (never delete `vibe/<alias>/main`).
+  *Branch lifecycle* (feature branches `vibe/<slug>` → PR to `main`;
+  never delete a branch whose code is not fully on `main`).

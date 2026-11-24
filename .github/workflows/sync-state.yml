@@ -72,8 +72,8 @@ jobs:
           git config --global user.name "kingdoms-deployer[bot]"
           git config --global user.email "noreply@jj-guild.org"
       - name: Skip when the state branch does not exist yet
-        # A personal env's state branch is created by its first autopin;
-        # syncing a missing branch would fail on the checkout.
+        # A personal env's state branch is created by its first /deploy
+        # pin; syncing a missing branch would fail on the checkout.
         env:
           APP_TOKEN: ${{ steps.app-token.outputs.token }}
         run: |
