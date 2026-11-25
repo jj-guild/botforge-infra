@@ -1,20 +1,20 @@
 # Desired state of botforge-bot on the merlin environment (ADR-0018).
 # Written by the deploy pipelines only (kingdoms-deployer GitHub App);
 # a push to this branch deploys this exact image.
-image: ghcr.io/jj-guild/botforge-services:pr-405-20261125173936-2ce458f
-version_label: pr-405-20261125173936-2ce458f
-deploy_url: https://github.com/jj-guild/botforge-services/pull/405#issuecomment-7169810738
+image: ghcr.io/jj-guild/botforge-services:pr-405-20261125183616-9ebff69
+version_label: pr-405-20261125183616-9ebff69
+deploy_url: https://github.com/jj-guild/botforge-services/pull/405#issuecomment-7171130276
 deploy_kind: pr
 deploy_ref: 405
-deploy_tree_url: https://github.com/jj-guild/botforge-services/tree/2ce458f18ea146c6c7f7b6c612535a3f774dddd3
-deploy_ts: 1795628425
-deploy_commit_ts: 1795628078
-deploy_commit: 2ce458f18ea146c6c7f7b6c612535a3f774dddd3
-deploy_ci_run_id: 45667007464
-deploy_ci_run_number: 2248
-deploy_ci_run_ts: 1795628349
+deploy_tree_url: https://github.com/jj-guild/botforge-services/tree/9ebff693e86c4729c5325c3522f64253d1d7bd12
+deploy_ts: 1795631832
+deploy_commit_ts: 1795631461
+deploy_commit: 9ebff693e86c4729c5325c3522f64253d1d7bd12
+deploy_ci_run_id: 45676768589
+deploy_ci_run_number: 2255
+deploy_ci_run_ts: 1795631749
 deployed_by: merlin-pinpin (/deploy)
-deployed_at: "2026-11-25T17:40:25Z"
+deployed_at: "2026-11-25T18:37:12Z"
 source: 
 deploy_branch: vibe/providers-stats
 deploy_pr_title: feat(providers): the stats layer — libre:match & aoe2lobby, the source of truth for match history and elo
