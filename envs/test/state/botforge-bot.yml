@@ -1,20 +1,20 @@
 # Desired state of botforge-bot on the test environment (ADR-0018).
 # Written by the deploy pipelines only (kingdoms-deployer GitHub App);
 # a push to this branch deploys this exact image.
-image: ghcr.io/jj-guild/botforge-services:pr-428-20261126072739-4d01ed6
-version_label: pr-428-20261126072739-4d01ed6
-deploy_url: https://github.com/jj-guild/botforge-services/pull/428#issuecomment-7185475562
+image: ghcr.io/jj-guild/botforge-services:pr-428-20261126142854-ec2ed86
+version_label: pr-428-20261126142854-ec2ed86
+deploy_url: https://github.com/jj-guild/botforge-services/pull/428#issuecomment-7194872945
 deploy_kind: pr
 deploy_ref: 428
-deploy_tree_url: https://github.com/jj-guild/botforge-services/tree/4d01ed66e18317a0fb024f08b049cd7fd646f4d9
-deploy_ts: 1795678114
-deploy_commit_ts: 1795678005
-deploy_commit: 4d01ed66e18317a0fb024f08b049cd7fd646f4d9
-deploy_ci_run_id: 45775412001
-deploy_ci_run_number: 2300
-deploy_ci_run_ts: 1795678029
+deploy_tree_url: https://github.com/jj-guild/botforge-services/tree/ec2ed86471e02a72556c0512e5880950ba2f7cd6
+deploy_ts: 1795703391
+deploy_commit_ts: 1795703287
+deploy_commit: ec2ed86471e02a72556c0512e5880950ba2f7cd6
+deploy_ci_run_id: 45839351289
+deploy_ci_run_number: 2320
+deploy_ci_run_ts: 1795703303
 deployed_by: Drasahaoe (/deploy)
-deployed_at: "2026-11-26T07:28:34Z"
+deployed_at: "2026-11-26T14:29:51Z"
 source: 
 deploy_branch: vibe/mod-kingdom-rework
 deploy_pr_title: feat(kingdom): finish the reference-branch migration — mod console debug ops + realms/market pins, settings salon renamed to console
