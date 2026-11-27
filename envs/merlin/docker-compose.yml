@@ -122,11 +122,16 @@ services:
       # map sync's User-Agent must identify the project and carry a
       # contact; non-secret GitHub environment variable (deploy-env.yml).
       PROVIDER_CONTACT: ${PROVIDER_CONTACT:-}
-      # ADR-0020 providers: core aggregates ext-librematch and ext-aoe2lobby
-      # over the docker network; without URIs it degrades cleanly (marked
-      # offline in the live dashboard) — the ext processes still serve.
+      # ADR-0020 providers: core aggregates ext-librematch (and
+      # ext-aoe2lobby when wired) over the docker network; without URIs
+      # it degrades cleanly (marked offline in the live dashboard) —
+      # the ext processes still serve.
       EXT_LIBREMATCH_URI: ${EXT_LIBREMATCH_URI:-botforge-ext-librematch:50061}
-      EXT_AOE2LOBBY_URI: ${EXT_AOE2LOBBY_URI:-botforge-ext-aoe2lobby:50062}
+      # aoe2lobby DISABLED in the merlin delivery (owner 2026-11-27:
+      # the upstream is unreliable — the system runs WITHOUT the
+      # realtime layer, clean logs; re-enable with the service block
+      # below).
+      # EXT_AOE2LOBBY_URI: ${EXT_AOE2LOBBY_URI:-botforge-ext-aoe2lobby:50062}
       # Game content provider (ext-aoe2techtree, botforge.v1.Content):
       # localized faction/map data over the docker network; without the
       # URI the core refresh falls back to the vendored dataset in-process.
@@ -213,7 +218,10 @@ services:
       # here — the reads and the stores share ONE Redis)
       REDIS_URI: redis://botforge-redis:6379
       MONGO_DB: ${MONGO_DB:-botforge}
-      EXT_AOE2LOBBY_URI: ${EXT_AOE2LOBBY_URI:-botforge-ext-aoe2lobby:50062}
+      # aoe2lobby DISABLED in the merlin delivery (owner 2026-11-27):
+      # no realtime URI — the enrollments stand clean (botforge-services
+      # reads the absent provider as a healthy steady state).
+      # EXT_AOE2LOBBY_URI: ${EXT_AOE2LOBBY_URI:-botforge-ext-aoe2lobby:50062}
       EXT_LIBREMATCH_URI: ${EXT_LIBREMATCH_URI:-botforge-ext-librematch:50061}
       # the providers panel shows every provider; the techtree is
       # deployed, liquipedia probes empty until it joins the stack.
@@ -229,8 +237,6 @@ services:
       retries: 5
       start_period: 15s
     depends_on:
-      botforge-ext-aoe2lobby:
-        condition: service_healthy
       botforge-ext-librematch:
         condition: service_healthy
       # The per-player realtime state persists to Mongo from the first
@@ -240,36 +246,40 @@ services:
       botforge-redis:
         condition: service_healthy
     restart: unless-stopped
-  botforge-ext-aoe2lobby:
-    logging: *bounded-logging
-    # ext-aoe2lobby: AoE2 live lobby events (aoe2lobby.com WebSocket).
-    image: ${BOTFORGE_IMAGE:?BOTFORGE_IMAGE must be pinned by deploy/merlin/state/botforge-bot.yml}
-    pull_policy: always
-    environment:
-      BOTFORGE_PROCESS: ext-aoe2lobby
-      BOTFORGE_VERSION: ${BOTFORGE_VERSION:-}
-      EXT_GRPC_PORT: "50062"
-      AOE2LOBBY_WS_URL: ${AOE2LOBBY_WS_URL:-}
-      AOE2LOBBY_API_KEY: ${AOE2LOBBY_API_KEY:-}
-      # The last received ws frame + its derived info persist to Mongo
-      # (the ws_last_frame collection) — the debugging trail.
-      MONGO_URI: mongodb://botforge-mongo:27017
-      MONGO_DB: ${MONGO_DB:-botforge}
-      LOG_LEVEL: ${LOG_LEVEL:-INFO}
-    expose:
-      - "50062"
-    healthcheck:
-      test: ["CMD", "python", "-c", "import socket; socket.create_connection(('127.0.0.1', 50062), timeout=3).close()"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-      start_period: 15s
-    # The ws frames persist to Mongo (ws_last_frame): the watchdog
-    # writes from boot — the store gates on Mongo health like core.
-    depends_on:
-      botforge-mongo:
-        condition: service_healthy
-    restart: unless-stopped
+  # aoe2lobby DISABLED in the merlin delivery (owner 2026-11-27): the
+  # upstream is unreliable (timeouts, 403s) and the system runs clean
+  # without the realtime layer — the block stays commented for a
+  # one-line re-enable.
+#   botforge-ext-aoe2lobby:
+#     logging: *bounded-logging
+#     # ext-aoe2lobby: AoE2 live lobby events (aoe2lobby.com WebSocket).
+#     image: ${BOTFORGE_IMAGE:?BOTFORGE_IMAGE must be pinned by deploy/merlin/state/botforge-bot.yml}
+#     pull_policy: always
+#     environment:
+#       BOTFORGE_PROCESS: ext-aoe2lobby
+#       BOTFORGE_VERSION: ${BOTFORGE_VERSION:-}
+#       EXT_GRPC_PORT: "50062"
+#       AOE2LOBBY_WS_URL: ${AOE2LOBBY_WS_URL:-}
+#       AOE2LOBBY_API_KEY: ${AOE2LOBBY_API_KEY:-}
+#       # The last received ws frame + its derived info persist to Mongo
+#       # (the ws_last_frame collection) — the debugging trail.
+#       MONGO_URI: mongodb://botforge-mongo:27017
+#       MONGO_DB: ${MONGO_DB:-botforge}
+#       LOG_LEVEL: ${LOG_LEVEL:-INFO}
+#     expose:
+#       - "50062"
+#     healthcheck:
+#       test: ["CMD", "python", "-c", "import socket; socket.create_connection(('127.0.0.1', 50062), timeout=3).close()"]
+#       interval: 10s
+#       timeout: 5s
+#       retries: 5
+#       start_period: 15s
+#     # The ws frames persist to Mongo (ws_last_frame): the watchdog
+#     # writes from boot — the store gates on Mongo health like core.
+#     depends_on:
+#       botforge-mongo:
+#         condition: service_healthy
+#     restart: unless-stopped
 
   botforge-ext-aoe2techtree:
     logging: *bounded-logging
